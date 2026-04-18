@@ -19,25 +19,28 @@ const app = express();
 // console.log("Stripe Key Check:", process.env.STRIPE_SECRET_KEY)
 
 // ✅ Regular routes use JSON parser
-app.use(express.json());
+// Ye do lines zaroori hain
+app.use(express.json()); // JSON data read karne ke liye
+app.use(express.urlencoded({ extended: true })); // Form data read karne ke liye
 app.use(cookieParser());
 
 // ✅ Allow multiple frontend origins (Vercel + Localhost)
 const allowedOrigins = [
-  "https://fancytopcovers.vercel.app", // deployed frontend
-  "http://localhost:5173"              // local dev
+  "http://localhost:5173", // local dev
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman / Thunder Client
-    if (!allowedOrigins.includes(origin)) {
-      return callback(new Error("CORS policy: Not allowed by server"), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow Postman / Thunder Client
+      if (!allowedOrigins.includes(origin)) {
+        return callback(new Error("CORS policy: Not allowed by server"), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  }),
+);
 
 // ✅ Routes
 app.use("/api/user", userRoutes);
