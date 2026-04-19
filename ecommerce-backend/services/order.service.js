@@ -8,34 +8,77 @@ export const placeOrderService = async (userId, orderData) => {
 
   try {
     const {
-      fullName, phoneNumber, email,
-      address, city, postalCode, country, paymentMethod,
+      fullName,
+      phoneNumber,
+      email,
+      address,
+      city,
+      postalCode,
+      country,
+      paymentMethod,
     } = orderData;
 
     const cart = await Cart.findOne({ where: { userId } });
     if (!cart) throw { status: 404, message: "Cart not found." };
 
     const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
-    if (!cartItems || cartItems.length === 0) throw { status: 400, message: "Cart is empty." };
+    if (!cartItems || cartItems.length === 0)
+      throw { status: 400, message: "Cart is empty." };
 
     let totalAmount = 0;
     const orderItemRows = [];
 
     for (let item of cartItems) {
-      const product = await Product.findByPk(item.productId);
+      const product = await Product.findByPk(item.productId, {
+        transaction: t,
+      });
       if (!product) continue;
-      const price = Number(product.price) || 0;
-      totalAmount += price * item.quantity;
-      orderItemRows.push({ productId: product.id, quantity: item.quantity, price });
+
+      // 1. Stock check inside transaction
+      if (product.stock < item.quantity) {
+        throw { status: 400, message: `Stock finished for ${product.name}` };
+      }
+
+      // 2. Use Discount Price if available
+      const activePrice =
+        product.discountPrice && product.discountPrice > 0
+          ? product.discountPrice
+          : product.price;
+
+      totalAmount += activePrice * item.quantity;
+
+      // 3. Subtract Stock
+      product.stock -= item.quantity;
+      await product.save({ transaction: t });
+
+      orderItemRows.push({
+        productId: product.id,
+        quantity: item.quantity,
+        price: activePrice,
+      });
     }
 
-    const order = await Order.create({
-      userId, totalAmount, status: "pending",
-      fullName, phoneNumber, email,
-      address, city, postalCode, country, paymentMethod,
-    }, { transaction: t });
+    const order = await Order.create(
+      {
+        userId,
+        totalAmount,
+        status: "pending",
+        fullName,
+        phoneNumber,
+        email,
+        address,
+        city,
+        postalCode,
+        country,
+        paymentMethod,
+      },
+      { transaction: t },
+    );
 
-    const rowsToInsert = orderItemRows.map(r => ({ ...r, orderId: order.id }));
+    const rowsToInsert = orderItemRows.map((r) => ({
+      ...r,
+      orderId: order.id,
+    }));
     if (rowsToInsert.length) {
       await OrderItem.bulkCreate(rowsToInsert, { transaction: t });
     }
