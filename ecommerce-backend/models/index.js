@@ -6,6 +6,7 @@ import Product from "./product.model.js";
 import User from "./user.model.js";
 import Order from "./order.model.js";
 import OrderItem from "./orderItem.model.js";
+import Review from "./review.model.js";
 
 // Initialize models
 const models = {
@@ -15,6 +16,7 @@ const models = {
   CartItem,
   Order,
   OrderItem,
+  Review, 
 };
 
 // Call associate for each model if exists
