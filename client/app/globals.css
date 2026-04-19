@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
+/* Light Mode (Default) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Identity */
+  --primary-color: #d4af37;
+  --bg-color: #ffffff;
+
+  /* Typography */
+  --text-main: #1a1a1a;
+  --text-muted: #666666;
+
+  /* Feedback & UI Elements */
+  --error: #ff4d4d;
+  --success: #27ae60;
+  --border-light: #e0e0e0;
+
+  /* Tailwind Default Fallbacks */
+  --background: var(--bg-color);
+  --foreground: var(--text-main);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark Mode logic - using class selector for next-themes */
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --text-main: #ededed;
+  --text-muted: #a1a1a1;
+  --bg-color: #0a0a0a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Typography */
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased; /* Text ko smooth aur premium dikhane ke liye */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Layout Fixes */
+  margin: 0;
+  min-height: 100vh; /* Takay footer humesha neechay rahe agar content kam ho */
+  overflow-x: hidden; /* Horizontal scroll ko prevent karne ke liye */
+
+  /* Smooth Scrolling */
+  scroll-behavior: smooth;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
