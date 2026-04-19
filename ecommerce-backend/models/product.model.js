@@ -1,7 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-class Product extends Model {}
+class Product extends Model { }
 
 Product.init(
   {
@@ -59,6 +59,10 @@ Product.init(
     discountPrice: {
       type: DataTypes.FLOAT,
       defaultValue: 0,
+    },
+    vehicleType: {
+      type: DataTypes.STRING,
+      allowNull: true, // car ya bike
     },
   },
   {
