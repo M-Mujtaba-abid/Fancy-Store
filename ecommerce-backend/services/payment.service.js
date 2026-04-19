@@ -101,7 +101,7 @@ export const processCheckoutCompletedService = async (session) => {
     });
   }
 
-  console.log("✅ Order created from webhook:", createdOrder.id);
+  console.log(" Order created from webhook:", createdOrder.id);
 };
 
 // ================= VERIFY SESSION =================
