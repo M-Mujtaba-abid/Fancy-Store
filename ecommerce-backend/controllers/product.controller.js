@@ -237,6 +237,8 @@ import {
   updateProductService,
   deleteProductService,
   getTotalProductsService,
+  getCarProductsService,
+  getBikeProductsService,
 } from "../services/product.service.js";
 
 export const addProduct = asyncHandler(async (req, res) => {
@@ -287,4 +289,16 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 export const getTotalProducts = asyncHandler(async (req, res) => {
   const count = await getTotalProductsService();
   res.status(200).json(new ApiResponse(200, { total: count }, "Count fetched"));
+});
+
+// Get Cars
+export const getCarProducts = asyncHandler(async (req, res) => {
+  const data = await getCarProductsService(req.query.page, req.query.limit);
+  res.status(200).json(new ApiResponse(200, data, "Car products fetched"));
+});
+
+// Get Bikes
+export const getBikeProducts = asyncHandler(async (req, res) => {
+  const data = await getBikeProductsService(req.query.page, req.query.limit);
+  res.status(200).json(new ApiResponse(200, data, "Bike products fetched"));
 });

@@ -193,7 +193,7 @@ import Product from "../models/product.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/apiError.js";
 import { Op } from "sequelize";
-import { DEFAULT_LIMITS } from "../constants/index.js"; // ✅ import
+import { DEFAULT_LIMITS,VEHICLE_TYPES } from "../constants/index.js"; // ✅ import
 
 // ============================================================
 // PAGINATION HELPERS
@@ -242,7 +242,7 @@ export const addProductService = async (body, files) => {
   const {
     name, description, price, stock, category,
     carModel, color, material, isFeatured,
-    isNewArrival, isOnSale, discountPrice,
+    isNewArrival, isOnSale, discountPrice,vehicleType, // ✅ yeh add karo
   } = body;
 
   const uploadedImages = await uploadImagesToCloudinary(files);
@@ -253,6 +253,7 @@ export const addProductService = async (body, files) => {
     isFeatured: isFeatured === "true" || isFeatured === true,
     isNewArrival: isNewArrival === "true" || isNewArrival === true,
     isOnSale: isOnSale === "true" || isOnSale === true,
+    vehicleType: vehicleType || null,
     discountPrice: discountPrice || 0,
     imageUrl: uploadedImages[0],
     images: uploadedImages,
@@ -378,4 +379,31 @@ export const deleteProductService = async (id) => {
 // 10. Total Count
 export const getTotalProductsService = async () => {
   return await Product.count();
+};
+
+
+// 11. Get Cars
+export const getCarProductsService = async (queryPage, queryLimit) => {
+  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+
+  const data = await Product.findAndCountAll({
+    where: { vehicleType: VEHICLE_TYPES.CAR },
+    limit, offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return formatPagingResponse(data, page, limit);
+};
+
+// 12. Get Bikes
+export const getBikeProductsService = async (queryPage, queryLimit) => {
+  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+
+  const data = await Product.findAndCountAll({
+    where: { vehicleType: VEHICLE_TYPES.BIKE},
+    limit, offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return formatPagingResponse(data, page, limit);
 };

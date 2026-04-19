@@ -29,3 +29,8 @@ export const DEFAULT_LIMITS = {
   ON_SALE: 10,
   SEARCH: 10,
 };
+// vehicles types
+export const VEHICLE_TYPES = {
+  CAR: "car",
+  BIKE: "bike",
+};
