@@ -319,7 +319,7 @@ export const createCheckoutSession = async (req, res) => {
 
     return res.json({ url });
   } catch (err) {
-    console.error("❌ createCheckoutSession error:", err);
+    console.error(" createCheckoutSession error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
