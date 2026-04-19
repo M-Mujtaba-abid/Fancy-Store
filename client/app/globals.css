@@ -16,17 +16,18 @@
   --border-light: #e0e0e0;
 
   /* Tailwind Default Fallbacks */
-  --background: var(--bg-color);
-  --foreground: var(--text-main);
+  --background: #ffffff; 
+  --foreground: #1a1a1a;
 }
 
 /* Dark Mode logic - using class selector for next-themes */
 html.dark {
-  --background: #0a0a0a;
+  --background: 10 10 10; /* RGB for #0a0a0a */
+  --bg-color: #0a0a0a;
   --foreground: #ededed;
   --text-main: #ededed;
   --text-muted: #a1a1a1;
-  --bg-color: #0a0a0a;
+  --border-light: #1f1f1f; /* Dark mode ke liye borders halkay rakhein */
 }
 
 body {
