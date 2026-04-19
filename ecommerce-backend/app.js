@@ -7,6 +7,7 @@ import orderRoutes from "./routes/order.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import searchRoutes from "./routes/search.routes.js";
 import contactRoutes from "./routes/contact.route.js";
+import reviewRoutes from "./routes/review.route.js";
 import { stripeWebhook } from "./controllers/payment.controller.js";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/error.middleware.js";
@@ -50,6 +51,7 @@ app.use("/api/orders", orderRoutes);
 // app.use("/api/payment", paymentRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/contacts", contactRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 dbConnection();
 app.use(errorHandler);
