@@ -2,9 +2,9 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Mail, 
-  Phone, 
+import {
+  Mail,
+  Phone,
   MapPin,
   ArrowUpRight
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import { useTheme } from 'next-themes';
 
 const Footer = () => {
   const { resolvedTheme } = useTheme();
-  
+
   const logoSrc = resolvedTheme === "dark" ? "/logoB.png" : "/logoW.png";
 
   // Social Links with Custom SVG Icons for consistency and theme support
@@ -58,40 +58,40 @@ const Footer = () => {
   return (
     <footer className="bg-background border-t border-border-custom text-text-main pt-16 pb-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
+
           {/* Column 1: Brand Info */}
           <div className="space-y-6">
             <Link href="/" className="inline-block">
-              <Image 
-                src={logoSrc} 
-                alt="Fancy Store" 
-                width={130} 
-                height={45} 
+              <Image
+                src={logoSrc}
+                alt="Fancy Store"
+                width={130}
+                height={45}
                 className="object-contain"
               />
             </Link>
             <p className="text-text-muted text-sm leading-relaxed max-w-xs">
-              Providing premium quality vehicle covers for cars and bikes. 
+              Providing premium quality vehicle covers for cars and bikes.
               Protect your passion with our all-weather durable shields.
             </p>
             <div className="flex flex-wrap gap-3">
               {socialLinks.map((social) => (
-                <Link 
-                  key={social.name} 
-                  href={social.href} 
+                <Link
+                  key={social.name}
+                  href={social.href}
                   className="p-2 bg-border-custom/30 rounded-full hover:bg-primary hover:text-white transition-all text-text-main"
                   aria-label={social.name}
                 >
-                  <svg 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                   >
                     {social.svg}
@@ -136,11 +136,16 @@ const Footer = () => {
             <ul className="space-y-5">
               <li className="flex items-start space-x-3 text-sm text-text-muted">
                 <MapPin size={20} className="text-primary shrink-0" />
-                <span>Lahore, Punjab, Pakistan<br />Main Boulevard, Gulberg III</span>
+                <span>Lahore, Punjab, Pakistan<br />Dha phase 1 , Fancy Store LAhore</span>
               </li>
               <li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Phone size={20} className="text-primary shrink-0" />
-                <span>+92 300 1234567</span>
+                <span>+92 333 4140461</span>
+              </li>
+
+              <li className="flex items-center space-x-3 text-sm text-text-muted">
+                <Phone size={20} className="text-primary shrink-0" />
+                <span>+92 305 1365856</span>
               </li>
               <li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Mail size={20} className="text-primary shrink-0" />
@@ -155,7 +160,7 @@ const Footer = () => {
           <p className="text-xs text-text-muted">
             © {new Date().getFullYear()} <span className="font-bold text-text-main">Fancy Store</span>. All rights reserved.
           </p>
-          
+
         </div>
       </div>
     </footer>
