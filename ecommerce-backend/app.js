@@ -28,7 +28,7 @@ app.use(cookieParser());
 
 // ✅ Allow multiple frontend origins (Vercel + Localhost)
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
+  "http://localhost:3000", // local dev
 ];
 
 app.use(
