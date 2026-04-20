@@ -31,8 +31,8 @@ const Sale = () => {
         {/* Header Area - With Sale Badge */}
         <div className="flex justify-between items-end mb-8">
           <div className="flex items-center space-x-3">
-            <div className="bg-error p-2 rounded-lg text-white">
-              <Percent size={20} strokeWidth={3} />
+            <div className="bg-error p-2 rounded-lg text-black">
+              <Percent size={32} strokeWidth={3} />
             </div>
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-text-main uppercase">Flash <span className="text-error">Sale</span></h2>

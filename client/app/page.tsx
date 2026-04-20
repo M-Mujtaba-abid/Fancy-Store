@@ -11,13 +11,13 @@ import Navbar from "@/components/shop/mainPage/navbarItems/Navbar"
 const page = () => {
   return (
     <div className="min-h-screen">
-      <Navbar/>
+      {/* <Navbar/> */}
       <Carosel/>
       <Category/>
       <NewArrivals/>
       <Sale/>
       <ProductGrid/>
-      <Footer/>
+      {/* <Footer/> */}
       {/* <Sale/> */}
       {/* <h1 className="text-primary text-4xl font-bold">Fancy Store</h1>
       <p>Helo, welcome to the store.</p> */}

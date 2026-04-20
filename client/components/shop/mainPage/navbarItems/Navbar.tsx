@@ -41,6 +41,11 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+const navLinks = [
+  { name: "Shop All", href: "/products/All" },
+  { name: "New Arrivals", href: "/new-arrivals" },
+  { name: "Collections", href: "/collections" },
+];
 
   return (
   <nav className="sticky top-0 z-40 w-full border-b border-border-custom bg-background transition-colors duration-300">
@@ -63,16 +68,16 @@ const Navbar = () => {
 
         {/* 2. Desktop Navigation */}
         <div className="hidden md:flex space-x-10 items-center">
-          {["Shop All", "New Arrivals", "Collections"].map((item) => (
-            <Link
-              key={item}
-              href={`/${item.toLowerCase().replace(" ", "-")}`}
-              className="text-sm font-medium text-text-main hover:text-primary transition-colors"
-            >
-              {item}
-            </Link>
-          ))}
-        </div>
+      {navLinks.map((link) => (
+        <Link
+          key={link.name}
+          href={link.href}
+          className="text-sm font-medium text-text-main hover:text-primary transition-colors"
+        >
+          {link.name}
+        </Link>
+      ))}
+    </div>
 
         {/* 3. Right Actions */}
         <div className="flex items-center space-x-1 sm:space-x-4">
