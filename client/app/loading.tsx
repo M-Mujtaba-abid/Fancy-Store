@@ -1,13 +1,12 @@
 "use client";
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 const Loading = () => {
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background dark:bg-slate-950 transition-colors duration-300">
       {/* Container for the logo and spinner */}
       <div className="relative flex flex-col items-center">
-        
         {/* Animated Outer Circle */}
         <motion.div
           animate={{
@@ -18,7 +17,7 @@ const Loading = () => {
             repeat: Infinity,
             ease: "linear",
           }}
-          className="w-20 h-20 border-4 border-border-custom border-t-primary rounded-full"
+          className="w-20 h-20 border-4 border-border-custom dark:border-slate-700 border-t-primary rounded-full"
         />
 
         {/* Pulsing Center Icon/Dot */}
@@ -43,7 +42,7 @@ const Loading = () => {
         transition={{ delay: 0.5 }}
         className="mt-6 text-center"
       >
-        <p className="text-sm font-bold tracking-[0.2em] uppercase text-text-main">
+        <p className="text-sm font-bold tracking-[0.2em] uppercase text-text-main dark:text-white">
           Fancy <span className="text-primary italic">Store</span>
         </p>
         <div className="flex justify-center space-x-1 mt-2">

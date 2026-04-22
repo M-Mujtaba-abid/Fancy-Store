@@ -26,3 +26,21 @@ export const useProductDetails = (id: string) => {
     enabled: !!id, // Jab tak id na mile, hit na ho
   });
 };
+
+// Car Products (Top Covers) fetch karne ka hook
+export const useCarProducts = (page: number = 1, limit: number = 10) => {
+  return useQuery({
+    queryKey: ["products", "cars", page, limit],
+    queryFn: () => productService.getCarProducts(page, limit),
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+// Bike Products (Top Covers) fetch karne ka hook
+export const useBikeProducts = (page: number = 1, limit: number = 10) => {
+  return useQuery({
+    queryKey: ["products", "bikes", page, limit],
+    queryFn: () => productService.getBikeProducts(page, limit),
+    placeholderData: (previousData) => previousData,
+  });
+};

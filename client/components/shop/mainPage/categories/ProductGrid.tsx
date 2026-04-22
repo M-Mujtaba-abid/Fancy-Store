@@ -38,7 +38,7 @@ const ProductGrid = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex bg-border-custom/30 p-1 rounded-full self-center">
+          <div className="flex bg-card p-1 rounded-full self-center floating-card">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -72,7 +72,7 @@ const ProductGrid = () => {
                 className="group"
               >
                 {/* Image Container */}
-                <div className="relative aspect-square bg-border-custom rounded-3xl overflow-hidden border border-border-custom/50 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                <div className="relative aspect-square bg-card rounded-3xl overflow-hidden shadow-sm group-hover:shadow-xl transition-all duration-500 floating-card">
                   <Image
                     src={product.img}
                     alt={product.name}
@@ -108,7 +108,7 @@ const ProductGrid = () => {
 
                   <div className="flex items-center justify-between pt-1">
                     <p className="text-xl font-black text-primary">Rs. {product.price}</p>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted px-2 py-1 border border-border-custom rounded-md">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted px-2 py-1 bg-card rounded-md floating-card">
                       {product.category}
                     </span>
                   </div>
