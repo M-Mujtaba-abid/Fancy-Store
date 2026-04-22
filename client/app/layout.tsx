@@ -29,12 +29,12 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning // Hydration warning se bachne ke liye zaroori hai
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300">
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}>
         <Providers>
           <Navbar />
-          <main className="grow">{children}</main>
+          <main className="flex-1 pt-20">{children}</main>
           <Footer />
         </Providers>
       </body>

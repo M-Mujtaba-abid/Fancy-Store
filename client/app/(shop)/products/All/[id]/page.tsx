@@ -24,7 +24,7 @@ const ProductDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Image Gallery */}
         <div className="space-y-4">
-          <div className="aspect-square relative overflow-hidden rounded-2xl border border-border-custom bg-white">
+          <div className="aspect-square relative overflow-hidden rounded-2xl bg-card floating-card">
             <Image
               src={product.imageUrl}
               alt={product.name}
@@ -36,7 +36,7 @@ const ProductDetails = () => {
           {/* Sub Images (if any) */}
           <div className="grid grid-cols-4 gap-4">
             {product.images?.map((img, idx) => (
-              <div key={idx} className="aspect-square relative border border-border-custom rounded-lg overflow-hidden cursor-pointer hover:border-primary">
+              <div key={idx} className="aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 floating-card">
                 <Image src={img} alt="thumbnail" fill className="object-cover" />
               </div>
             ))}
@@ -77,13 +77,13 @@ const ProductDetails = () => {
               <ShoppingCart size={20} />
               <span>Add to Cart</span>
             </button>
-            <button className="flex-1 border border-border-custom h-14 rounded-full font-bold hover:bg-border-custom transition-all">
+            <button className="flex-1 bg-card h-14 rounded-full font-bold hover:bg-background transition-all floating-card">
               Buy Now
             </button>
           </div>
 
           {/* Trust Badges */}
-          <div className="border-t border-border-custom pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="flex items-center space-x-3 text-sm text-text-muted">
               <Truck size={20} className="text-primary" />
               <span>Fast Delivery</span>

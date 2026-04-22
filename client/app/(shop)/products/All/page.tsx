@@ -16,7 +16,7 @@ const ProductList = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
       {data?.products.map((product) => (
-        <div key={product.id} className="border rounded-lg p-4 shadow-sm bg-background">
+        <div key={product.id} className="rounded-lg p-4 shadow-sm bg-card floating-card">
           <img 
             src={product.imageUrl} 
             alt={product.name} 

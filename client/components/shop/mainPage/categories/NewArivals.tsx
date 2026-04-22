@@ -46,14 +46,14 @@ const NewArrivals = () => {
           {/* Navigation Arrows */}
           <button 
             onClick={() => scroll('left')}
-            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-background border border-border-custom p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+            className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block floating-card"
           >
             <ChevronLeft size={24} />
           </button>
 
           <button 
             onClick={() => scroll('right')}
-            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-background border border-border-custom p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+            className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-card p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block floating-card"
           >
             <ChevronRight size={24} />
           </button>
@@ -69,7 +69,7 @@ const NewArrivals = () => {
                 whileHover={{ y: -5 }}
                 className="min-w-[280px] md:min-w-[calc(25%-18px)] snap-start"
               >
-                <div className="relative aspect-[4/5] bg-border-custom rounded-2xl overflow-hidden group/card border border-border-custom/50">
+                <div className="relative aspect-4/5 bg-card rounded-2xl overflow-hidden group/card floating-card">
                   {/* Product Image */}
                   <Image 
                     src={product.img} 

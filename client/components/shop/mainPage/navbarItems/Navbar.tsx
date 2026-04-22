@@ -48,8 +48,8 @@ const navLinks = [
 ];
 
   return (
-  <nav className="sticky top-0 z-40 w-full border-b border-border-custom bg-background transition-colors duration-300">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <nav className="fixed top-0 z-50 w-full bg-background transition-colors duration-300 shadow-md">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center h-20 relative">
         
         {/* 1. Logo Section */}
@@ -81,7 +81,7 @@ const navLinks = [
 
         {/* 3. Right Actions */}
         <div className="flex items-center space-x-1 sm:space-x-4">
-          <button onClick={() => setIsSearchOpen(true)} className="p-2 text-text-main hover:text-primary">
+          <button onClick={() => setIsSearchOpen((prev) => !prev)} className="p-2 text-text-main hover:text-primary">
             <Search size={22} strokeWidth={1.5} />
           </button>
 
@@ -94,33 +94,33 @@ const navLinks = [
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`p-2 rounded-full transition-all ${isMenuOpen ? "bg-border-custom text-primary" : "text-text-main hover:bg-border-custom"}`}
+              className={`p-2 rounded-full transition-all ${isMenuOpen ? "bg-card text-primary" : "text-text-main hover:bg-card"}`}
             >
               <MoreVertical size={22} strokeWidth={1.5} />
             </button>
 
             {isMenuOpen && (
-          <div className="absolute right-0 mt-3 w-64 origin-top-right bg-background border border-border-custom shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 z-50">
+          <div className="absolute right-0 mt-3 w-64 origin-top-right bg-background shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 z-50">
                 <div className="py-2 bg-background text-text-main">
                   {/* Mobile Links */}
-                  <div className="md:hidden border-b border-border-custom pb-2 mb-2">
+                  <div className="md:hidden pb-2 mb-2 border-b border-border-custom/30">
                     <p className="px-4 py-1 text-[10px] font-bold text-text-muted uppercase tracking-widest">Navigation</p>
-                    <Link href="/shop" className="flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-white/5">
+                    <Link href="/shop" className="flex items-center justify-between px-4 py-3 text-sm hover:bg-background/80">
                       Shop All <ChevronRight size={14} />
                     </Link>
                   </div>
 
                   <p className="px-4 py-1 text-[10px] font-bold text-text-muted uppercase tracking-widest">Account & Settings</p>
-                  <Link href="/profile" className="flex items-center px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-white/5">
+                  <Link href="/profile" className="flex items-center px-4 py-3 text-sm hover:bg-background/80">
                     <User className="mr-3 text-text-muted" size={18} /> Profile
                   </Link>
 
-                  <div className="hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                  <div className="hover:bg-background/80 transition-colors">
                     <ThemeToggle />
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-border-custom">
-                    <Link href="/auth" className="flex items-center px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-white/5">
+                  <div className="mt-2 pt-2 border-t border-border-custom/30">
+                    <Link href="/login" className="flex items-center px-4 py-3 text-sm hover:bg-background/80">
                       <LogIn className="mr-3 text-text-muted" size={18} /> Sign In
                     </Link>
                     <button className="w-full flex items-center px-4 py-3 text-sm text-error hover:bg-error/10">
