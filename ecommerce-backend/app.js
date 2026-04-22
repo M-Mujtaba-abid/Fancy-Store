@@ -13,6 +13,7 @@ import { stripeWebhook } from "./controllers/payment.controller.js";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/error.middleware.js";
 import cors from "cors";
+import passport from "./config/passport.js";        // ✅ add
 
 const app = express();
 
@@ -25,6 +26,7 @@ const app = express();
 app.use(express.json()); // JSON data read karne ke liye
 app.use(express.urlencoded({ extended: true })); // Form data read karne ke liye
 app.use(cookieParser());
+app.use(passport.initialize());        
 
 // ✅ Allow multiple frontend origins (Vercel + Localhost)
 const allowedOrigins = [
