@@ -64,3 +64,21 @@ export const resetPasswordService = async ({ email, newPassword }) => {
   user.resetOtpExpiry = null;
   await user.save();
 };
+
+
+
+// ================= GOOGLE AUTH =================
+export const googleAuthService = (user) => {
+  const token = generateToken({ id: user.id, role: user.role });
+
+  return {
+    token,
+    user: {
+      id:     user.id,
+      name:   user.name,
+      email:  user.email,
+      role:   user.role,
+      avatar: user.avatar,
+    },
+  };
+};

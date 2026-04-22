@@ -140,6 +140,7 @@ import {
   forgetPasswordService,
   verifyOtpService,
   resetPasswordService,
+  googleAuthService,
 } from "../services/user.service.js";
 
 // ================= REGISTER =================
@@ -184,4 +185,17 @@ export const verifyOtp = asyncHandler(async (req, res) => {
 export const resetPassword = asyncHandler(async (req, res) => {
   await resetPasswordService(req.body);
   res.status(200).json(new ApiResponse(200, null, "Password reset successful"));
+});
+// ================= GOOGLE AUTH CALLBACK =================
+export const googleAuthCallback = asyncHandler(async (req, res) => {
+  const data = googleAuthService(req.user); // passport ne req.user set kiya
+
+  res.cookie("token", data.token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  res.redirect(`${process.env.CLIENT_URL}/auth/callback?success=true`);
 });
