@@ -58,8 +58,8 @@ const navLinks = [
             <Image
               src={logoSrc}
               alt="Logo"
-              width={120}
-              height={40}
+              width={140}
+              height={60}
               className="object-contain"
               priority
             />
