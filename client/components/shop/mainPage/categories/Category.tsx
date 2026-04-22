@@ -11,7 +11,7 @@ const categories = [
     title: "Premium Car Covers",
     subtitle: "Custom fit for Haval & Luxury SUVs",
     image: "/sportage.png",
-    link: "/shop/cars",
+    link: "/carTopCover",
     direction: -50, // Slide from left
   },
   {
@@ -19,7 +19,23 @@ const categories = [
     title: "Superbike Shields",
     subtitle: "High-performance protection for your ride",
     image: "/bike.png",
-    link: "/shop/bikes",
+    link: "/bikeTopCover",
+    direction: 50, // Slide from right
+  },
+  {
+    id: 3,
+    title: "Trunc Tray Mat",
+    subtitle: "High-performance protection for your ride",
+    image: "/sportage.png",
+    link: "/truncTrayMat",
+    direction: 50, // Slide from right
+  },
+  {
+    id: 4,
+    title: "Superbike Shields",
+    subtitle: "High-performance protection for your ride",
+    image: "/bike.png",
+    link: "/dashboardMat",
     direction: 50, // Slide from right
   }
 ];
@@ -44,7 +60,7 @@ const Category = () => {
         </motion.div>
 
         {/* 2. Cards Grid with Framer Motion */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
           {categories.map((item) => (
             <motion.div
               key={item.id}
@@ -55,7 +71,7 @@ const Category = () => {
             >
               <Link 
                 href={item.link} 
-                className="group relative h-[380px] md:h-[420px] block overflow-hidden bg-border-custom rounded-xl shadow-lg cursor-pointer"
+                className="group relative h-[380px] md:h-[420px] block overflow-hidden bg-card rounded-xl shadow-lg cursor-pointer floating-card"
               >
                 {/* Image Container */}
                 <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
@@ -67,7 +83,7 @@ const Category = () => {
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   {/* Overlay for Depth */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-90" />
                 </div>
 
                 {/* Hover "More" Button */}

@@ -1,51 +1,108 @@
 @import "tailwindcss";
 
-/* Light Mode (Default) */
-:root {
-  /* Brand Identity */
-  --primary-color: #d4af37;
-  --bg-color: #ffffff;
-
-  /* Typography */
-  --text-main: #1a1a1a;
-  --text-muted: #666666;
-
-  /* Feedback & UI Elements */
-  --error: #ff4d4d;
-  --success: #27ae60;
-  --border-light: #e0e0e0;
-
-  /* Tailwind Default Fallbacks */
-  --background: #ffffff; 
-  --foreground: #1a1a1a;
+@theme {
+  --color-primary: var(--primary-color);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-text-main: var(--foreground);
+  --color-text-muted: var(--text-muted);
+  --color-border-custom: var(--border);
+  --color-error: var(--error);
+  --color-success: var(--success);
 }
 
-/* Dark Mode logic - using class selector for next-themes */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #f8fafc;
+  --border: #e2e8f0;
+  --text-muted: #64748b;
+  --primary-color: #d4af37;
+  --error: #ef4444;
+  --success: #22c55e;
+  --transition-speed: 0.3s;
+}
+
 html.dark {
-  --background: 10 10 10; /* RGB for #0a0a0a */
-  --bg-color: #0a0a0a;
-  --foreground: #ededed;
-  --text-main: #ededed;
-  --text-muted: #a1a1a1;
-  --border-light: #1f1f1f; /* Dark mode ke liye borders halkay rakhein */
+  --background: #020617;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --border: #1e293b;
+  --text-muted: #94a3b8;
+  --primary-color: #fbbf24;
+}
+
+[data-theme="dark"] {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --border: #1e293b;
+  --text-muted: #94a3b8;
+  --primary-color: #fbbf24;
+}
+
+html, body {
+  transition: background-color var(--transition-speed) ease,
+    color var(--transition-speed) ease,
+    border-color var(--transition-speed) ease;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  /* Typography */
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased; /* Text ko smooth aur premium dikhane ke liye */
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /* Layout Fixes */
+  padding-top: 5rem;
   margin: 0;
-  min-height: 100vh; /* Takay footer humesha neechay rahe agar content kam ho */
-  overflow-x: hidden; /* Horizontal scroll ko prevent karne ke liye */
-
-  /* Smooth Scrolling */
+  min-height: 100vh;
+  overflow-x: hidden;
   scroll-behavior: smooth;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+}
+
+/* Custom 3D & Utility Classes */
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .shadow-3d {
+    shadow-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .shadow-3d {
+    shadow-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Scrollbar Styling for Professional Look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+@layer components {
+  .floating-card {
+    background-color: var(--card);
+    border: none;
+    box-shadow: 0 14px 38px rgba(2, 6, 23, 0.08);
+  }
+
+  html.dark .floating-card,
+  [data-theme="dark"] .floating-card {
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
 }
