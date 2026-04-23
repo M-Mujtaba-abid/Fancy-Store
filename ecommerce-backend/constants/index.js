@@ -34,3 +34,12 @@ export const VEHICLE_TYPES = {
   CAR: "car",
   BIKE: "bike",
 };
+// ✅ Product Categories
+export const CATEGORIES = {
+  FLOOR_MAT: "floor_mat",
+  TRUNK_TRAY: "trunk_tray",
+  DASHBOARD_MAT: "dashboard_mat",
+  SEAT_COVER: "seat_cover",
+  STEERING_COVER: "steering_cover",
+  // Future mein bas yahan add karo
+};
