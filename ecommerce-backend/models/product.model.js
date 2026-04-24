@@ -64,6 +64,12 @@ Product.init(
       type: DataTypes.STRING,
       allowNull: true, // car ya bike
     },
+    // product.model.js mein yeh add karo
+subCategory: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  // "floor_mat" | "trunk_tray" | "dashboard_mat" etc.
+},
   },
   {
     sequelize,

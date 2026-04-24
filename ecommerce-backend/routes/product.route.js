@@ -11,7 +11,9 @@ import {
     getNewArrivals,
     getOnSaleProducts,
     getCarProducts,
-    getBikeProducts
+    getBikeProducts,
+    getProductsByFilter,
+    getProductsByCategory
 } from "../controllers/product.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -26,10 +28,12 @@ router.get("/featured", getFeaturedProducts);
 router.get("/new-arrivals", getNewArrivals);
 router.get("/sale", getOnSaleProducts);
 router.get("/count", getTotalProducts);
-router.get("/cars", getCarProducts);   // ✅ upar aaya
-router.get("/bikes", getBikeProducts); // ✅ upar aaya
+router.get("/cars", getCarProducts);
+router.get("/bikes", getBikeProducts);
+router.get("/category/:category", getProductsByCategory);  // ✅ upar
+router.get("/filter", getProductsByFilter);                // ✅ upar
 router.get("/", getProducts);
-router.get("/:id", getProductById);    // ✅ hamesha sabse neeche
+router.get("/:id", getProductById);                        // ✅ hamesha sabse neeche
 
 // --- Protected Routes (Admin) ---
 router.post("/", authMiddleware, adminMiddleware, upload.array("images", 5), addProduct);
