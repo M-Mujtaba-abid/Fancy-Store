@@ -17,6 +17,7 @@ import {
   getProductsByCategoryService,
   getProductsByFilterService,
 } from "../services/product.service.js";
+import ApiError from "../utils/apiError.js";
 
 export const addProduct = asyncHandler(async (req, res) => {
   const product = await addProductService(req.body, req.files);
