@@ -16,6 +16,7 @@ import {
   getBikeProductsService,
   getProductsByCategoryService,
   getProductsByFilterService,
+  getRelatedProductsService,
 } from "../services/product.service.js";
 import ApiError from "../utils/apiError.js";
 
@@ -105,4 +106,9 @@ export const getProductsByFilter = asyncHandler(async (req, res) => {
     req.query.limit
   );
   res.status(200).json(new ApiResponse(200, data, "Filtered products fetched"));
+});
+
+export const getRelatedProducts = asyncHandler(async (req, res) => {
+  const data = await getRelatedProductsService(req.params.id);
+  res.status(200).json(new ApiResponse(200, data, "Related products fetched"));
 });
