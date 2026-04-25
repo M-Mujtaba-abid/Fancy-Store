@@ -35,7 +35,7 @@ const ProductSection: React.FC<ProductSectionProps> = ({ title, products, isLoad
         {/* Header Area */}
         <div className="flex justify-between items-end mb-8 border-b border-border/50 pb-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-text-main">{title}</h2>
+            <h2 className="text-2xl  text-primary md:text-3xl font-bold tracking-tight ">{title}</h2>
             <div className="h-1 w-12 bg-primary mt-2"></div>
           </div>
           

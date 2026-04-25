@@ -24,7 +24,7 @@ export const addProduct = asyncHandler(async (req, res) => {
   const product = await addProductService(req.body, req.files);
   res.status(201).json(new ApiResponse(201, product, "Product added successfully"));
 });
-
+// no
 export const searchProducts = asyncHandler(async (req, res) => {
   const data = await searchProductsService(req.query.q, req.query.page, req.query.limit);
   res.status(200).json(new ApiResponse(200, data, "Search results fetched"));
