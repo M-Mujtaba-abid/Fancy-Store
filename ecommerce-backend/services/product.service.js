@@ -194,7 +194,7 @@ import Product from "../models/product.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/apiError.js";
 import { Op } from "sequelize";
-import { DEFAULT_LIMITS,VEHICLE_TYPES } from "../constants/index.js"; // ✅ import
+import { CATEGORIES, VEHICLE_TYPES, DEFAULT_LIMITS } from "../constants/index.js"; // ✅ import
 
 // ============================================================
 // PAGINATION HELPERS
@@ -403,6 +403,39 @@ export const getBikeProductsService = async (queryPage, queryLimit) => {
   const data = await Product.findAndCountAll({
     where: { vehicleType: VEHICLE_TYPES.BIKE},
     limit, offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return formatPagingResponse(data, page, limit);
+};
+
+
+
+// ✅ 1 Generic Function — sab categories handle karega
+export const getProductsByCategoryService = async (category, queryPage, queryLimit) => {
+  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+
+  const data = await Product.findAndCountAll({
+    where: { category },
+    limit, offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return formatPagingResponse(data, page, limit);
+};
+
+// ✅ Vehicle Type + Category filter — dono saath
+export const getProductsByFilterService = async (filters, queryPage, queryLimit) => {
+  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+
+  // Sirf woh filters rakho jo undefined nahi hain
+  const where = {};
+  if (filters.vehicleType) where.vehicleType = filters.vehicleType;
+  if (filters.category)    where.category    = filters.category;
+  if (filters.subCategory) where.subCategory = filters.subCategory;
+
+  const data = await Product.findAndCountAll({
+    where, limit, offset,
     order: [["createdAt", "DESC"]],
   });
 

@@ -104,3 +104,22 @@ export const useDeleteProduct = () => {
     },
   });
 };
+
+
+
+// hooks wali file mein add karein
+
+// Filtered Products fetch karne ka hook (Best for Shop Page)
+export const useFilteredProducts = (
+  filters: { vehicleType?: string; category?: string; subCategory?: string }, 
+  page: number = 1, 
+  limit: number = 12
+) => {
+  return useQuery({
+    // QueryKey mein filters array pass karna zaroori hai taake category change hone par naya data fetch ho
+    queryKey: ["products", "filter", filters, page, limit],
+    queryFn: () => productService.getProductsByFilter(filters, page, limit),
+    placeholderData: (previousData) => previousData, 
+    enabled: true, // Hamesha run hoga, chahe filter empty ho (taake all products aa jayein)
+  });
+};

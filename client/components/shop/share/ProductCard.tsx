@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ShoppingCart, Heart } from "lucide-react";
 import { Product } from "@/types/product.type";
+import Image from "next/image";
 
 const ProductCard: React.FC<Product> = (product) => {
   const { id, name, price, discountPrice, imageUrl, isFeatured, isOnSale } = product;
@@ -13,9 +14,11 @@ const ProductCard: React.FC<Product> = (product) => {
     <Link href={`/products/${id}`}>
       <div className="group relative bg-card rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden floating-card">
         <div className="relative w-full h-48 bg-card/80 overflow-hidden">
-          <img
-            src={imageUrl}
+          <Image
+            src={imageUrl}  
             alt={name}
+            width={300}
+            height={300}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
 

@@ -1,5 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
+import { CATEGORIES } from "../constants/index.js";
 import {
   addProductService,
   searchProductsService,
@@ -13,6 +14,8 @@ import {
   getTotalProductsService,
   getCarProductsService,
   getBikeProductsService,
+  getProductsByCategoryService,
+  getProductsByFilterService,
 } from "../services/product.service.js";
 
 export const addProduct = asyncHandler(async (req, res) => {
@@ -75,4 +78,30 @@ export const getCarProducts = asyncHandler(async (req, res) => {
 export const getBikeProducts = asyncHandler(async (req, res) => {
   const data = await getBikeProductsService(req.query.page, req.query.limit);
   res.status(200).json(new ApiResponse(200, data, "Bike products fetched"));
+});
+
+
+
+// ✅ 1 Generic Controller — sab categories handle karega
+export const getProductsByCategory = asyncHandler(async (req, res) => {
+  const { category } = req.params;
+
+  // Valid category check karo
+  if (!Object.values(CATEGORIES).includes(category)) {
+    throw new ApiError(400, "Invalid category");
+  }
+
+  const data = await getProductsByCategoryService(category, req.query.page, req.query.limit);
+  res.status(200).json(new ApiResponse(200, data, `${category} products fetched`));
+});
+
+// ✅ Advanced Filter — vehicleType + category + subCategory
+export const getProductsByFilter = asyncHandler(async (req, res) => {
+  const { vehicleType, category, subCategory } = req.query;
+  const data = await getProductsByFilterService(
+    { vehicleType, category, subCategory },
+    req.query.page,
+    req.query.limit
+  );
+  res.status(200).json(new ApiResponse(200, data, "Filtered products fetched"));
 });
