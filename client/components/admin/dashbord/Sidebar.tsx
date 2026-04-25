@@ -3,6 +3,7 @@
 import React from "react";
 import { AdminDashboardSection } from "@/types/product.type";
 import { Box, ChevronDown, ClipboardList, Settings, Users } from "lucide-react";
+import AuthButtons from "@/components/shop/share/AuthButtons";
 
 interface SidebarProps {
   activeSection: AdminDashboardSection;
@@ -109,18 +110,8 @@ const Sidebar = ({ activeSection, onChangeSection }: SidebarProps) => {
             </span>
             <ChevronDown size={16} className={`${openSettings ? "rotate-180" : ""} transition-transform`} />
           </button>
-          {openSettings && (
+        {openSettings && (
             <div className="pl-4 space-y-1">
-              <button
-                onClick={() => onChangeSection("settings-login-logout")}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm ${
-                  activeSection === "settings-login-logout"
-                    ? "bg-primary text-white"
-                    : "text-text-main hover:bg-background"
-                }`}
-              >
-                Login / Logout
-              </button>
               <button
                 onClick={() => onChangeSection("settings-theme")}
                 className={`w-full text-left px-3 py-2 rounded-md text-sm ${
@@ -129,6 +120,11 @@ const Sidebar = ({ activeSection, onChangeSection }: SidebarProps) => {
               >
                 Theme Button
               </button>
+              
+              {/* ✅ 2. Yahan AuthButtons lagaya gaya hai Settings ke andar */}
+              <div className="pt-2 mt-2 border-t border-border-custom/30 pr-3">
+                <AuthButtons className="flex flex-col gap-2" />
+              </div>
             </div>
           )}
         </div>
