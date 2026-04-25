@@ -21,7 +21,7 @@ import authMiddleware from "../middleware/auth.middleware.js";
 import adminMiddleware from "../middleware/admin.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
-const router = express.Router();
+const   router = express.Router();
 
 // --- Public Routes ---
 router.get("/search", searchProducts);

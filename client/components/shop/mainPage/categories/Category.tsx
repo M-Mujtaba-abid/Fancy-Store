@@ -5,47 +5,15 @@ import Image from 'next/image';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const categories = [
-  {
-    id: 1,
-    title: "Premium Car Covers",
-    subtitle: "Custom fit for Haval & Luxury SUVs",
-    image: "/sportage.png",
-    link: "/carTopCover",
-    direction: -50, // Slide from left
-  },
-  {
-    id: 2,
-    title: "Superbike Shields",
-    subtitle: "High-performance protection for your ride",
-    image: "/bike.png",
-    link: "/bikeTopCover",
-    direction: 50, // Slide from right
-  },
-  {
-    id: 3,
-    title: "Trunc Tray Mat",
-    subtitle: "High-performance protection for your ride",
-    image: "/sportage.png",
-    link: "/truncTrayMat",
-    direction: 50, // Slide from right
-  },
-  {
-    id: 4,
-    title: "Superbike Shields",
-    subtitle: "High-performance protection for your ride",
-    image: "/bike.png",
-    link: "/dashboardMat",
-    direction: 50, // Slide from right
-  }
-];
+// ✅ 1. Apna data import karein
+import { HOME_CATEGORIES } from '@/constants/categoriesData'; 
 
 const Category = () => {
   return (
     <section className="py-12 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* 1. Main Heading - Centered */}
+        {/* Main Heading */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -59,9 +27,10 @@ const Category = () => {
           <div className="h-1 w-24 bg-primary mt-3"></div>
         </motion.div>
 
-        {/* 2. Cards Grid with Framer Motion */}
+        {/* Cards Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
-          {categories.map((item) => (
+          {/* ✅ 2. HOME_CATEGORIES map karein */}
+          {HOME_CATEGORIES.map((item) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, x: item.direction }}
@@ -69,8 +38,9 @@ const Category = () => {
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
+              {/* ✅ 3. URL ko dynamic banayein: /shop?category=premium-car-covers */}
               <Link 
-                href={item.link} 
+                href={`/category?category=${item.id}`} 
                 className="group relative h-[380px] md:h-[420px] block overflow-hidden bg-card rounded-xl shadow-lg cursor-pointer floating-card"
               >
                 {/* Image Container */}
@@ -82,7 +52,6 @@ const Category = () => {
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
-                  {/* Overlay for Depth */}
                   <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-90" />
                 </div>
 
@@ -101,8 +70,6 @@ const Category = () => {
                   <p className="text-gray-300 text-xs md:text-sm mt-1 font-light tracking-wide uppercase">
                     {item.subtitle}
                   </p>
-                  
-                  {/* Hover line animation */}
                   <div className="mt-4 h-[3px] w-0 bg-primary transition-all duration-500 group-hover:w-20" />
                 </div>
               </Link>

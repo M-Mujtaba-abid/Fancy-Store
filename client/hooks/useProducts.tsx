@@ -20,6 +20,20 @@ export const useNewArrivals = () => {
     queryFn: () => productService.getNewArrivals(1, 10),
   });
 };
+// New Arrivals fetch karne ka hook
+export const useFeaturedProducts = () => {
+  return useQuery({
+    queryKey: ["products", "featured"],
+    queryFn: () => productService.getFeatured(1, 10),
+  });
+};
+// New Arrivals fetch karne ka hook
+export const useOnSaleProducts = () => {
+  return useQuery({
+    queryKey: ["products", "on-sale"],
+    queryFn: () => productService.getSaleProducts(1, 10),
+  });
+};
 
 export const useProductDetails = (id: string) => {
   return useQuery({
@@ -102,5 +116,79 @@ export const useDeleteProduct = () => {
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to delete product");
     },
+  });
+};
+
+
+
+// hooks wali file mein add karein
+
+// Filtered Products fetch karne ka hook (Best for Shop Page)
+// hooks/useProducts.tsx
+
+export const useFilteredProducts = (
+  filters: { vehicleType?: string; category?: string; subCategory?: string }, 
+  page: number = 1, 
+  limit: number = 12
+) => {
+  return useQuery({
+    queryKey: ["products", "filter", filters, page, limit],
+    queryFn: () => {
+      // Fallback ("top_cover") hata diya
+      const categoryName = filters.category; 
+      
+      const filterOptions = {
+        vehicleType: filters.vehicleType,
+        subCategory: filters.subCategory
+      };
+
+      return productService.getProductsByFilter(categoryName, filterOptions, page, limit);
+    },
+    placeholderData: (previousData) => previousData, 
+    enabled: true, // Ab yeh "All Products" ke liye bhi bina error chalega
+  });
+};
+
+
+// src/hooks/useProducts.tsx (is file mein neeche add karein)
+
+// 1. Hook arguments mein `searchQuery` add karein
+export const useShopPageProductsViewMore = (
+  filter?: string | null, 
+  searchQuery?: string | null, // ✅ Yahan searchQuery accept karein
+  page = 1, 
+  limit = 12
+) => {
+  return useQuery({
+    // 2. queryKey mein bhi searchQuery add karein taake search change hone pe refetch ho
+    queryKey: ["shop-page-products", filter, searchQuery, page, limit], 
+    queryFn: () => {
+
+      // ✅ 3. Ab yahan error nahi aayega, kyunke searchQuery arguments se aa rahi hai
+      if (searchQuery) {
+        return productService.searchProducts(searchQuery, page, limit);
+      }
+      
+      switch (filter) {
+        case "new-arrivals":
+          return productService.getNewArrivals(page, limit);
+        case "on-sale":
+          return productService.getSaleProducts(page, limit);
+        case "featured":
+          return productService.getFeatured(page, limit);
+        default:
+          return productService.getAllProducts(page, limit); 
+      }
+    },
+  });
+};
+
+
+// useProducts.ts mein add karein
+export const useSearchProducts = (query: string, page = 1, limit = 5) => {
+  return useQuery({
+    queryKey: ["products", "search", query, page, limit],
+    queryFn: () => productService.searchProducts(query, page, limit),
+    enabled: !!query, // 👈 Agar search query empty hai toh API call nahi hogi
   });
 };

@@ -31,9 +31,9 @@ export const productService = {
   // 1. Get All Products
   getAllProducts: async (page = 1, limit = 10) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products?page=${page}&limit=${limit}`,
+      `/products?page=${page}&limit=${limit}`
     );
-    return res.data.data; // ApiResponse ke andar ka 'data' field return hoga
+    return res.data.data; 
   },
 
   // 2. Get Single Product
@@ -45,15 +45,16 @@ export const productService = {
   // 3. New Arrivals
   getNewArrivals: async (page = 1, limit = 5) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products/new-arrivals?page=${page}&limit=${limit}`,
+      `/products/new-arrivals?page=${page}&limit=${limit}`
     );
+    console.log("new arrival ",res.data.data)
     return res.data.data;
   },
 
   // 4. Featured Products
   getFeatured: async (page = 1, limit = 5) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products/featured?page=${page}&limit=${limit}`,
+      `/products/featured?page=${page}&limit=${limit}`
     );
     return res.data.data;
   },
@@ -61,21 +62,22 @@ export const productService = {
   // 5. Search Products
   search: async (query: string, page = 1) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products/search?q=${query}&page=${page}`,
+      `/products/search?q=${query}&page=${page}`
     );
     return res.data.data;
   },
 
   // 6. On Sale Products
-  getSaleProducts: async () => {
-    const res = await api.get<ApiResponse<PagingResponse>>("/products/sale");
+  getSaleProducts: async (page = 1, limit = 10) => {
+    const res = await api.get<ApiResponse<PagingResponse>>(`/products/sale?page=${page}&limit=${limit}`);
+    console.log("sale products ",res.data.data)
     return res.data.data;
   },
 
   // 7. Car Products (Top Covers)
   getCarProducts: async (page = 1, limit = 10) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products/cars?page=${page}&limit=${limit}`,
+      `/products/cars?page=${page}&limit=${limit}`
     );
     return res.data.data;
   },
@@ -83,7 +85,7 @@ export const productService = {
   // 8. Bike Products (Top Covers)
   getBikeProducts: async (page = 1, limit = 10) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products/bikes?page=${page}&limit=${limit}`,
+      `/products/bikes?page=${page}&limit=${limit}`
     );
     return res.data.data;
   },
@@ -91,8 +93,34 @@ export const productService = {
   // 9. Admin: Get All Products
   getAdminProducts: async (page = 1, limit = 10) => {
     const res = await api.get<ApiResponse<PagingResponse>>(
-      `/products?page=${page}&limit=${limit}`,
+      `/products?page=${page}&limit=${limit}`
     );
+    return res.data.data;
+  },
+
+  // --- THE FIXED FUNCTION ---
+  getProductsByFilter: async (
+    categoryName?: string, // Isko optional kar diya (string | undefined)
+    filters: { vehicleType?: string; subCategory?: string } = {},
+    page = 1,
+    limit = 10
+  ) => {
+    // Query params ready karein
+    const queryParams = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      ...(filters.vehicleType && { vehicleType: filters.vehicleType }),
+      ...(filters.subCategory && { subCategory: filters.subCategory }),
+      // Agar general filter hit ho raha hai toh category query mein bhej dein
+      ...(!categoryName && filters.category && { category: filters.category }) 
+    }).toString();
+
+    // 🌟 SMART ROUTING: Agar categoryName hai toh category API, warna Filter API
+    const endpoint = categoryName 
+      ? `/products/category/${categoryName}?${queryParams}`
+      : `/products/filter?${queryParams}`; 
+
+    const res = await api.get<ApiResponse<PagingResponse>>(endpoint);
     return res.data.data;
   },
 
@@ -122,5 +150,13 @@ export const productService = {
   deleteProduct: async (id: string) => {
     const res = await api.delete<ApiResponse<null>>(`/products/${id}`);
     return res.data;
+  },
+  // Search Products
+  searchProducts: async (query: string, page = 1, limit = 5) => {
+    // 5 limit isliye rakhi hai taake search dropdown mein bohot lamba scroll na aaye
+    const res = await api.get<ApiResponse<PagingResponse>>(
+      `/products/search?q=${query}&page=${page}&limit=${limit}`
+    );
+    return res.data.data;
   },
 };
