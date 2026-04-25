@@ -1,27 +1,30 @@
 // src/app/shop/page.tsx
 "use client";
 
-import React, { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useFilteredProducts } from '@/hooks/useProducts'; // Apna path theek kar lein
-// import ProductCard from '@/components/ProductCard'; // Apna ProductCard import karein
+import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { useFilteredProducts } from "@/hooks/useProducts";
+import ProductCard from "@/components/shop/share/ProductCard";
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get("category") || undefined; 
-  
+  const categoryId = searchParams.get("category") || undefined;
+
   // Real API Hit 🚀
-  const { data, isLoading, isError } = useFilteredProducts({ category: categoryId });
+  const { data, isLoading, isError } = useFilteredProducts({
+    category: categoryId,
+  });
 
   // Format title (e.g. "trunk_tray" to "Trunk Tray")
-  const displayTitle = categoryId 
-    ? categoryId.replace(/_/g, ' ') 
+  const displayTitle = categoryId
+    ? categoryId.replace(/_/g, " ")
     : "All Products";
 
   return (
-    <div className="min-h-screen pt-24 pb-12 max-w-7xl mx-auto px-4">
+    <div className="min-h-screen pt-12 pb-12 max-w-7xl mx-auto px-4">
       <h1 className="text-3xl font-bold mb-8 uppercase">
-        Showing results for: <span className="text-primary">{displayTitle}</span>
+        Showing results for:{" "}
+        <span className="text-primary">{displayTitle}</span>
       </h1>
 
       {/* Loading State */}
@@ -48,15 +51,9 @@ function ShopContent() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-6">
               {data.products.map((product) => (
-                <div key={product.id} className="border p-4 rounded-lg shadow-sm">
-                  {/* Yahan par apna real ProductCard component call karein */}
-                  {/* <ProductCard product={product} /> */}
-                  
-                  {/* Temporary Placeholder UI */}
-                  <img src={product.imageUrl || product.images?.[0]} alt={product.name} className="w-full h-48 object-cover rounded-md mb-4"/>
-                  <h3 className="font-semibold text-lg">{product.name}</h3>
-                  <p className="text-primary font-bold">Rs. {product.price}</p>
-                </div>
+                // ✅ Yahan humne reusable ProductCard use kiya hai
+                // Spread operator {...product} saara data automatically map kar dega
+                <ProductCard key={product.id} {...product} />
               ))}
             </div>
           )}
@@ -69,7 +66,11 @@ function ShopContent() {
 // Next.js Best Practice: useSearchParams ko Suspense boundary mein wrap karna chahiye
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen pt-24 text-center">Loading Shop...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen pt-24 text-center">Loading Shop...</div>
+      }
+    >
       <ShopContent />
     </Suspense>
   );

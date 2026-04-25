@@ -85,13 +85,16 @@ export const getBikeProducts = asyncHandler(async (req, res) => {
 // ✅ 1 Generic Controller — sab categories handle karega
 export const getProductsByCategory = asyncHandler(async (req, res) => {
   const { category } = req.params;
-
+  const { vehicleType, subCategory, page, limit } = req.query; // Query nikal li
   // Valid category check karo
   if (!Object.values(CATEGORIES).includes(category)) {
     throw new ApiError(400, "Invalid category");
   }
 
-  const data = await getProductsByCategoryService(category, req.query.page, req.query.limit);
+  const filters = { category, vehicleType, subCategory };
+
+
+  const data = await getProductsByFilterService(filters, page, limit);
   res.status(200).json(new ApiResponse(200, data, `${category} products fetched`));
 });
 
