@@ -1,4 +1,7 @@
 import models from "../models/index.js";
+import sendEmail from "../utils/sendEmail.js";
+import { orderConfirmationTemplate, adminNewOrderTemplate } from "../utils/emailTemplate.js";
+
 const { Cart, CartItem, Product, Order, OrderItem, User } = models;
 
 // ================= PLACE ORDER =================
@@ -34,12 +37,10 @@ export const placeOrderService = async (userId, orderData) => {
       });
       if (!product) continue;
 
-      // 1. Stock check inside transaction
       if (product.stock < item.quantity) {
         throw { status: 400, message: `Stock finished for ${product.name}` };
       }
 
-      // 2. Use Discount Price if available
       const activePrice =
         product.discountPrice && product.discountPrice > 0
           ? product.discountPrice
@@ -47,7 +48,6 @@ export const placeOrderService = async (userId, orderData) => {
 
       totalAmount += activePrice * item.quantity;
 
-      // 3. Subtract Stock
       product.stock -= item.quantity;
       await product.save({ transaction: t });
 
@@ -85,8 +85,31 @@ export const placeOrderService = async (userId, orderData) => {
 
     await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
 
+    // ✅ Pehle commit
     await t.commit();
+
+    // ✅ Phir email — alag try/catch mein
+    try {
+      const user = await User.findByPk(userId);
+      await Promise.all([
+        sendEmail(
+          user.email,
+          "Order Confirmed — Fancy Store 🎉",
+          orderConfirmationTemplate(user.name, order)
+        ),
+        sendEmail(
+          process.env.ADMIN_EMAIL,
+          "📦 New Order Received!",
+          adminNewOrderTemplate(user.name, user.email, order)
+        ),
+      ]);
+    } catch (emailErr) {
+      console.error("Email send failed:", emailErr.message);
+      // Email fail ho toh order cancel nahi hoga
+    }
+
     return { orderId: order.id };
+
   } catch (err) {
     await t.rollback();
     throw err;
