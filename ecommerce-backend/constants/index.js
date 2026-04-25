@@ -34,7 +34,7 @@ export const VEHICLE_TYPES = {
   CAR: "car",
   BIKE: "bike",
 };
-// ✅ Product Categories
+//  Product Categories
 export const CATEGORIES = {
   FLOOR_MAT: "floor_mat",
   TRUNK_TRAY: "trunk_tray",

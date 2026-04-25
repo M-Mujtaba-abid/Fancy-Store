@@ -13,7 +13,8 @@ import {
     getCarProducts,
     getBikeProducts,
     getProductsByFilter,
-    getProductsByCategory
+    getProductsByCategory,
+    getRelatedProducts
 } from "../controllers/product.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -33,6 +34,7 @@ router.get("/bikes", getBikeProducts);
 router.get("/category/:category", getProductsByCategory);  //  upar
 router.get("/filter", getProductsByFilter);                //  upar
 router.get("/", getProducts);
+router.get("/:id/related", getRelatedProducts); // ✅ /:id se pehle rakho
 router.get("/:id", getProductById);                        // hamesha sabse neeche
 
 // --- Protected Routes (Admin) ---
