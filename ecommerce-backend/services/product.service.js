@@ -441,3 +441,20 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
 
   return formatPagingResponse(data, page, limit);
 };
+
+export const getRelatedProductsService = async (productId) => {
+  const product = await Product.findByPk(productId);
+  if (!product) throw new ApiError(404, "Product not found");
+
+  const related = await Product.findAll({
+    where: {
+      category: product.category,
+      vehicleType: product.vehicleType,
+      id: { [Op.ne]: productId },
+    },
+    limit: 4,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return related;
+};
