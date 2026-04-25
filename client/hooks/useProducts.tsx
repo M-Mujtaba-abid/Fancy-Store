@@ -20,6 +20,20 @@ export const useNewArrivals = () => {
     queryFn: () => productService.getNewArrivals(1, 10),
   });
 };
+// New Arrivals fetch karne ka hook
+export const useFeaturedProducts = () => {
+  return useQuery({
+    queryKey: ["products", "featured"],
+    queryFn: () => productService.getFeatured(1, 10),
+  });
+};
+// New Arrivals fetch karne ka hook
+export const useOnSaleProducts = () => {
+  return useQuery({
+    queryKey: ["products", "on-sale"],
+    queryFn: () => productService.getSaleProducts(1, 10),
+  });
+};
 
 export const useProductDetails = (id: string) => {
   return useQuery({
@@ -132,5 +146,29 @@ export const useFilteredProducts = (
     },
     placeholderData: (previousData) => previousData, 
     enabled: true, // Ab yeh "All Products" ke liye bhi bina error chalega
+  });
+};
+
+
+// src/hooks/useProducts.tsx (is file mein neeche add karein)
+
+export const useShopPageProductsViewMore = (filter?: string | null, page = 1, limit = 12) => {
+  return useQuery({
+    // QueryKey mein filter add kiya taake jab URL change ho toh data dobara fetch ho
+    queryKey: ["shop-page-products", filter, page, limit], 
+    queryFn: () => {
+      // URL mein jo filter aaya hai, us hisaab se service call karein
+      switch (filter) {
+        case "new-arrivals":
+          return productService.getNewArrivals(page, limit);
+        case "on-sale":
+          return productService.getSaleProducts(page, limit);
+        case "featured":
+          return productService.getFeatured(page, limit);
+        default:
+          // Agar URL mein koi filter nahi hai (sirf /shop hai), toh sab products layein
+          return productService.getAllProducts(page, limit); 
+      }
+    },
   });
 };

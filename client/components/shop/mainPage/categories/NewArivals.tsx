@@ -1,22 +1,18 @@
 "use client";
+
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-// ✅ Apna reusable card import karein
-// import ProductCard from '@/components/ProductCard'; 
-import { Product } from "@/types/product.type";
+// ✅ Apna hook import karein
+import { useNewArrivals } from "@/hooks/useProducts";
 import ProductCard from '../../share/ProductCard';
-
-// Temporary Dummy Data (Make sure ye Product type se match kare)
-const products: Partial<Product>[] = [
-  { id: "1", name: "Luxury Haval Cover", price: 4500, imageUrl: "/sportage.png", isNewArrival: true },
-  { id: "2", name: "Superbike Pro Shield", price: 2800, imageUrl: "/bike.png", isFeatured: true },
-  { id: "3", name: "Fortuner Elite Cover", price: 5200, imageUrl: "/sportage.png", isOnSale: true, discountPrice: 4800 },
-];
 
 const NewArrivals = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ✅ 1. API se real data fetch kar rahe hain
+  const { data, isLoading, isError } = useNewArrivals();
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -25,6 +21,20 @@ const NewArrivals = () => {
       scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
+
+  // ✅ 2. Loading State (Jab tak data aa raha hai)
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-background flex justify-center items-center min-h-[300px]">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+      </section>
+    );
+  }
+
+  // ✅ 3. Error ya Empty State (Agar API fail ho jaye ya koi product na ho toh yeh section hide ho jayega)
+  if (isError || !data || data.products.length === 0) {
+    return null; // Homepage pe khali jagah dikhane se behtar hai section hide kar dein
+  }
 
   return (
     <section className="py-16 bg-background">
@@ -53,17 +63,19 @@ const NewArrivals = () => {
 
           {/* Draggable/Scrollable Area */}
           <div ref={scrollRef} className="flex space-x-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4">
-            {products.map((product) => (
+            
+            {/* ✅ 4. Real data ko map kar diya */}
+            {data.products.map((product) => (
               <motion.div 
                 key={product.id}
                 whileHover={{ y: -5 }}
                 className="min-w-[280px] md:min-w-[calc(25%-18px)] snap-start"
               >
-                {/* ✅ Yahan humne pura code hata kar sirf apna component call kar liya */}
-                {/* Props spread {...product} karne se sara data automatically pass ho jayega */}
-                <ProductCard {...(product as Product)} />
+                {/* Ab 'as Product' likhne ki zaroorat nahi kyunke API type automatically theek aayegi */}
+                <ProductCard {...product} />
               </motion.div>
             ))}
+
           </div>
         </div>
       </div>

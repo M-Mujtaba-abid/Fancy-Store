@@ -47,6 +47,7 @@ export const productService = {
     const res = await api.get<ApiResponse<PagingResponse>>(
       `/products/new-arrivals?page=${page}&limit=${limit}`
     );
+    console.log("new arrival ",res.data.data)
     return res.data.data;
   },
 
@@ -67,8 +68,9 @@ export const productService = {
   },
 
   // 6. On Sale Products
-  getSaleProducts: async () => {
-    const res = await api.get<ApiResponse<PagingResponse>>("/products/sale");
+  getSaleProducts: async (page = 1, limit = 10) => {
+    const res = await api.get<ApiResponse<PagingResponse>>(`/products/sale?page=${page}&limit=${limit}`);
+    console.log("sale products ",res.data.data)
     return res.data.data;
   },
 

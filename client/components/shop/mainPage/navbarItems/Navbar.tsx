@@ -43,9 +43,11 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 const navLinks = [
-  { name: "Shop All", href: "/products/All" },
-  { name: "New Arrivals", href: "/new-arrivals" },
-  { name: "Collections", href: "/collections" },
+  { name: "Shop All", href: "/products" },
+  { name: "New Arrivals", href: "/viewMore?filter=new-arrivals" },
+  { name: "Sales", href: "/viewMore?filter=on-sale" },
+  { name: "Featured ", href: "/viewMore?filter=featured" },
+  { name: "Contact Us", href: "/contactus" },
 ];
 
   return (
@@ -107,7 +109,7 @@ const navLinks = [
                   <div className="md:hidden pb-2 mb-2 border-b border-border-custom/30">
                     <p className="px-4 py-1 text-[10px] font-bold text-text-muted uppercase tracking-widest">Navigation</p>
                     <Link href="/shop" className="flex items-center justify-between px-4 py-3 text-sm hover:bg-background/80">
-                      Shop All <ChevronRight size={14} />
+                      Shop <ChevronRight size={14} />
                     </Link>
                   </div>
 
