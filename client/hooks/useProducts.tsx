@@ -152,12 +152,23 @@ export const useFilteredProducts = (
 
 // src/hooks/useProducts.tsx (is file mein neeche add karein)
 
-export const useShopPageProductsViewMore = (filter?: string | null, page = 1, limit = 12) => {
+// 1. Hook arguments mein `searchQuery` add karein
+export const useShopPageProductsViewMore = (
+  filter?: string | null, 
+  searchQuery?: string | null, // ✅ Yahan searchQuery accept karein
+  page = 1, 
+  limit = 12
+) => {
   return useQuery({
-    // QueryKey mein filter add kiya taake jab URL change ho toh data dobara fetch ho
-    queryKey: ["shop-page-products", filter, page, limit], 
+    // 2. queryKey mein bhi searchQuery add karein taake search change hone pe refetch ho
+    queryKey: ["shop-page-products", filter, searchQuery, page, limit], 
     queryFn: () => {
-      // URL mein jo filter aaya hai, us hisaab se service call karein
+
+      // ✅ 3. Ab yahan error nahi aayega, kyunke searchQuery arguments se aa rahi hai
+      if (searchQuery) {
+        return productService.searchProducts(searchQuery, page, limit);
+      }
+      
       switch (filter) {
         case "new-arrivals":
           return productService.getNewArrivals(page, limit);
@@ -166,9 +177,18 @@ export const useShopPageProductsViewMore = (filter?: string | null, page = 1, li
         case "featured":
           return productService.getFeatured(page, limit);
         default:
-          // Agar URL mein koi filter nahi hai (sirf /shop hai), toh sab products layein
           return productService.getAllProducts(page, limit); 
       }
     },
+  });
+};
+
+
+// useProducts.ts mein add karein
+export const useSearchProducts = (query: string, page = 1, limit = 5) => {
+  return useQuery({
+    queryKey: ["products", "search", query, page, limit],
+    queryFn: () => productService.searchProducts(query, page, limit),
+    enabled: !!query, // 👈 Agar search query empty hai toh API call nahi hogi
   });
 };

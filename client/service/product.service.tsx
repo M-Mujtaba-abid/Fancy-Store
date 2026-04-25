@@ -151,4 +151,12 @@ export const productService = {
     const res = await api.delete<ApiResponse<null>>(`/products/${id}`);
     return res.data;
   },
+  // Search Products
+  searchProducts: async (query: string, page = 1, limit = 5) => {
+    // 5 limit isliye rakhi hai taake search dropdown mein bohot lamba scroll na aaye
+    const res = await api.get<ApiResponse<PagingResponse>>(
+      `/products/search?q=${query}&page=${page}&limit=${limit}`
+    );
+    return res.data.data;
+  },
 };

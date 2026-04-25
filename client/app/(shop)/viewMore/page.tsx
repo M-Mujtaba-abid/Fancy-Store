@@ -10,12 +10,14 @@ function ShopContent() {
   const searchParams = useSearchParams();
   // ✅ URL se "?filter=" nikal rahe hain
   const currentFilter = searchParams.get("filter"); 
+  const searchQuery = searchParams.get("search"); // e.g., "Honda"
 
   // ✅ Smart Hook Call: Yeh automatically filter ke hisaab se API hit karega
-  const { data, isLoading, isError } = useShopPageProductsViewMore(currentFilter);
+  const { data, isLoading, isError } = useShopPageProductsViewMore(currentFilter, searchQuery);
 
   // Dynamic Title
   const getPageTitle = () => {
+    if (searchQuery) return `Search Results for "${searchQuery}"`; // Output: Search Results for "Honda"
     if (currentFilter === "new-arrivals") return "New Arrivals";
     if (currentFilter === "on-sale") return "Hot Deals & Sales";
     if (currentFilter === "featured") return "Featured Products";
@@ -42,6 +44,15 @@ function ShopContent() {
           // View More wale page par aam tor par default variant acha lagta hai
           <ProductCard key={product.id} {...product} variant="default" />
         ))}
+
+        {data?.products?.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
+            <span className="text-4xl mb-4">🔍</span>
+            <p className="text-lg font-medium">
+              {searchQuery ? `No products found matching "${searchQuery}"` : "No products found in this category."}
+            </p>
+          </div>
+        )}
 
         {data?.products?.length === 0 && (
           <div className="col-span-full text-center py-20 text-gray-500 text-lg">
