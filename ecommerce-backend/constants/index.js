@@ -41,6 +41,8 @@ export const CATEGORIES = {
   DASHBOARD_MAT: "dashboard_mat",
   SEAT_COVER: "seat_cover",
   STEERING_COVER: "steering_cover",
-  TOP_COVER: "top_cover",  
+  CAR_TOP_COVER: "car_topCover",
+  BIKE_TOP_COVER: "bike_topCover",
+
   // Future mein bas yahan add karo
 };

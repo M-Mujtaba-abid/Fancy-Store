@@ -22,16 +22,25 @@ import ApiError from "../utils/apiError.js";
 
 export const addProduct = asyncHandler(async (req, res) => {
   const product = await addProductService(req.body, req.files);
-  res.status(201).json(new ApiResponse(201, product, "Product added successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, product, "Product added successfully"));
 });
-
+// no
 export const searchProducts = asyncHandler(async (req, res) => {
-  const data = await searchProductsService(req.query.q, req.query.page, req.query.limit);
+  const data = await searchProductsService(
+    req.query.q,
+    req.query.page,
+    req.query.limit,
+  );
   res.status(200).json(new ApiResponse(200, data, "Search results fetched"));
 });
 
 export const getFeaturedProducts = asyncHandler(async (req, res) => {
-  const data = await getFeaturedProductsService(req.query.page, req.query.limit);
+  const data = await getFeaturedProductsService(
+    req.query.page,
+    req.query.limit,
+  );
   res.status(200).json(new ApiResponse(200, data, "Featured products fetched"));
 });
 
@@ -47,22 +56,40 @@ export const getOnSaleProducts = asyncHandler(async (req, res) => {
 
 export const getProducts = asyncHandler(async (req, res) => {
   const data = await getProductsService(req.query.page, req.query.limit);
-  res.status(200).json(new ApiResponse(200, data, "All products fetched successfully"));
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, "All products fetched successfully"));
 });
 
 export const getProductById = asyncHandler(async (req, res) => {
   const product = await getProductByIdService(req.params.id);
-  res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
+  res
+    .status(200)
+    .json(new ApiResponse(200, product, "Product fetched successfully"));
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
-  const product = await updateProductService(req.params.id, req.body, req.files);
-  res.status(200).json(new ApiResponse(200, product, "Product updated successfully"));
+  const product = await updateProductService(
+    req.params.id,
+    req.body,
+    req.files,
+  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, product, "Product updated successfully"));
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
   await deleteProductService(req.params.id);
-  res.status(200).json(new ApiResponse(200, null, "Product and its images deleted from Cloudinary and DB"));
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        "Product and its images deleted from Cloudinary and DB",
+      ),
+    );
 });
 
 export const getTotalProducts = asyncHandler(async (req, res) => {
@@ -82,19 +109,21 @@ export const getBikeProducts = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, data, "Bike products fetched"));
 });
 
-
-
 // ✅ 1 Generic Controller — sab categories handle karega
 export const getProductsByCategory = asyncHandler(async (req, res) => {
   const { category } = req.params;
-
+  const { vehicleType, subCategory, page, limit } = req.query; // Query nikal li
   // Valid category check karo
   if (!Object.values(CATEGORIES).includes(category)) {
     throw new ApiError(400, "Invalid category");
   }
 
-  const data = await getProductsByCategoryService(category, req.query.page, req.query.limit);
-  res.status(200).json(new ApiResponse(200, data, `${category} products fetched`));
+  const filters = { category, vehicleType, subCategory };
+
+  const data = await getProductsByFilterService(filters, page, limit);
+  res
+    .status(200)
+    .json(new ApiResponse(200, data, `${category} products fetched`));
 });
 
 // ✅ Advanced Filter — vehicleType + category + subCategory
@@ -103,7 +132,7 @@ export const getProductsByFilter = asyncHandler(async (req, res) => {
   const data = await getProductsByFilterService(
     { vehicleType, category, subCategory },
     req.query.page,
-    req.query.limit
+    req.query.limit,
   );
   res.status(200).json(new ApiResponse(200, data, "Filtered products fetched"));
 });
