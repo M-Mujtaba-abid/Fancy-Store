@@ -40,7 +40,19 @@ export const forgetPasswordService = async (email) => {
   user.resetOtpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
   await user.save();
 
-  await sendEmail(user.email, "Password Reset OTP", `Your OTP is: ${otp}`);
+  await sendEmail(
+  user.email,
+  "Password Reset OTP — Fancy Store",
+  `
+    <h2>Password Reset Request 🔐</h2>
+    <p>Your OTP code is:</p>
+    <h1 style="color: #4F46E5; letter-spacing: 5px;">${otp}</h1>
+    <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+    <p>If you did not request this, please ignore this email.</p>
+    <br/>
+    <p><strong>Fancy Store</strong> 🛍️</p>
+  `
+);
 };
 
 // ================= VERIFY OTP =================
