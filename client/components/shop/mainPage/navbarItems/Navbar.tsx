@@ -14,6 +14,7 @@ import {
 import SearchBar from "./SearchBar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "next-themes"; // Import useTheme
+import AuthButtons from "../../share/AuthButtons";
 // import { useState, useEffect, useRef } from "react";
 const Navbar = () => {
   const { resolvedTheme } = useTheme(); // resolvedTheme "light" ya "dark" batata hai
@@ -120,12 +121,9 @@ const navLinks = [
                   </div>
 
                   <div className="mt-2 pt-2 border-t border-border-custom/30">
-                    <Link href="/login" className="flex items-center px-4 py-3 text-sm hover:bg-background/80">
-                      <LogIn className="mr-3 text-text-muted" size={18} /> Sign In
-                    </Link>
-                    <button className="w-full flex items-center px-4 py-3 text-sm text-error hover:bg-error/10">
-                      <LogOut className="mr-3" size={18} /> Logout
-                    </button>
+                   <div className="mt-2 pt-4 pb-2 px-4 border-t border-border-custom/30">
+                      <AuthButtons className="flex flex-col gap-2" />
+                    </div>
                   </div>
                 </div>
               </div>

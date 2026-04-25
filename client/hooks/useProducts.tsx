@@ -1,5 +1,7 @@
 import { productService } from "@/service/product.service";
-import { useQuery } from "@tanstack/react-query";
+import { ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 // import { productService } from "../services/product.service";
 
 // Sare products fetch karne ka hook
@@ -42,5 +44,63 @@ export const useBikeProducts = (page: number = 1, limit: number = 10) => {
     queryKey: ["products", "bikes", page, limit],
     queryFn: () => productService.getBikeProducts(page, limit),
     placeholderData: (previousData) => previousData,
+  });
+};
+
+// Admin hooks
+export const useAdminProducts = (page: number, limit: number) => {
+  return useQuery({
+    queryKey: ["admin-products", page, limit],
+    queryFn: () => productService.getAdminProducts(page, limit),
+    placeholderData: (prev) => prev,
+  });
+};
+
+export const useCreateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ProductMutationInput) => productService.createProduct(payload),
+    onSuccess: () => {
+      toast.success("Product created successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to create product");
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: ProductUpdateInput }) =>
+      productService.updateProduct(id, payload),
+    onSuccess: () => {
+      toast.success("Product updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to update product");
+    },
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => productService.deleteProduct(id),
+    onSuccess: () => {
+      toast.success("Product deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to delete product");
+    },
   });
 };

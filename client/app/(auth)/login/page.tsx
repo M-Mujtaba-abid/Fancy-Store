@@ -24,6 +24,13 @@ export default function LoginPage() {
     login(formData);
   };
 
+  const handleGoogleLogin = () => {
+  // Replace this URL with your actual backend base URL if it's different
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  window.location.href = `${BACKEND_URL}/api/user/auth/google`;
+  console.log("clicked")
+};
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-text-main px-4 transition-colors duration-300 perspective-1000">
       {/* Background Glow Effect */}
@@ -137,6 +144,7 @@ export default function LoginPage() {
 
             {/* Social Logins */}
             <button
+            onClick={handleGoogleLogin}
               type="button"
               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-background rounded-xl hover:bg-card transition-all font-bold text-text-main text-xs uppercase tracking-wider shadow-sm active:scale-95"
             >
@@ -146,7 +154,7 @@ export default function LoginPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" />
               </svg>
-              Google Account
+              Continue Google Account
             </button>
           </div>
         </div>

@@ -3,9 +3,8 @@ import Category from "@/components/shop/mainPage/categories/Category"
 import NewArrivals from "@/components/shop/mainPage/categories/NewArivals"
 import ProductGrid from "@/components/shop/mainPage/categories/ProductGrid"
 import Sale from "@/components/shop/mainPage/categories/Sale"
-import Footer from "@/components/shop/mainPage/Footer"
 // import Sale from "@/components/shop/mainPage/categories/Sale"
-import Navbar from "@/components/shop/mainPage/navbarItems/Navbar"
+
 
 
 const page = () => {

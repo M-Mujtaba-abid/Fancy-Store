@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/context/Providers"; // Naya Providers import karein
-import Navbar from "@/components/shop/mainPage/navbarItems/Navbar";
-import Footer from "@/components/shop/mainPage/Footer";
+import AppShell from "@/components/layout/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +32,7 @@ export default function RootLayout({
     >
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}>
         <Providers>
-          <Navbar />
-          <main className="flex-1 pt-20">{children}</main>
-          <Footer />
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>
