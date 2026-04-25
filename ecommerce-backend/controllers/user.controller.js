@@ -20,6 +20,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const loginUser = asyncHandler(async (req, res) => {
   const data = await loginUserService(req.body);
 
+  console.log("data login response  ->", data)
   res.cookie("token", data.token, {
     httpOnly: true,
     secure: true,
@@ -48,18 +49,19 @@ export const resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, null, "Password reset successful"));
 });
 // ================= GOOGLE AUTH CALLBACK =================
+
 export const googleAuthCallback = asyncHandler(async (req, res) => {
-  const data = googleAuthService(req.user); // passport ne req.user set kiya
+  const data = await googleAuthService(req.user); // Added await if service is async
 
   res.cookie("token", data.token, {
     httpOnly: true,
     secure: true,
     sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
-  });
+  }); // Removed the extra }) that was here
 
-  res.redirect(`${process.env.CLIENT_URL}/auth/callback?success=true`);
-});
+  res.redirect(`${process.env.CLIENT_URL}/`);
+}); 
 
 // ================= VERIFY OTP =================
 export const verifyOtp = asyncHandler(async (req, res) => {
