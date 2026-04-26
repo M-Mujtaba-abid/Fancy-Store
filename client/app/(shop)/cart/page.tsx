@@ -123,9 +123,9 @@ export default function CartPage() {
             <span className="text-2xl font-black text-primary">Rs. {subtotal.toLocaleString()}</span>
           </div>
 
-          <button className="w-full py-4 bg-primary text-white rounded-xl font-bold hover:opacity-90 hover:scale-[1.02] transition-all shadow-md">
+          <Link href="/checkout" className="w-full py-4 px-7 bg-primary text-white rounded-xl font-bold hover:opacity-90 hover:scale-[1.02] transition-all shadow-md">
             Proceed to Checkout
-          </button>
+          </Link>
         </div>
       </div>
     </div>
