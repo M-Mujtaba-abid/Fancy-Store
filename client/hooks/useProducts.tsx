@@ -192,3 +192,12 @@ export const useSearchProducts = (query: string, page = 1, limit = 5) => {
     enabled: !!query, // 👈 Agar search query empty hai toh API call nahi hogi
   });
 };
+
+// Related Products ka Hook
+export const useRelatedProducts = (id: string) => {
+  return useQuery({
+    queryKey: ["products", "related", id],
+    queryFn: () => productService.getRelatedProducts(id),
+    enabled: !!id, // Jab tak ID na ho tab tak hit nahi karna
+  });
+};
