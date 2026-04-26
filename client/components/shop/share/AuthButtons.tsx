@@ -83,7 +83,7 @@ function AuthButtonsContent({ className }: { className: string }) {
             Login
           </Link>
           <Link
-            href="/register" 
+            href="/signup" 
             className="px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:opacity-90 transition-opacity text-center w-full md:w-auto"
           >
             Sign Up
