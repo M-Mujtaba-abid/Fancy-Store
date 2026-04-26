@@ -41,4 +41,13 @@ export const authService = {
     const response = await api.post("/user/logout");
     return response.data;
   },
+
+  handleGoogleLogin : () => {
+  // Replace this URL with your actual backend base URL if it's different
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  window.location.href = `${BACKEND_URL}/api/user/auth/google`;
+  
+  console.log("clicked")
+},
+
 };

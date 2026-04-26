@@ -161,6 +161,7 @@ export const productService = {
   },
   getRelatedProducts: async (id: string) => {
     const res = await api.get<ApiResponse<PagingResponse>>(`/products/${id}/related`);
+    console.log("related profucts ",res.data.data)
     return res.data.data; // Yeh aapko wo 6 products ka array dega
   },
 };

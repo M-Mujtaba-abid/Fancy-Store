@@ -7,6 +7,7 @@ import { useLogin } from "@/hooks/useAuth";
 import { Loader, Mail, Lock, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTheme } from "next-themes";
+import { authService } from "@/service/auth.service";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -24,12 +25,6 @@ export default function LoginPage() {
     login(formData);
   };
 
-  const handleGoogleLogin = () => {
-  // Replace this URL with your actual backend base URL if it's different
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-  window.location.href = `${BACKEND_URL}/api/user/auth/google`;
-  console.log("clicked")
-};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-text-main px-4 transition-colors duration-300 perspective-1000">
@@ -144,7 +139,7 @@ export default function LoginPage() {
 
             {/* Social Logins */}
             <button
-            onClick={handleGoogleLogin}
+            onClick={authService.handleGoogleLogin}
               type="button"
               className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-background rounded-xl hover:bg-card transition-all font-bold text-text-main text-xs uppercase tracking-wider shadow-sm active:scale-95"
             >
