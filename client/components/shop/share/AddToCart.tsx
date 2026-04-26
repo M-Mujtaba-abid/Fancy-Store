@@ -4,6 +4,7 @@ import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useAddToCart } from "@/hooks/useCart";
 import toast from "react-hot-toast";
+import { flyToCart } from "@/utils/flyToCart";
 
 interface AddToCartProps {
   productId: string;
@@ -28,6 +29,9 @@ const AddToCart: React.FC<AddToCartProps> = ({ productId, stock, className }) =>
       toast.error("Product is out of stock!");
       return;
     }
+
+    // ✅ Animation chalao
+    flyToCart(e);
 
     addToCart({ productId, quantity: 1 });
   };

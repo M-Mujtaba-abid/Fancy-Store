@@ -15,6 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "next-themes";
 import AuthButtons from "../../share/AuthButtons";
 import LoginSync from "@/components/LoginSync";
+import NavCartButton from "./NavCartButton";
 
 const Navbar = () => {
   const { resolvedTheme } = useTheme();
@@ -92,7 +93,7 @@ const Navbar = () => {
               <Search size={22} strokeWidth={1.5} />
             </button>
 
-            <Link
+            {/* <Link
               href="/cart"
               className="relative p-2 text-text-main hover:text-primary"
             >
@@ -100,7 +101,8 @@ const Navbar = () => {
               <span className="absolute top-1 right-1 bg-primary text-[10px] text-white font-bold h-4 w-4 flex items-center justify-center rounded-full">
                 0
               </span>
-            </Link>
+            </Link> */}
+            <NavCartButton />
 
             {/* 3-Dots Menu & Dropdown Modal */}
             <div className="relative" ref={menuRef}>
@@ -157,8 +159,7 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
                     >
-                      <User className="mr-3 text-text-muted" size={18} />{" "}
-                      random
+                      <User className="mr-3 text-text-muted" size={18} /> random
                     </Link>
 
                     <div className="hover:bg-background/80 transition-colors">
