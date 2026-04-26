@@ -188,9 +188,9 @@ const Navbar = () => {
   // ✅ Aapke exact links
   const navLinks = [
     { name: "Shop All", href: "/products" },
-    { name: "New Arrivals", href: "/shop?filter=new-arrivals" }, // path /shop theek kiya hai
-    { name: "Sales", href: "/shop?filter=on-sale" },
-    { name: "Featured", href: "/shop?filter=featured" },
+    { name: "New Arrivals", href: "/viewMore?filter=new-arrivals" }, // path /shop theek kiya hai
+    { name: "Sales", href: "/viewMore?filter=on-sale" },
+    { name: "Featured", href: "/viewMore?filter=featured" },
     { name: "Contact Us", href: "/contactus" },
   ];
 

@@ -30,7 +30,9 @@ export default function RootLayout({
       suppressHydrationWarning // Hydration warning se bachne ke liye zaroori hai
       
     >
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}>
+      <body 
+        suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}>
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>
