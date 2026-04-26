@@ -71,10 +71,7 @@ export const forgetPasswordService = async (email) => {
   });
 
   if (!localIdentity) {
-    throw new ApiError(
-      400,
-      "Aapka account Google se linked hai. Please 'Continue with Google' use karein.",
-    );
+    throw new ApiError(400, "Your account is linked with  Google  Please 'Continue with Google' to reset password.");
   }
 
   // OTP banao aur save karo
