@@ -41,7 +41,7 @@ const Category = () => {
               {/* ✅ 3. URL ko dynamic banayein: /shop?category=premium-car-covers */}
               <Link 
                 href={`/category?category=${item.id}`} 
-                className="group relative h-[380px] md:h-[420px] block overflow-hidden bg-card rounded-xl shadow-lg cursor-pointer floating-card"
+                className="group relative h-95 md:h-105 block overflow-hidden bg-card rounded-xl shadow-lg cursor-pointer floating-card"
               >
                 {/* Image Container */}
                 <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
@@ -70,7 +70,7 @@ const Category = () => {
                   <p className="text-gray-300 text-xs md:text-sm mt-1 font-light tracking-wide uppercase">
                     {item.subtitle}
                   </p>
-                  <div className="mt-4 h-[3px] w-0 bg-primary transition-all duration-500 group-hover:w-20" />
+                  <div className="mt-4 h-0.75 w-0 bg-primary transition-all duration-500 group-hover:w-20" />
                 </div>
               </Link>
             </motion.div>
