@@ -442,19 +442,60 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
   return formatPagingResponse(data, page, limit);
 };
 
+// 13. Get Related Products (Amazon/Daraz Style Waterfall Logic)
+// 13. Get Related Products (Amazon/Daraz Style Waterfall Logic)
 export const getRelatedProductsService = async (productId) => {
   const product = await Product.findByPk(productId);
   if (!product) throw new ApiError(404, "Product not found");
 
-  const related = await Product.findAll({
+  const limit = 6; // Daraz aksar 6 items dikhata hai slider mein
+
+  // STEP 1: Pehle exact matches dhundo (Same Category + Same Vehicle Type)
+  let related = await Product.findAll({
     where: {
       category: product.category,
       vehicleType: product.vehicleType,
-      id: { [Op.ne]: productId },
+      id: { [Op.ne]: productId }, // Current product nikal do
     },
-    limit: 4,
+    limit: limit,
     order: [["createdAt", "DESC"]],
   });
+
+  // STEP 2: Agar list puri nahi hui, toh sirf Same Category ke aur products dalo
+  if (related.length < limit) {
+    const fetchedIds = related.map((p) => p.id);
+    fetchedIds.push(productId);
+
+    const categoryMatches = await Product.findAll({
+      where: {
+        category: product.category,
+        id: { [Op.notIn]: fetchedIds }, // Duplicate se bachne ke liye
+      },
+      limit: limit - related.length,
+      order: [["createdAt", "DESC"]],
+    });
+
+    related = [...related, ...categoryMatches];
+  }
+
+  // STEP 3: Agar abhi bhi jagah bachi hai, toh shop ke New Arrivals ya Featured dikha do
+  if (related.length < limit) {
+    const finalIds = related.map((p) => p.id);
+    finalIds.push(productId);
+
+    const genericMatches = await Product.findAll({
+      where: {
+        id: { [Op.notIn]: finalIds },
+      },
+      limit: limit - related.length,
+      order: [
+        ["isFeatured", "DESC"], // Pehle featured cheezein ayen
+        ["createdAt", "DESC"],
+      ],
+    });
+
+    related = [...related, ...genericMatches];
+  }
 
   return related;
 };
