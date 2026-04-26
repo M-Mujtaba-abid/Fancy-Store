@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; // ✅ useSearchParams add kiya
 import { authService } from "@/service/auth.service";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -10,39 +10,43 @@ interface AuthButtonsProps {
   className?: string; 
 }
 
-// 📌 Helper function: Cookie read karne ke liye
-const getCookie = (name: string) => {
-  if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift();
-  return null;
-};
-
-export default function AuthButtons({ className = "flex gap-3" }: AuthButtonsProps) {
+// ✅ Asal logic humne is chote component mein daal di hai
+function AuthButtonsContent({ className }: { className: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ URL check karne ke liye
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Check User is Logged In or Not (via Cookie)
+  // 1. Check User is Logged In or Not
   useEffect(() => {
-    // ⚠️ Dhyan rakhein: Yahan 'token' ki jagah wahi naam likhein jo backend cookie ka naam rakhta hai (jaise 'jwt', 'session', ya 'token')
-const loggedInFlag = typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;    
-    if (loggedInFlag) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
+    if (typeof window !== "undefined") {
+      // 🌟 GOOGLE LOGIN LOGIC: Check karein agar URL mein ?login=success hai
+      const loginStatus = searchParams.get("login");
+      if (loginStatus === "success") {
+        localStorage.setItem("isLoggedIn", "true");
+        toast.success("Logged in successfully!");
+        // URL saaf kar dein taake page refresh par dobara toast na aaye
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      // 🌟 NORMAL LOGIN LOGIC: Jo aapka pehle se tha
+      const loggedInFlag = localStorage.getItem("isLoggedIn");    
+      if (loggedInFlag === "true") {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
     }
     
     setIsLoading(false); 
-  }, []);
+  }, [searchParams]); // ✅ searchParams ko dependency mein add kiya
 
   // 2. Logout Logic
   const handleLogout = async () => {
    try {
       await authService.logout();
       
-      // ✅ Logout par localStorage se flag remove kar dein
+      // Logout par localStorage se flag remove kar dein
       if (typeof window !== "undefined") {
         localStorage.removeItem("isLoggedIn"); 
       }
@@ -87,5 +91,14 @@ const loggedInFlag = typeof window !== "undefined" ? localStorage.getItem("isLog
         </>
       )}
     </div>
+  );
+}
+
+// ✅ MAIN COMPONENT: Isko Suspense mein wrap karna lazmi hai Next.js mein
+export default function AuthButtons({ className = "flex gap-3" }: AuthButtonsProps) {
+  return (
+    <Suspense fallback={<div className="h-10 w-24 animate-pulse bg-background/50 rounded-lg"></div>}>
+      <AuthButtonsContent className={className} />
+    </Suspense>
   );
 }

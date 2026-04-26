@@ -60,7 +60,7 @@ export const googleAuthCallback = asyncHandler(async (req, res) => {
     maxAge: 24 * 60 * 60 * 1000,
   }); // Removed the extra }) that was here
 
-  res.redirect(`${process.env.CLIENT_URL}/`);
+  res.redirect(`${process.env.CLIENT_URL}/?login=success`);
 }); 
 
 // ================= VERIFY OTP =================
