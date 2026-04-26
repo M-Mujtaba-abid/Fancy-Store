@@ -31,9 +31,9 @@ export default function WishlistPage() {
   const products = wishlistItems?.map((item) => item.Product) || [];
 
   return (
-    <div className="min-h-screen pt-24 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-8 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="mb-10 flex items-center gap-3">
-        <Heart className="text-primary fill-primary/20" size={32} />
+        <Heart className="text-primary fill-primary/20" size={50} />
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-text-main">My Wishlist</h1>
           <div className="h-1 w-16 bg-primary mt-3"></div>
