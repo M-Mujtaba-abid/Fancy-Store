@@ -8,7 +8,7 @@ import {
   resetPassword,
    googleAuthCallback,     
 } from "../controllers/user.controller.js";
-import passport from "../config/passport.js";        // ✅ add
+import passport from "../config/passport.js";        //  add
 
 
 const router = express.Router();
