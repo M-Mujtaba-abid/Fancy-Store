@@ -133,6 +133,7 @@ import { ShoppingCart, Eye, Star, ChevronLeft, ChevronRight } from 'lucide-react
 // ✅ Real data ke liye apna hook aur loading import karein
 import { useAllProducts } from "@/hooks/useProducts";
 import Loading from "@/app/loading";
+import WishlistButton from '../../share/WishlistButton';
 
 const categories = ["All", "Cars", "Bikes"];
 
@@ -209,25 +210,33 @@ const ProductGrid = () => {
                 className="group"
               >
                 {/* Image Container */}
-                <Link href={`/products/${product.id}`} className="block relative aspect-square bg-card rounded-3xl overflow-hidden shadow-sm group-hover:shadow-xl transition-all duration-500 floating-card">
-                  <Image
-                    // ✅ Real image mapping
-                    src={product.imageUrl || (product.images && product.images[0]) || "/placeholder.png"}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                 {/* Image Container */}
+                <div className="relative aspect-square bg-card rounded-3xl overflow-hidden shadow-sm group-hover:shadow-xl transition-all duration-500 floating-card block">
+                  <Link href={`/products/${product.id}`} className="block w-full h-full">
+                    <Image
+                      src={product.imageUrl || (product.images && product.images[0]) || "/placeholder.png"}
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </Link>
+
+                  {/* ✅ Yahan Apna Custom Wishlist Button Laga Diya */}
+                  <WishlistButton 
+                    productId={product.id}
+                    className="absolute top-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm opacity-0 group-hover:opacity-100 duration-300"
                   />
                   
                   {/* Hover Quick Actions */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
-                    <button onClick={(e) => e.preventDefault()} className="bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0">
+                  <div className="absolute inset-0 pointer-events-none bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
+                    <button className="pointer-events-auto bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0">
                       <ShoppingCart size={20} />
                     </button>
-                    <button onClick={(e) => e.preventDefault()} className="bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 delay-75">
+                    <Link href={`/products/${product.id}`} className="pointer-events-auto bg-white text-black p-3 rounded-full hover:bg-primary hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 delay-75">
                       <Eye size={20} />
-                    </button>
+                    </Link>
                   </div>
-                </Link>
+                </div>
 
                 {/* Info Section */}
                 <div className="mt-5 space-y-2 px-2">

@@ -161,133 +161,75 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { ShoppingCart, Heart, PackageX } from "lucide-react";
+import { ShoppingCart, PackageX } from "lucide-react";
 import { Product } from "@/types/product.type";
 import Image from "next/image";
+// ✅ Apna naya component import karein
+import WishlistButton from "@/components/shop/share/WishlistButton";
 
-// Helper function
 const formatText = (text?: string) => {
   if (!text) return "";
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-// ✅ Naya Prop Add Kiya: variant
 interface ProductCardProps extends Product {
   variant?: "default" | "overlay" | "minimal";
 }
 
 const ProductCard: React.FC<ProductCardProps> = (props) => {
   const {
-    id,
-    name,
-    price,
-    discountPrice,
-    imageUrl,
-    images,
-    isFeatured,
-    isOnSale,
-    isNewArrival,
-    category,
-    carModel,
-    vehicleType,
-    stock,
-    variant = "default", // Default variant set kar diya
+    id, name, price, discountPrice, imageUrl, images, isOnSale,
+    isNewArrival, category, carModel, vehicleType, stock,
+    variant = "default",
   } = props;
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const displayImage =
-    imageUrl || (images?.length ? images[0] : "/placeholder.png");
+  const displayImage = imageUrl || (images?.length ? images[0] : "/placeholder.png");
   const isOutOfStock = stock <= 0;
-  const metaData = [
-    formatText(vehicleType),
-    formatText(carModel),
-    formatText(category),
-  ]
-    .filter(Boolean)
-    .join(" • ");
+  const metaData = [formatText(vehicleType), formatText(carModel), formatText(category)].filter(Boolean).join(" • ");
 
   // ------------------------------------------------------------------
-  // VARIANT 2: OVERLAY DESIGN (Image ke upar data)
+  // VARIANT 2: OVERLAY DESIGN
   // ------------------------------------------------------------------
   if (variant === "overlay") {
     return (
-      <Link
-        href={`/products/${id}`}
-        className="group relative block w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-      >
-        {/* Full Image */}
+      <Link href={`/products/${id}`} className="group relative block w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src={displayImage}
-          alt={name}
-          fill
+          src={displayImage} alt={name} fill
           className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
           sizes="(max-width: 768px) 100vw, 25vw"
         />
-
-        {/* Black Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
 
-        {/* Wishlist Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            setIsWishlisted(!isWishlisted);
-          }}
-          className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
-        >
-          <Heart
-            size={20}
-            className={
-              isWishlisted ? "fill-red-500 text-red-500" : "text-white"
-            }
-          />
-        </button>
+        {/* ✅ Wishlist Component */}
+        <WishlistButton 
+          productId={id as string} 
+          className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
+          iconClassName="text-white fill-transparent" // Dark BG ke liye white stroke
+        />
 
         {/* Content Area (Bottom) */}
         <div className="absolute bottom-0 left-0 w-full p-5 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
           <div className="flex gap-2 mb-2">
-            {isOnSale && (
-              <span className="bg-red-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">
-                Sale
-              </span>
-            )}
-            {isNewArrival && (
-              <span className="bg-green-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">
-                New
-              </span>
-            )}
+            {isOnSale && <span className="bg-red-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Sale</span>}
+            {isNewArrival && <span className="bg-green-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">New</span>}
           </div>
           <p className="text-xs text-gray-300 mb-1 line-clamp-1">{metaData}</p>
           <h3 className="text-lg font-bold line-clamp-1 mb-1">{name}</h3>
-
           <div className="flex items-center justify-between mt-2">
             <div>
               {isOnSale && discountPrice ? (
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold text-primary">
-                    Rs. {discountPrice.toLocaleString()}
-                  </span>
-                  <span className="text-xs line-through text-gray-400">
-                    Rs. {price.toLocaleString()}
-                  </span>
+                  <span className="text-lg font-bold text-primary">Rs. {discountPrice.toLocaleString()}</span>
+                  <span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-primary">
-                  Rs. {price.toLocaleString()}
-                </span>
+                <span className="text-lg font-bold text-primary">Rs. {price.toLocaleString()}</span>
               )}
             </div>
-
-            <div
-              className={`p-2 rounded-full backdrop-blur-md ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}
-            >
-              {isOutOfStock ? (
-                <PackageX size={18} className="text-white" />
-              ) : (
-                <ShoppingCart size={18} className="text-white" />
-              )}
+            <div className={`p-2 rounded-full backdrop-blur-md ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}>
+              {isOutOfStock ? <PackageX size={18} className="text-white" /> : <ShoppingCart size={18} className="text-white" />}
             </div>
           </div>
         </div>
@@ -296,53 +238,36 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   }
 
   // ------------------------------------------------------------------
-  // VARIANT 3: MINIMAL DESIGN (Fashion style, no borders)
+  // VARIANT 3: MINIMAL DESIGN
   // ------------------------------------------------------------------
   if (variant === "minimal") {
     return (
       <div className="group relative flex flex-col h-full bg-transparent">
-        <Link
-          href={`/products/${id}`}
-          className="relative w-full aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden mb-3"
-        >
-          <Image
-            src={displayImage}
-            alt={name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 100vw, 25vw"
-          />
-          {isOnSale && (
-            <span className="absolute top-3 left-3 bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
-              Sale
-            </span>
-          )}
-        </Link>
+        <div className="relative w-full aspect-[4/5] mb-3">
+          <Link href={`/products/${id}`} className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden">
+            <Image
+              src={displayImage} alt={name} fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 100vw, 25vw"
+            />
+          </Link>
+          {isOnSale && <span className="absolute top-3 left-3 pointer-events-none bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">Sale</span>}
 
-        <Link
-          href={`/products/${id}`}
-          className="flex flex-col flex-grow text-center"
-        >
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
-            {category.replace(/_/g, " ")}
-          </p>
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-1 mb-2 group-hover:text-primary transition-colors">
-            {name}
-          </h3>
+          {/* ✅ Wishlist Component */}
+          <WishlistButton 
+            productId={id as string} 
+            className="absolute top-3 right-3 bg-white/70 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
+          />
+        </div>
+
+        <Link href={`/products/${id}`} className="flex flex-col flex-grow text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{category?.replace(/_/g, " ")}</p>
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-1 mb-2 group-hover:text-primary transition-colors">{name}</h3>
           <div className="flex justify-center items-center gap-2">
             {isOnSale && discountPrice ? (
-              <>
-                <span className="text-sm font-bold text-red-600">
-                  Rs. {discountPrice.toLocaleString()}
-                </span>
-                <span className="text-xs line-through text-gray-400">
-                  Rs. {price.toLocaleString()}
-                </span>
-              </>
+              <><span className="text-sm font-bold text-red-600">Rs. {discountPrice.toLocaleString()}</span><span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span></>
             ) : (
-              <span className="text-sm font-semibold text-gray-900">
-                Rs. {price.toLocaleString()}
-              </span>
+              <span className="text-sm font-semibold text-gray-900">Rs. {price.toLocaleString()}</span>
             )}
           </div>
         </Link>
@@ -351,26 +276,31 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   }
 
   // ------------------------------------------------------------------
-  // VARIANT 1: DEFAULT DESIGN (Aapka existing design)
+  // VARIANT 1: DEFAULT DESIGN
   // ------------------------------------------------------------------
   return (
     <div className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
-      {/* ... Aapka purana code (Main thoda chota kar ke likh raha hoon space bachane ke liye, aap apna pura default yahan rakh lein) ... */}
-      <Link
-        href={`/products/${id}`}
-        className="relative w-full aspect-square bg-gray-50 overflow-hidden block"
-      >
-        <Image
-          src={displayImage}
-          alt={name}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+      <div className="relative w-full aspect-square bg-gray-50">
+        <Link href={`/products/${id}`} className="block w-full h-full overflow-hidden">
+          <Image
+            src={displayImage} alt={name} fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        </Link>
+
+        {/* ✅ Wishlist Component */}
+        <WishlistButton 
+          productId={id as string} 
+          className="absolute top-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
         />
-      </Link>
+      </div>
+
       <div className="p-4 flex flex-col grow">
-        <h3 className="text-sm font-semibold line-clamp-2 mb-2">{name}</h3>
-        <span className="text-lg font-bold text-primary mb-4">Rs. {price}</span>
-        <button className="w-full bg-primary text-white py-2 rounded-lg text-sm">
+        <Link href={`/products/${id}`}>
+          <h3 className="text-sm font-semibold line-clamp-2 mb-2 group-hover:text-primary transition-colors">{name}</h3>
+        </Link>
+        <span className="text-lg font-bold text-primary mb-4">Rs. {price?.toLocaleString()}</span>
+        <button className="w-full bg-primary text-white py-2 rounded-lg text-sm hover:opacity-90 transition-opacity mt-auto">
           Add to Cart
         </button>
       </div>

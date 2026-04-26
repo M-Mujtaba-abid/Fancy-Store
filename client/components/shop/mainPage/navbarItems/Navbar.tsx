@@ -8,6 +8,7 @@ import {
   MoreVertical,
   User,
   ChevronRight,
+  Heart,
 } from "lucide-react";
 import SearchBar from "./SearchBar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -138,10 +139,26 @@ const Navbar = () => {
                     <Link
                       href="/profile"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center px-4 py-3 text-sm hover:bg-background/80"
+                      className="flex  items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
                     >
                       <User className="mr-3 text-text-muted" size={18} />{" "}
                       Profile
+                    </Link>
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
+                    >
+                      <Heart className="mr-3 text-text-muted" size={18} />{" "}
+                      Wishlist
+                    </Link>
+                    <Link
+                      href="/"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
+                    >
+                      <User className="mr-3 text-text-muted" size={18} />{" "}
+                      random
                     </Link>
 
                     <div className="hover:bg-background/80 transition-colors">

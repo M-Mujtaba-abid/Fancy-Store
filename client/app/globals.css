@@ -106,3 +106,17 @@ body {
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   }
 }
+
+
+/* Heart Boundary Loading Animation */
+.loading-heart path {
+  stroke-dasharray: 25 65; /* 25px ki red line, aur baqi 65px ka gap */
+  animation: heart-dash-move 1s linear infinite;
+}
+
+@keyframes heart-dash-move {
+  to {
+    /* 25 + 65 = 90 (Taake animation ka loop smooth rahay) */
+    stroke-dashoffset: -90; 
+  }
+}
