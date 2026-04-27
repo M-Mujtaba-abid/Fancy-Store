@@ -36,7 +36,7 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-background max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-8 pb-16 bg-background max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold mb-8 text-text-main">My Orders</h1>
 
       <div className="space-y-6">
@@ -48,7 +48,7 @@ export default function MyOrdersPage() {
               {/* Order Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-border/50 pb-4 mb-4 gap-4">
                 <div>
-                  <p className="text-sm text-text-muted mb-1">Order <span className="font-mono">#{order.id.substring(0, 8).toUpperCase()}</span></p>
+                  <p className="text-sm text-text-muted mb-1">Order <span className="font-mono">#{String(order.id).substring(0, 8).toUpperCase()}</span></p>
                   <p className="text-xs text-text-muted">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider ${getStatusConfig(order.status).color}`}>

@@ -13,36 +13,29 @@ import { stripeWebhook } from "./controllers/payment.controller.js";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/error.middleware.js";
 import cors from "cors";
-// import passport from "./config/passport.js";        // ✅ add
 
 const app = express();
 
-// ⚡ Webhook route must be defined before JSON middleware to access raw body
-// app.post("/api/payment/webhook", express.raw({ type: "application/json" }), stripeWebhook);
-// console.log("Stripe Key Check:", process.env.STRIPE_SECRET_KEY)
-
-// ✅ Regular routes use JSON parser
-// Ye do lines zaroori hain
-app.use(express.json()); // JSON data read karne ke liye
-app.use(express.urlencoded({ extended: true })); // Form data read karne ke liye
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
 app.use(cookieParser());
-// app.use(passport.initialize());        
 
-// ✅ Allow multiple frontend origins (Vercel + Localhost)
+// ⚡ CHANGE 1: Production (Vercel) URL aur Localhost dono ko allow karein
 const allowedOrigins = [
   "http://localhost:3000", // local dev
+  process.env.FRONTEND_URL // Vercel dashboard mein frontend ka live URL yahan set karna hoga
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow Postman / Thunder Client
+      if (!origin) return callback(null, true); 
       if (!allowedOrigins.includes(origin)) {
         return callback(new Error("CORS policy: Not allowed by server"), false);
       }
       return callback(null, true);
     },
-    credentials: true,
+    credentials: true, // Cookies frontend tak bhejne ke liye zaroori hai
   }),
 );
 
@@ -60,4 +53,18 @@ app.use("/api/wishlist", wishlistRoutes);
 dbConnection();
 app.use(errorHandler);
 
+// ⚡ CHANGE 2: Local server listener add karein
+// Vercel par NODE_ENV default 'production' hota hai, to ye block wahan nahi chalega
+// Sirf local par chalega taake port par app listen kar sake
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running locally on port ${PORT}`);
+  });
+  app.get("/", (req, res) => {
+    res.send("Hello World!");
+  });
+}
+
+// Vercel serverless functions ke liye export karna zaroori hai
 export default app;

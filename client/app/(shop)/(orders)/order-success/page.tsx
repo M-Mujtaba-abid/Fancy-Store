@@ -36,12 +36,12 @@ function SuccessContent() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/my-orders" className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
+        <div className="flex flex-col sm:flex-row items-center  gap-4 justify-center">
+          <Link href="/order" className="px-6 p-6  bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
             View Order
           </Link>
-          <Link href="/shop" className="px-6 py-3 bg-background border border-border font-bold rounded-xl hover:bg-card transition-all flex-1 flex items-center justify-center gap-2">
-            <ShoppingBag size={18} /> Continue Shopping
+          <Link href="/products" className="px-6 p-6 bg-background border border-border font-bold rounded-xl hover:bg-card transition-all flex-1 text-primary flex items-center justify-center gap-2">
+            <ShoppingBag size={18} /> Continue 
           </Link>
         </div>
       </motion.div>

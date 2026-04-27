@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: 'https',
+        hostname: 'your-backend-app.vercel.app', // Agar backend se images aa rahi hain
+      }
     ],
   },
 };

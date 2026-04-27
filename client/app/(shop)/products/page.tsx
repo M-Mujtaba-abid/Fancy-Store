@@ -48,7 +48,9 @@ function ProductsContent() {
       </div>
 
       {/* ✅ Pagination Controls (Next / Previous Buttons) */}
-      {data?.totalPages > 1 && (
+    {/* ✅ Pagination Controls (Next / Previous Buttons) */}
+      {/* Yahan brackets lagana zaroori hain */}
+      {(data?.totalPages || 0) > 1 && (
         <div className="flex justify-center items-center gap-4 mt-12 pt-8 border-t border-border/50">
           <button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
@@ -59,12 +61,13 @@ function ProductsContent() {
           </button>
           
           <span className="font-medium text-text-muted">
-            Page {data.currentPage} of {data.totalPages}
+            Page {data?.currentPage || 1} of {data?.totalPages || 1}
           </span>
           
           <button
             onClick={() => setPage((prev) => prev + 1)}
-            disabled={page >= data.totalPages}
+            // ✅ Yahan bhi brackets lazmi hain
+            disabled={page >= (data?.totalPages || 1)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-card border hover:bg-background"
           >
             Next <ChevronRight size={18} />
