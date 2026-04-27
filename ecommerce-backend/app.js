@@ -61,6 +61,9 @@ if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`Server is running locally on port ${PORT}`);
   });
+  app.get("/", (req, res) => {
+    res.send("Hello World!");
+  });
 }
 
 // Vercel serverless functions ke liye export karna zaroori hai
