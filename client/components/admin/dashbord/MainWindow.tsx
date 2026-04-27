@@ -36,7 +36,7 @@ const MainWindow = ({ activeSection }: MainWindowProps) => {
     createProduct(payload);
   };
 
-  if (isSubmitting && activeSection !== "products") {
+  if (isSubmitting && activeSection !== "products-add" && activeSection !== "products-show") {
     return <Loading />;
   }
 
