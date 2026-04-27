@@ -4,13 +4,14 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLogin } from "@/hooks/useAuth";
-import { Loader, Mail, Lock, ArrowRight } from "lucide-react";
+import { Loader, Mail, Lock, ArrowRight ,Eye, EyeOff} from "lucide-react";
 import toast from "react-hot-toast";
 import { useTheme } from "next-themes";
 import { authService } from "@/service/auth.service";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const { mutate: login, isPending } = useLogin();
   const { resolvedTheme } = useTheme();
 
@@ -80,33 +81,39 @@ export default function LoginPage() {
               </div>
 
               {/* Password Input */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center ml-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">
-                    Password
-                  </label>
-                  <Link
-                    href="/forget-password"
-                    className="text-[10px] uppercase font-bold text-primary hover:tracking-widest transition-all"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
-                <div className="relative group/input">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted group-focus-within/input:text-primary transition-colors">
-                    <Lock size={18} />
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
+            <div className="space-y-2">
+  <div className="flex justify-between items-center ml-1">
+    <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">
+      Password
+    </label>
+    <Link
+      href="/forget-password"
+      className="text-[10px] uppercase font-bold text-primary hover:tracking-widest transition-all"
+    >
+      Forgot Password?
+    </Link>
+  </div>
+  <div className="relative group/input">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted group-focus-within/input:text-primary transition-colors">
+      <Lock size={18} />
+    </div>
+    <input
+      type={showPassword ? "text" : "password"}
+      required
+      placeholder="••••••••"
+      className="w-full pl-10 pr-11 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
+      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+    />
+    {/* 👁 Eye Toggle Button */}
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-primary transition-colors"
+    >
+      {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+    </button>
+  </div>
+</div>
 
               {/* Remember Me */}
               <div className="flex items-center space-x-2 ml-1">
