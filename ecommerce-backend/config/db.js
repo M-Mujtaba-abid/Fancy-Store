@@ -14,6 +14,9 @@ const sequelize = process.env.DATABASE_URL
           require: true,
           rejectUnauthorized: false,
         },
+        keepalives: 1,
+        keepalivesIdle: 30000,
+        connectionTimeoutMillis: 30000,
       },
       logging: false,
     })
@@ -31,6 +34,9 @@ const sequelize = process.env.DATABASE_URL
             require: true,
             rejectUnauthorized: false,
           },
+          keepalives: 1,
+          keepalivesIdle: 30000,
+          connectionTimeoutMillis: 30000,
         },
         logging: false,
       }
