@@ -7,11 +7,20 @@ dotenv.config();
 const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: "postgres",
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
       dialectOptions: {
         ssl: {
           require: true,
           rejectUnauthorized: false,
         },
+        keepalives: 1,
+        keepalivesIdle: 30000,
+        connectionTimeoutMillis: 30000,
       },
       logging: false,
     })
@@ -23,11 +32,20 @@ const sequelize = process.env.DATABASE_URL
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 5432,
         dialect: "postgres",
+        pool: {
+          max: 5,
+          min: 0,
+          acquire: 30000,
+          idle: 10000,
+        },
         dialectOptions: {
           ssl: {
             require: true,
             rejectUnauthorized: false,
           },
+          keepalives: 1,
+          keepalivesIdle: 30000,
+          connectionTimeoutMillis: 30000,
         },
         logging: false,
       }
