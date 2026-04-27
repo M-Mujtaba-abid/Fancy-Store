@@ -101,7 +101,7 @@ export const productService = {
   // --- THE FIXED FUNCTION ---
   getProductsByFilter: async (
     categoryName?: string, // Isko optional kar diya (string | undefined)
-    filters: { vehicleType?: string; subCategory?: string } = {},
+   filters: { vehicleType?: string; subCategory?: string; category?: string } = {},
     page = 1,
     limit = 10
   ) => {

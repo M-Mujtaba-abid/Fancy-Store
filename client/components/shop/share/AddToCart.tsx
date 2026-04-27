@@ -10,6 +10,7 @@ interface AddToCartProps {
   productId: string;
   stock: number;
   className?: string; // Custom styling allowance
+  children?: React.ReactNode; // 👈 YEH LINE LAZMI ADD KAREIN
 }
 
 const AddToCart: React.FC<AddToCartProps> = ({ productId, stock, className }) => {

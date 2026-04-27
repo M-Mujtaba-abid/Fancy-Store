@@ -139,20 +139,20 @@ const ProductGrid = () => {
 
                     <div className="absolute inset-0 pointer-events-none bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
                       <AddToCart
-                        productId={product.id}
-                        stock={product.stock}
-                        className={`pointer-events-auto p-3 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 flex items-center justify-center ${
-                          isOutOfStock
-                            ? "bg-gray-300 text-gray-500"
-                            : "bg-white text-black! hover:bg-primary hover:text-white"
-                        }`}
-                      >
-                        {isOutOfStock ? (
-                          <PackageX size={20} />
-                        ) : (
-                          <ShoppingCart size={20} />
-                        )}
-                      </AddToCart>
+  productId={product.id}
+  stock={product.stock}
+  className={`pointer-events-auto p-3 rounded-full transition-all transform translate-y-4 group-hover:translate-y-0 flex items-center justify-center ${
+    isOutOfStock
+      ? "bg-gray-300 text-gray-500"
+      : "bg-white text-black! hover:bg-primary hover:text-white"
+  }`}
+>
+  {isOutOfStock ? (
+    <PackageX size={20} />
+  ) : (
+    <ShoppingCart size={20} />
+  )}
+</AddToCart>
 
                       <Link
                         href={`/products/${product.id}`}
@@ -211,11 +211,11 @@ const ProductGrid = () => {
         )}
 
         {/* Pagination Component */}
-        {data?.totalPages > 1 && (
+       {(data?.totalPages || 0) > 1 && (
           <div className="mt-16 pt-8 border-t border-border/50">
             <Pagination
-              currentPage={data.currentPage || page}
-              totalPages={data.totalPages}
+              currentPage={data?.currentPage || page}
+              totalPages={data?.totalPages || 1}
               onPageChange={(newPage) => setPage(newPage)}
             />
           </div>
