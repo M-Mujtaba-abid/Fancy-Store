@@ -55,7 +55,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold mb-8 text-text-main">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -97,7 +97,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Country *</label>
-                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border border-border outline-none cursor-not-allowed" />
+                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-200 border border-border outline-none cursor-not-allowed" />
               </div>
             </div>
 
