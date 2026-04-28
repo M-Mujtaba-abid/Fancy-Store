@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGetCart } from "@/hooks/useCart";
 import { usePlaceOrder } from "@/hooks/useOrders";
 import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const isBuyNow = searchParams.get("type") === "buynow"; // ✅ Check if it's Buy Now
+  const [buyNowItem, setBuyNowItem] = useState<any>(null);
+
+  useEffect(() => {
+    if (isBuyNow) {
+      const item = sessionStorage.getItem("buyNowItem");
+      if (item) setBuyNowItem(JSON.parse(item));
+    }
+  }, [isBuyNow]);
+
   const { data: cartData, isLoading: isCartLoading } = useGetCart();
   const { mutate: placeOrder, isPending: isPlacingOrder } = usePlaceOrder();
 
@@ -22,7 +34,7 @@ export default function CheckoutPage() {
     city: "",
     postalCode: "",
     country: "Pakistan", // Default
-    paymentMethod: "COD", // Cash on Delivery default
+    paymentMethod: "COD", // Cash on Delivery default (lowercase rakhein)
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -32,18 +44,24 @@ export default function CheckoutPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    placeOrder(formData, {
+    // ✅ Agar Buy Now hai toh API ko Product ID aur Quantity sath bhejo
+    const finalPayload = isBuyNow && buyNowItem
+      ? { ...formData, buyNowProductId: buyNowItem.productId, buyNowQuantity: buyNowItem.quantity }
+      : formData;
+
+    placeOrder(finalPayload, {
       onSuccess: (res: any) => {
-        // ✅ Order success hone par Order ID ke sath redirect karein
+        if (isBuyNow) sessionStorage.removeItem("buyNowItem"); // Safai
         router.push(`/order-success?orderId=${res.orderId}`);
       }
     });
   };
 
-  if (isCartLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (isCartLoading && !isBuyNow) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
-  // Agar cart khali hai toh wapas bhej dein
-  if (!cartData?.items || cartData.items.length === 0) {
+  // ✅ Agar Cart Flow hai aur cart khali hai toh wapas bhej dein
+  // (Buy Now mein isko bypass karna zaroori hai)
+  if (!isBuyNow && (!cartData?.items || cartData.items.length === 0)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <h2 className="text-2xl font-bold mb-4">Your cart is empty!</h2>
@@ -53,6 +71,10 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  // ✅ Decide karein ke konsa data dikhana hai (Buy Now wala ya Cart wala)
+  const displayItems = isBuyNow && buyNowItem ? [buyNowItem] : (cartData?.items || []);
+  const displaySubtotal = isBuyNow && buyNowItem ? (buyNowItem.price * buyNowItem.quantity) : (cartData?.subtotal || 0);
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,7 +119,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Country *</label>
-                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-200 border border-border outline-none cursor-not-allowed" />
+                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border border-border outline-none cursor-not-allowed" />
               </div>
             </div>
 
@@ -117,10 +139,11 @@ export default function CheckoutPage() {
           <h2 className="text-xl font-bold mb-6 border-b border-border/50 pb-4">Order Summary</h2>
           
           <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 no-scrollbar">
-            {cartData.items.map((item) => (
+            {/* ✅ Yahan cartData.items ki jagah displayItems use karein */}
+            {displayItems.map((item: any) => (
               <div key={item.productId} className="flex justify-between text-sm">
                 <span className="text-text-muted truncate pr-4">{item.quantity}x {item.name}</span>
-                <span className="font-medium">Rs. {item.itemTotal.toLocaleString()}</span>
+                <span className="font-medium">Rs. {(item.itemTotal || item.price).toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -128,7 +151,8 @@ export default function CheckoutPage() {
           <div className="space-y-3 border-t border-border/50 pt-4 mb-6">
             <div className="flex justify-between text-text-muted">
               <span>Subtotal</span>
-              <span className="font-medium text-text-main">Rs. {cartData.subtotal.toLocaleString()}</span>
+              {/* ✅ Yahan cartData.subtotal ki jagah displaySubtotal use karein */}
+              <span className="font-medium text-text-main">Rs. {displaySubtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
@@ -138,10 +162,9 @@ export default function CheckoutPage() {
 
           <div className="border-t border-border/50 pt-4 mb-8 flex justify-between items-center">
             <span className="text-lg font-bold">Total</span>
-            <span className="text-2xl font-black text-primary">Rs. {cartData.subtotal.toLocaleString()}</span>
+            <span className="text-2xl font-black text-primary">Rs. {displaySubtotal.toLocaleString()}</span>
           </div>
 
-          {/* ✅ Submit Button (Form ke bahar hai isliye form="checkout-form" lagaya hai) */}
           <button 
             type="submit" 
             form="checkout-form"
@@ -154,5 +177,14 @@ export default function CheckoutPage() {
 
       </div>
     </div>
+  );
+}
+
+// ✅ Next.js App Router rules ke mutabiq export default mein Suspense lazmi hai
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Checkout...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -20,7 +20,7 @@ function ProductsContent() {
   if (isError) return <div className="text-center py-20 text-red-500 font-medium">Failed to load products.</div>;
 
   return (
-    <div className="min-h-screen pt-24 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-8 pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       {/* Page Header */}
       <div className="mb-10">

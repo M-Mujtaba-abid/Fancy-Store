@@ -20,7 +20,7 @@ export const orderService = {
     const res = await api.get("/orders/all");
     return res.data.orders;
   },
-
+// 03213211851
   getOrdersCount: async (): Promise<number> => {
     const res = await api.get("/orders/count");
     return res.data.count;

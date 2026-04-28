@@ -3,7 +3,6 @@ import sendEmail from "../utils/sendEmail.js";
 import { orderConfirmationTemplate, adminNewOrderTemplate } from "../utils/emailTemplate.js";
 
 const { Cart, CartItem, Product, Order, OrderItem, User } = models;
-
 // ================= PLACE ORDER =================
 export const placeOrderService = async (userId, orderData) => {
   const sequelize = Order.sequelize;
@@ -19,45 +18,71 @@ export const placeOrderService = async (userId, orderData) => {
       postalCode,
       country,
       paymentMethod,
+      buyNowProductId, // ✅ NAYA: Buy Now Product ID
+      buyNowQuantity   // ✅ NAYA: Buy Now Quantity
     } = orderData;
-
-    const cart = await Cart.findOne({ where: { userId } });
-    if (!cart) throw { status: 404, message: "Cart not found." };
-
-    const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
-    if (!cartItems || cartItems.length === 0)
-      throw { status: 400, message: "Cart is empty." };
 
     let totalAmount = 0;
     const orderItemRows = [];
+    let cart = null;
 
-    for (let item of cartItems) {
-      const product = await Product.findByPk(item.productId, {
-        transaction: t,
-      });
-      if (!product) continue;
-
-      if (product.stock < item.quantity) {
+    // =======================================================
+    // SCENARIO 1: DIRECT "BUY NOW" FLOW (Trolley ko hath nahi lagana)
+    // =======================================================
+    if (buyNowProductId && buyNowQuantity) {
+      const product = await Product.findByPk(buyNowProductId, { transaction: t });
+      if (!product) throw { status: 404, message: "Product not found." };
+      
+      if (product.stock < buyNowQuantity) {
         throw { status: 400, message: `Stock finished for ${product.name}` };
       }
 
-      const activePrice =
-        product.discountPrice && product.discountPrice > 0
-          ? product.discountPrice
-          : product.price;
+      const activePrice = product.discountPrice && product.discountPrice > 0 ? product.discountPrice : product.price;
+      totalAmount = activePrice * buyNowQuantity;
 
-      totalAmount += activePrice * item.quantity;
-
-      product.stock -= item.quantity;
+      product.stock -= buyNowQuantity;
       await product.save({ transaction: t });
 
       orderItemRows.push({
         productId: product.id,
-        quantity: item.quantity,
+        quantity: buyNowQuantity,
         price: activePrice,
       });
+    } 
+    // =======================================================
+    // SCENARIO 2: NORMAL "CART" FLOW (Trolley ka saman aur Trolley khali)
+    // =======================================================
+    else {
+      cart = await Cart.findOne({ where: { userId } });
+      if (!cart) throw { status: 404, message: "Cart not found." };
+
+      const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
+      if (!cartItems || cartItems.length === 0)
+        throw { status: 400, message: "Cart is empty." };
+
+      for (let item of cartItems) {
+        const product = await Product.findByPk(item.productId, { transaction: t });
+        if (!product) continue;
+
+        if (product.stock < item.quantity) {
+          throw { status: 400, message: `Stock finished for ${product.name}` };
+        }
+
+        const activePrice = product.discountPrice && product.discountPrice > 0 ? product.discountPrice : product.price;
+        totalAmount += activePrice * item.quantity;
+
+        product.stock -= item.quantity;
+        await product.save({ transaction: t });
+
+        orderItemRows.push({
+          productId: product.id,
+          quantity: item.quantity,
+          price: activePrice,
+        });
+      }
     }
 
+    // ✅ ORDER CREATION (Dono scenarios mein order banega)
     const order = await Order.create(
       {
         userId,
@@ -72,40 +97,56 @@ export const placeOrderService = async (userId, orderData) => {
         country,
         paymentMethod,
       },
-      { transaction: t },
+      { transaction: t }
     );
 
     const rowsToInsert = orderItemRows.map((r) => ({
       ...r,
       orderId: order.id,
     }));
+    
     if (rowsToInsert.length) {
       await OrderItem.bulkCreate(rowsToInsert, { transaction: t });
     }
 
-    await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
+    // ✅ SIRF CART FLOW MEIN CART DELETE KARO (Buy now mein delete NAHI hoga)
+    if (!buyNowProductId && cart) {
+      await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
+    }
 
     // ✅ Pehle commit
     await t.commit();
 
-    // ✅ Phir email — alag try/catch mein
+    // ✅ Phir email — alag try/catch mein (Aapki Exact Same Logic)
     try {
       const user = await User.findByPk(userId);
-      await Promise.all([
-        sendEmail(
-          user.email,
-          "Order Confirmed — Fancy Store 🎉",
-          orderConfirmationTemplate(user.name, order)
-        ),
-        sendEmail(
-          process.env.ADMIN_EMAIL,
-          "📦 New Order Received!",
-          adminNewOrderTemplate(user.name, user.email, order)
-        ),
-      ]);
+      const emailPromises = [];
+
+      // 1. Customer ko bhejien (agar email exist karti hai)
+      if (user && user.email) {
+        emailPromises.push(
+          sendEmail(
+            user.email,
+            "Order Confirmed — Fancy Store 🎉",
+            orderConfirmationTemplate(user.name, order)
+          )
+        );
+      }
+
+      // 2. Admin ko bhejien (agar env set hai)
+      if (process.env.ADMIN_EMAIL) {
+        emailPromises.push(
+          sendEmail(
+            process.env.ADMIN_EMAIL,
+            "📦 New Order Received!",
+            adminNewOrderTemplate(user.name, user.email || 'N/A', order)
+          )
+        );
+      }
+
+      await Promise.all(emailPromises);
     } catch (emailErr) {
       console.error("Email send failed:", emailErr.message);
-      // Email fail ho toh order cancel nahi hoga
     }
 
     return { orderId: order.id };
