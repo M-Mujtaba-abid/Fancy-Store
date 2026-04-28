@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; // ✅ useSearchParams add kiya
-import { authService } from "@/service/auth.service";
+import { authService } from "@/service/authService/auth.service";
 import toast from "react-hot-toast";
 import Link from "next/link";
 

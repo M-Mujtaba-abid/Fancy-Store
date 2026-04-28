@@ -1,5 +1,6 @@
-import api from "./api"; // Aapka Axios instance jisme token attach hota hai
+// import api from "./api"; // Aapka Axios instance jisme token attach hota hai
 import { WishlistItem } from "@/types/wishlist.type";
+import api from "../api";
 
 export const wishlistService = {
   // Get All Wishlist Items

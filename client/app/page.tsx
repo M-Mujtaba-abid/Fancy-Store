@@ -71,7 +71,8 @@ import Carosel from "@/components/shop/mainPage/Carosel";
 import Category from "@/components/shop/mainPage/categories/Category";
 import ProductGrid from "@/components/shop/mainPage/categories/ProductGrid";
 import ProductSection from "@/components/shop/mainPage/categories/ProductSection";
-import { productService } from "@/service/product.service";
+import { productService } from "@/service/productservice/product.service";
+// import { productService } from "@/service/product.service";
 
 // ❌ Hooks ko import NAHI karna
 // import { useFeaturedProducts, useNewArrivals, useOnSaleProducts } from "@/hooks/useProducts";

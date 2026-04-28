@@ -7,7 +7,7 @@ import ShowProduct from "@/components/admin/products/ShowProduct";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 import Loading from "@/app/loading";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { authService } from "@/service/auth.service";
+import { authService } from "@/service/authService/auth.service";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 

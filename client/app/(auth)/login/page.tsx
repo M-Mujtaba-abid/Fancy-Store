@@ -7,7 +7,8 @@ import { useLogin } from "@/hooks/useAuth";
 import { Loader, Mail, Lock, ArrowRight ,Eye, EyeOff} from "lucide-react";
 import toast from "react-hot-toast";
 import { useTheme } from "next-themes";
-import { authService } from "@/service/auth.service";
+import { authService } from "@/service/authService/auth.service";
+// import { authService } from "@/service/auth.service";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
