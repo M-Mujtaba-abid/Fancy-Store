@@ -90,23 +90,36 @@ export const placeOrderService = async (userId, orderData) => {
 
     // ✅ Phir email — alag try/catch mein
     try {
-      const user = await User.findByPk(userId);
-      await Promise.all([
-        sendEmail(
-          user.email,
-          "Order Confirmed — Fancy Store 🎉",
-          orderConfirmationTemplate(user.name, order)
-        ),
-        sendEmail(
-          process.env.ADMIN_EMAIL,
-          "📦 New Order Received!",
-          adminNewOrderTemplate(user.name, user.email, order)
-        ),
-      ]);
-    } catch (emailErr) {
-      console.error("Email send failed:", emailErr.message);
-      // Email fail ho toh order cancel nahi hoga
-    }
+  const user = await User.findByPk(userId);
+  
+  const emailPromises = [];
+
+  // 1. Customer ko bhejien (agar email exist karti hai)
+  if (user && user.email) {
+    emailPromises.push(
+      sendEmail(
+        user.email,
+        "Order Confirmed — Fancy Store 🎉",
+        orderConfirmationTemplate(user.name, order)
+      )
+    );
+  }
+
+  // 2. Admin ko bhejien (agar env set hai)
+  if (process.env.ADMIN_EMAIL) {
+    emailPromises.push(
+      sendEmail(
+        process.env.ADMIN_EMAIL,
+        "📦 New Order Received!",
+        adminNewOrderTemplate(user.name, user.email || 'N/A', order)
+      )
+    );
+  }
+
+  await Promise.all(emailPromises);
+} catch (emailErr) {
+  console.error("Email send failed:", emailErr.message);
+}
 
     return { orderId: order.id };
 
