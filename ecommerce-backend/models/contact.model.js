@@ -2,7 +2,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-class Contact extends Model {}
+class Contact extends Model { }
 
 Contact.init(
   {
@@ -18,10 +18,13 @@ Contact.init(
     email: {
       type: DataTypes.STRING(150),
       allowNull: false,
-      unique: true,
       validate: {
         isEmail: true,
       },
+    },
+    category: {
+      type: DataTypes.ENUM("order_issue", "payment", "return_refund", "general", "other"),
+      defaultValue: "general",
     },
     subject: {
       type: DataTypes.STRING(200),
@@ -30,6 +33,11 @@ Contact.init(
     message: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    // ✅ Ye naya field add karein
+    is_replied: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     created_at: {
       type: DataTypes.DATE,
