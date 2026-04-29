@@ -64,6 +64,7 @@ export const getCartService = async (userId) => {
         include: [{ model: Product }],
       },
     ],
+    
     order: [[CartItem, "id", "ASC"]],
   });
   
