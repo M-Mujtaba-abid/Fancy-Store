@@ -64,8 +64,9 @@ export const getCartService = async (userId) => {
         include: [{ model: Product }],
       },
     ],
+    order: [[CartItem, "id", "ASC"]],
   });
-
+  
   if (!cart || !cart.CartItems || cart.CartItems.length === 0) {
     return { items: [], subtotal: 0, message: "Cart is empty" };
   }
