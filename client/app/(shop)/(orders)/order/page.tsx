@@ -30,7 +30,7 @@ export default function MyOrdersPage() {
         <Package size={80} className="text-gray-200 mb-4" />
         <h2 className="text-2xl font-bold mb-2">No orders found</h2>
         <p className="text-gray-500 mb-6">You haven't placed any orders yet.</p>
-        <Link href="/shop" className="bg-primary text-white px-6 py-2 rounded-full">Start Shopping</Link>
+        <Link href="/products" className="bg-primary text-white px-6 py-2 rounded-full">Start Shopping</Link>
       </div>
     );
   }

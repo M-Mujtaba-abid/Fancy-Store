@@ -57,7 +57,7 @@ const NavbarModal: React.FC<NavbarModalProps> = ({ navLinks, closeMenu }) => {
         
         {/* Maine "random" wale link ko My Orders bana diya hai taake purana flow complete rahay */}
         <Link
-          href="/my-orders"
+          href="/order"
           onClick={closeMenu}
           className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
         >
