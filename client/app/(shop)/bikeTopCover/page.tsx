@@ -87,7 +87,7 @@
 // }
 import React from 'react';
 
-const CarTopCoverPage = () => {
+const bikeTopCoverPage = () => {
   return (
     <div>
       <h1>Car Top Covers</h1>
@@ -97,4 +97,4 @@ const CarTopCoverPage = () => {
 };
 
 // YEH LINE SAB SE IMPORTANT HAI 👇
-export default CarTopCoverPage;
+export default bikeTopCoverPage;
