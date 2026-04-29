@@ -85,7 +85,16 @@
 //     </div>
 //   );
 // }
+import React from 'react';
 
+const CarTopCoverPage = () => {
+  return (
+    <div>
+      <h1>Car Top Covers</h1>
+      <p>Here you will find amazing car top covers.</p>
+    </div>
+  );
+};
 
-
-
+// YEH LINE SAB SE IMPORTANT HAI 👇
+export default CarTopCoverPage;

@@ -1,4 +1,5 @@
 import { Sequelize } from "sequelize";
+import pg  from "pg"; // 👈 CHANGE 1: pg ko import kiya
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -7,11 +8,15 @@ dotenv.config();
 const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: "postgres",
+      dialectModule: pg , // 👈 CHANGE 2: Vercel bundler ko force karne ke liye
       dialectOptions: {
         ssl: {
           require: true,
           rejectUnauthorized: false,
         },
+        keepalives: 1,
+        keepalivesIdle: 30000,
+        connectionTimeoutMillis: 30000,
       },
       logging: false,
     })
@@ -23,11 +28,15 @@ const sequelize = process.env.DATABASE_URL
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 5432,
         dialect: "postgres",
+        dialectModule: pg , // 👈 CHANGE 3: Vercel bundler ko force karne ke liye (fallback mein bhi)
         dialectOptions: {
           ssl: {
             require: true,
             rejectUnauthorized: false,
           },
+          keepalives: 1,
+          keepalivesIdle: 30000,
+          connectionTimeoutMillis: 30000,
         },
         logging: false,
       }

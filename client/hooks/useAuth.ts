@@ -3,7 +3,7 @@ import { authService } from "@/service/auth.service";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast"; 
 import { AxiosError, AxiosResponse } from "axios";
-import { AuthResponse } from "@/types/user.type"; // Path check kar lijiyega
+import { AuthResponse, ForgetPasswordPayload, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
 
 export const useRegister = () => {
   const router = useRouter();
@@ -56,6 +56,37 @@ export const useLogin = () => {
     
     onError: (error: AxiosError<{ message: string }>) => {
       toast.error(error.response?.data?.message || "Login failed");
+    },
+  });
+};
+
+
+// 1. Send OTP
+export const useForgetPassword = () => {
+  return useMutation({
+    mutationFn: (data: ForgetPasswordPayload) => authService.forgetPassword(data),
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    },
+  });
+};
+
+// 2. Verify OTP
+export const useVerifyOtp = () => {
+  return useMutation({
+    mutationFn: (data: VerifyOtpPayload) => authService.verifyOtp(data),
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Invalid OTP");
+    },
+  });
+};
+
+// 3. Reset Password
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: (data: ResetPasswordPayload) => authService.resetPassword(data),
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to reset password");
     },
   });
 };

@@ -33,3 +33,18 @@ export interface AuthResponse extends User {
 }
 
 // export type AuthResponse = ApiResponse<AuthData>;
+
+
+export interface ForgetPasswordPayload {
+  email: string;
+}
+
+export interface VerifyOtpPayload {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  newPassword: string;
+}

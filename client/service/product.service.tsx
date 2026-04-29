@@ -101,7 +101,7 @@ export const productService = {
   // --- THE FIXED FUNCTION ---
   getProductsByFilter: async (
     categoryName?: string, // Isko optional kar diya (string | undefined)
-    filters: { vehicleType?: string; subCategory?: string } = {},
+   filters: { vehicleType?: string; subCategory?: string; category?: string } = {},
     page = 1,
     limit = 10
   ) => {
@@ -161,6 +161,7 @@ export const productService = {
   },
   getRelatedProducts: async (id: string) => {
     const res = await api.get<ApiResponse<PagingResponse>>(`/products/${id}/related`);
+    console.log("related profucts ",res.data.data)
     return res.data.data; // Yeh aapko wo 6 products ka array dega
   },
 };

@@ -10,8 +10,8 @@ interface RelatedProductsProps {
 }
 
 const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
-  // ✅ Hook Call
-  const { data: products, isLoading, isError } = useRelatedProducts(productId);
+  // ✅ 1. Yahan humne data ko rename nahi kiya, bas data rakha hai
+  const { data, isLoading, isError } = useRelatedProducts(productId);
 
   if (isLoading) {
     return (
@@ -21,8 +21,11 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
     );
   }
 
-  // Agar error aaye ya 0 products hon toh component hide kar do
-  if (isError || !products || products.length === 0) return null;
+  // ✅ 2. Yahan humne PagingResponse (data) ke andar se asal products ka array nikal liya
+  const productsArray = data?.products || [];
+
+  // ✅ 3. Ab hum confidently .length use kar sakte hain kyunke yeh ab array hai
+  if (isError || productsArray.length === 0) return null;
 
   return (
     <div className="mt-20 pt-12 border-t border-border/50">
@@ -33,8 +36,8 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
         <div className="h-1 w-16 bg-primary mt-2"></div>
       </div>
 
-      {/* ✅ Aapka bana banaya Carousel */}
-      <ProductCarousel products={products} cardVariant="default" />
+      {/* ✅ 4. Carousel ko bhi pure array pass kar diya */}
+      <ProductCarousel products={productsArray} cardVariant="default" />
     </div>
   );
 };
