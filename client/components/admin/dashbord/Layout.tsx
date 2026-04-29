@@ -9,7 +9,7 @@ const Layout = () => {
   const [activeSection, setActiveSection] = useState<AdminDashboardSection>("products-add");
 
   return (
-    <div className="flex min-h-screen bg-background text-text-main">
+    <div className=" absolute top-0 flex min-h-screen bg-background text-text-main">
       <Sidebar activeSection={activeSection} onChangeSection={setActiveSection} />
       <MainWindow activeSection={activeSection} />
     </div>
