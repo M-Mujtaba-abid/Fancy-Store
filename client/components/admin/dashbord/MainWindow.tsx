@@ -118,26 +118,29 @@
 "use client";
 
 import React, { useState } from "react";
-// import AddProduct from "./AddProduct";
-// import ShowProduct from "./ShowProduct";
-import { AdminDashboardSection, Product, ProductMutationInput } from "@/types/product.type";
+import {
+  AdminDashboardSection,
+  Product,
+  ProductMutationInput,
+} from "@/types/product.type";
 
-// ✅ Dono hooks import kar liye
-import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts"; 
-import AddProduct from "../products/AddProduct";
-import ShowProduct from "../products/ShowProduct";
+// ✅ Hooks
+import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
+
+// ✅ Components (Saare sahi paths ke sath combine kar diye)
 import AddProduct from "@/components/admin/products/AddProduct";
 import ShowProduct from "@/components/admin/products/ShowProduct";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
-import Loading from "@/app/loading";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { authService } from "@/service/authService/auth.service";
-import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
+import ShowOrders from "../orders/ShowOrders"; 
 
+// ✅ Agar neechay inki zaroorat hai toh rakhein, warna VS code inko dull (grey) kar dega toh mita dijiye ga
+// import Loading from "@/app/loading";
+// import { ThemeToggle } from "@/components/ThemeToggle";
+// import { authService } from "@/service/authService/auth.service";
+// import { useRouter } from "next/navigation";
+// import { toast } from "react-hot-toast";
 interface MainWindowProps {
   activeSection: AdminDashboardSection;
-  setActiveSection: (section: AdminDashboardSection) => void; 
+  setActiveSection: (section: AdminDashboardSection) => void;
 }
 
 const MainWindow = ({ activeSection, setActiveSection }: MainWindowProps) => {
@@ -145,20 +148,20 @@ const MainWindow = ({ activeSection, setActiveSection }: MainWindowProps) => {
 
   // ✅ Dono mutations initialize kar li
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
-  const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct(); 
+  const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
   // =========================================
   // 🎯 EDIT FLOW HANDLERS
   // =========================================
 
   const handleEditClick = (product: Product) => {
-    setEditingProduct(product); 
-    setActiveSection("products-add"); 
+    setEditingProduct(product);
+    setActiveSection("products-add");
   };
 
   const handleCancelEdit = () => {
-    setEditingProduct(null); 
-    setActiveSection("products-show"); 
+    setEditingProduct(null);
+    setActiveSection("products-show");
   };
 
   const handleProductSubmit = (payload: ProductMutationInput) => {
@@ -166,18 +169,18 @@ const MainWindow = ({ activeSection, setActiveSection }: MainWindowProps) => {
       // 🛠️ UPDATE PRODUCT API CALL
       updateProduct(
         { id: editingProduct.id, payload: payload }, // Hook ki requirement ke mutabiq {id, payload} bheja
-        { 
+        {
           onSuccess: () => {
             setEditingProduct(null); // Form clear karein
             setActiveSection("products-show"); // Wapas list par jayein
-          }
-        }
+          },
+        },
       );
     } else {
       // 🆕 CREATE PRODUCT API CALL
       createProduct(payload, {
         onSuccess: () => {
-          setActiveSection("products-show"); 
+          setActiveSection("products-show");
         },
       });
     }
@@ -188,22 +191,23 @@ const MainWindow = ({ activeSection, setActiveSection }: MainWindowProps) => {
   // =========================================
   return (
     <div className="p-6 w-full h-full">
-      
       {activeSection === "products-add" && (
         <AddProduct
-          mode={editingProduct ? "edit" : "create"} 
-          initialData={editingProduct} 
+          mode={editingProduct ? "edit" : "create"}
+          initialData={editingProduct}
           onSubmit={handleProductSubmit}
           onCancelEdit={handleCancelEdit}
           // ✅ Button disable rahega agar create ya update dono mein se koi bhi chal raha ho
-          isSubmitting={isCreating || isUpdating} 
+          isSubmitting={isCreating || isUpdating}
         />
       )}
 
       {activeSection === "products-show" && (
         <ShowProduct onEdit={handleEditClick} />
       )}
-      
+
+      {activeSection === "orders-show" && <ShowOrders />}
+      {/* {activeSection === "users-show" && <ShowUsers />} */}
     </div>
   );
 };
