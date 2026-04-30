@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { orderService } from "@/service/order.service";
+import { orderService } from "@/service/orderService/order.service";
 import { PlaceOrderPayload } from "@/types/order.type";
 import toast from "react-hot-toast";
 

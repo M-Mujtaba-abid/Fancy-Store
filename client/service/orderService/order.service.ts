@@ -1,4 +1,4 @@
-import api from "./api"; // Aapka withCredentials wala axios instance
+import api from "../api"; // Aapka withCredentials wala axios instance
 import { Order, PlaceOrderPayload } from "@/types/order.type";
 
 export const orderService = {

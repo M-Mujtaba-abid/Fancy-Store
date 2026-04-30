@@ -123,9 +123,9 @@ import React, { useState } from "react";
 import { AdminDashboardSection, Product, ProductMutationInput } from "@/types/product.type";
 
 // ✅ Dono hooks import kar liye
-import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts"; 
-import AddProduct from "../products/AddProduct";
-import ShowProduct from "../products/ShowProduct";
+// import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts"; 
+// import AddProduct from "../products/AddProduct";
+// import ShowProduct from "../products/ShowProduct";
 import AddProduct from "@/components/admin/products/AddProduct";
 import ShowProduct from "@/components/admin/products/ShowProduct";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
