@@ -12,7 +12,7 @@ const Layout = () => {
     <div className="absolute top-0 left-0 w-full flex h-screen bg-background text-text-main overflow-hidden">
       <Sidebar activeSection={activeSection} onChangeSection={setActiveSection} />
       <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
-        <MainWindow activeSection={activeSection} />
+        <MainWindow activeSection={activeSection} setActiveSection={setActiveSection} />
       </div>
     </div>
   );
