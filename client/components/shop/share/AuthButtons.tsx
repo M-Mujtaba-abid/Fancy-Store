@@ -1,35 +1,37 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
+<<<<<<< HEAD
 import { useRouter, useSearchParams } from "next/navigation"; // ✅ useSearchParams add kiya
 import { authService } from "@/service/authService/auth.service";
+=======
+import { useRouter, useSearchParams } from "next/navigation";
+import { authService } from "@/service/auth.service";
+>>>>>>> 8d391b617b9b51aa5dc7e623a811f6d2c3eeb093
 import toast from "react-hot-toast";
 import Link from "next/link";
+// ✅ Icons import kiye hain
+import { LogIn, UserPlus, LogOut } from "lucide-react";
 
 interface AuthButtonsProps {
   className?: string; 
 }
 
-// ✅ Asal logic humne is chote component mein daal di hai
 function AuthButtonsContent({ className }: { className: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ URL check karne ke liye
+  const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Check User is Logged In or Not
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // 🌟 GOOGLE LOGIN LOGIC: Check karein agar URL mein ?login=success hai
       const loginStatus = searchParams.get("login");
       if (loginStatus === "success") {
         localStorage.setItem("isLoggedIn", "true");
         toast.success("Logged in successfully!");
-        // URL saaf kar dein taake page refresh par dobara toast na aaye
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      // 🌟 NORMAL LOGIN LOGIC: Jo aapka pehle se tha
       const loggedInFlag = localStorage.getItem("isLoggedIn");    
       if (loggedInFlag === "true") {
         setIsLoggedIn(true);
@@ -39,14 +41,12 @@ function AuthButtonsContent({ className }: { className: string }) {
     }
     
     setIsLoading(false); 
-  }, [searchParams]); // ✅ searchParams ko dependency mein add kiya
+  }, [searchParams]);
 
-  // 2. Logout Logic
   const handleLogout = async () => {
    try {
       await authService.logout();
       
-      // Logout par localStorage se flag remove kar dein
       if (typeof window !== "undefined") {
         localStorage.removeItem("isLoggedIn"); 
       }
@@ -59,33 +59,38 @@ function AuthButtonsContent({ className }: { className: string }) {
     }
   };
 
-  // 3. Loading UI 
   if (isLoading) {
-    return <div className="h-10 w-24 animate-pulse bg-background/50 rounded-lg"></div>;
+    return <div className="h-10 w-full animate-pulse bg-background/50 rounded-lg ml-4 max-w-[150px]"></div>;
   }
 
-  // 4. Final Render UI
   return (
     <div className={className}>
       {isLoggedIn ? (
+        // ✅ LOGOUT BUTTON
         <button
           onClick={handleLogout}
-          className="px-5 py-2.5 rounded-lg bg-error text-white font-semibold hover:opacity-90 transition-opacity w-full md:w-auto"
+          className="flex w-full items-center px-4 py-3 text-sm hover:bg-red-500/10 hover:text-red-500 transition-colors text-left"
         >
+          <LogOut className="mr-3 text-text-muted hover:text-red-500 transition-colors" size={18} />
           Logout
         </button>
       ) : (
         <>
+          {/* ✅ LOGIN LINK */}
           <Link
             href="/login"
-            className="px-5 py-2.5 rounded-lg bg-background border border-border-custom text-text-main font-semibold hover:bg-card transition-colors text-center w-full md:w-auto"
+            className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
           >
+            <LogIn className="mr-3 text-text-muted" size={18} />
             Login
           </Link>
+          
+          {/* ✅ SIGN UP LINK */}
           <Link
             href="/signup" 
-            className="px-5 py-2.5 rounded-lg bg-primary text-white font-semibold hover:opacity-90 transition-opacity text-center w-full md:w-auto"
+            className="flex items-center px-4 py-3 text-sm hover:bg-border-custom transition-colors"
           >
+            <UserPlus className="mr-3 text-text-muted" size={18} />
             Sign Up
           </Link>
         </>
@@ -94,10 +99,9 @@ function AuthButtonsContent({ className }: { className: string }) {
   );
 }
 
-// ✅ MAIN COMPONENT: Isko Suspense mein wrap karna lazmi hai Next.js mein
-export default function AuthButtons({ className = "flex gap-3" }: AuthButtonsProps) {
+export default function AuthButtons({ className = "" }: AuthButtonsProps) {
   return (
-    <Suspense fallback={<div className="h-10 w-24 animate-pulse bg-background/50 rounded-lg"></div>}>
+    <Suspense fallback={<div className="h-10 w-full animate-pulse bg-background/50 rounded-lg"></div>}>
       <AuthButtonsContent className={className} />
     </Suspense>
   );

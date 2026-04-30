@@ -119,7 +119,7 @@ function CheckoutContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Country *</label>
-                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border border-border outline-none cursor-not-allowed" />
+                <input required type="text" name="country" value={formData.country} readOnly className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-300 border border-border outline-none cursor-not-allowed" />
               </div>
             </div>
 
