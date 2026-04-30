@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
+<<<<<<< HEAD
+import { useRouter, useSearchParams } from "next/navigation"; // ✅ useSearchParams add kiya
+import { authService } from "@/service/authService/auth.service";
+=======
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/service/auth.service";
+>>>>>>> 8d391b617b9b51aa5dc7e623a811f6d2c3eeb093
 import toast from "react-hot-toast";
 import Link from "next/link";
 // ✅ Icons import kiye hain

@@ -92,13 +92,13 @@ import {
 
 export const createContact = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+  const { name, email, subject, message, category = "general" } = req.body;
 
     if (!name || !email || !message) {
       return res.status(400).json({ error: "Name, email, and message are required" });
     }
 
-    const data = await createContactService({ name, email, subject, message });
+    const data = await createContactService({ name, email, subject, message ,category});
 
     return res.status(201).json({
       success: true,

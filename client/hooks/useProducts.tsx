@@ -1,4 +1,5 @@
-import { productService } from "@/service/product.service";
+// import { productService } from "@/service/product.service";
+import { productService } from "@/service/productservice/product.service";
 import { ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";

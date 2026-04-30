@@ -1,5 +1,6 @@
-import api from "./api"; // Aapka Axios instance jisme withCredentials: true hai
+// import api from "./api"; // Aapka Axios instance jisme withCredentials: true hai
 import { CartResponse, AddToCartPayload } from "@/types/cart.type";
+import api from "../api";
 
 export const cartService = {
   getCart: async (): Promise<CartResponse> => {

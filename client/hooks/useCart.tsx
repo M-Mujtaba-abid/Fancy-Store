@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { cartService } from "@/service/cart.service";
+// import { cartService } from "@/service/cart.service";
 import { CartResponse, AddToCartPayload } from "@/types/cart.type";
 import toast from "react-hot-toast";
+import { cartService } from "@/service/cartService/cart.service";
 
 // 1. Get Cart
 export const useGetCart = () => {
