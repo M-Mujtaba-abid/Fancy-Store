@@ -5,7 +5,8 @@ import {
   ProductMutationInput,
   ProductUpdateInput,
 } from "@/types/product.type";
-import api from "./api";
+import api from "../api";
+// import api from "./api";
 
 const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
   const formData = new FormData();

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { authService } from "@/service/auth.service";
+import { authService } from "@/service/authService/auth.service";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast"; 
 import { AxiosError, AxiosResponse } from "axios";

@@ -126,6 +126,14 @@ import { AdminDashboardSection, Product, ProductMutationInput } from "@/types/pr
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts"; 
 import AddProduct from "../products/AddProduct";
 import ShowProduct from "../products/ShowProduct";
+import AddProduct from "@/components/admin/products/AddProduct";
+import ShowProduct from "@/components/admin/products/ShowProduct";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
+import Loading from "@/app/loading";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { authService } from "@/service/authService/auth.service";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 interface MainWindowProps {
   activeSection: AdminDashboardSection;

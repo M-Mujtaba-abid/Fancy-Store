@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { wishlistService } from "@/service/wishlist.service";
+import { wishlistService } from "@/service/wishlistService/wishlist.service";
 import toast from "react-hot-toast";
 
 // 1. Get Wishlist Hook

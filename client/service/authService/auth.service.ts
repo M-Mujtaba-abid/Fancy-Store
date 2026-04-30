@@ -21,10 +21,7 @@
 // };
 
 import { AuthResponse, ForgetPasswordPayload, LoginInput, RegisterInput, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type";
-import api from "./api";
-
-
-
+import api from "../api";
 export const authService = {
   // ✅ 2. 'any' ki jagah strictly types assign karein
   register: async (data: RegisterInput): Promise<AuthResponse> => {
