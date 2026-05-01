@@ -6,9 +6,12 @@ import {
   forgetPassword,
   verifyOtp,
   resetPassword,
-   googleAuthCallback,     
+   googleAuthCallback,
+   getProfile,
+   updateProfile,     
 } from "../controllers/user.controller.js";
 import passport from "../config/passport.js";        //  add
+import authMiddleware from "../middleware/auth.middleware.js";
 
 
 const router = express.Router();
@@ -38,4 +41,7 @@ router.get("/auth/google/callback",
   googleAuthCallback
 );
 
+// Profile Routes
+router.get("/profile", authMiddleware, getProfile);
+router.patch("/profile", authMiddleware, updateProfile);
 export default router;
