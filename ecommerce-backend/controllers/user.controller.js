@@ -85,8 +85,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const updatedData = await updateProfileService(req.user.id, req.body);
   res.status(200).json(new ApiResponse(200, updatedData, "Profile updated"));
 });
-nnsxnxsnmsxmnxsnmxsmnsxmnsxmnsxmnsnxmsxnsxnmsxnsmxnsmnxmsnxmsxnmsxn
-mmxsmsxmsnxmsxmsnxmsxmsxnmxmsxnms
+
 
 
 
