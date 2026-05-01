@@ -157,13 +157,17 @@ export const getProfileService = async (userId) => {
 };
 
 // ================= UPDATE PROFILE =================
+// services/user.service.js
 export const updateProfileService = async (userId, { name, avatar }) => {
   const user = await User.findByPk(userId);
   if (!user) throw new ApiError(404, "User not found");
 
-  // Sirf name aur avatar update hone do
   user.name = name || user.name;
-  user.avatar = avatar || user.avatar;
+  
+  // SIRF tab update karo agar avatar ek VALID STRING ho
+  if (avatar && typeof avatar === 'string') {
+    user.avatar = avatar;
+  }
   
   await user.save();
   return { id: user.id, name: user.name, avatar: user.avatar };

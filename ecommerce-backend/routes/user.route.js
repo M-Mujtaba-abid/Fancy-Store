@@ -12,6 +12,7 @@ import {
 } from "../controllers/user.controller.js";
 import passport from "../config/passport.js";        //  add
 import authMiddleware from "../middleware/auth.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 
 
 const router = express.Router();
@@ -43,5 +44,4 @@ router.get("/auth/google/callback",
 
 // Profile Routes
 router.get("/profile", authMiddleware, getProfile);
-router.patch("/profile", authMiddleware, updateProfile);
-export default router;
+router.patch("/profile", authMiddleware, upload.single("avatar"), updateProfile);export default router;
