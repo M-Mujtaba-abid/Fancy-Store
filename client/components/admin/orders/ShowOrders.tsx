@@ -24,7 +24,8 @@ const ShowOrders = () => {
   }
 
   // Handle case where orders are paginated vs simple array
-  const orders = Array.isArray(data) ? data : data?.orders || data?.data || [];
+  const safeData = data as any;
+const orders = Array.isArray(safeData) ? safeData : safeData?.orders || safeData?.data || [];
 
   return (
     <div className="space-y-6">
