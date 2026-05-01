@@ -8,6 +8,8 @@ import {
   verifyOtpService,
   resetPasswordService,
   googleAuthService,
+  getProfileService,
+  updateProfileService,
 } from "../services/user.service.js";
 
 // ================= REGISTER =================
@@ -67,4 +69,19 @@ export const googleAuthCallback = asyncHandler(async (req, res) => {
 export const verifyOtp = asyncHandler(async (req, res) => {
   await verifyOtpService(req.body);
   res.status(200).json(new ApiResponse(200, null, "OTP verified successfully"));
+});
+
+
+
+// ================= GET PROFILE =================
+export const getProfile = asyncHandler(async (req, res) => {
+  // req.user.id tumhare authMiddleware se aayega
+  const profile = await getProfileService(req.user.id);
+  res.status(200).json(new ApiResponse(200, profile, "Profile fetched"));
+});
+
+// ================= UPDATE PROFILE =================
+export const updateProfile = asyncHandler(async (req, res) => {
+  const updatedData = await updateProfileService(req.user.id, req.body);
+  res.status(200).json(new ApiResponse(200, updatedData, "Profile updated"));
 });

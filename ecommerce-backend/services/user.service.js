@@ -140,3 +140,31 @@ export const googleAuthService = (user) => {
     },
   };
 };
+
+
+
+// ================= GET PROFILE =================
+export const getProfileService = async (userId) => {
+  const user = await User.findByPk(userId, {
+    attributes: ["id", "name", "email", "avatar", "role"],
+    include: [{ 
+      model: UserIdentity, 
+      attributes: ["provider"] // Sirf provider ka pata chal jaye
+    }],
+  });
+  if (!user) throw new ApiError(404, "User not found");
+  return user;
+};
+
+// ================= UPDATE PROFILE =================
+export const updateProfileService = async (userId, { name, avatar }) => {
+  const user = await User.findByPk(userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  // Sirf name aur avatar update hone do
+  user.name = name || user.name;
+  user.avatar = avatar || user.avatar;
+  
+  await user.save();
+  return { id: user.id, name: user.name, avatar: user.avatar };
+};
