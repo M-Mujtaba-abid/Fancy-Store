@@ -1,13 +1,12 @@
 "use client";
-
 import React, { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation"; // ✅ useSearchParams add kiya
-import { authService } from "@/service/authService/auth.service";
+import { useRouter, useSearchParams } from "next/navigation"; 
+// ✅ Sahi path yahan rakh liya hai, agar aapka path different ho toh isey theek kar lijiye ga
+import { authService } from "@/service/authService/auth.service"; 
 import toast from "react-hot-toast";
 import Link from "next/link";
 // ✅ Icons import kiye hain
 import { LogIn, UserPlus, LogOut } from "lucide-react";
-
 interface AuthButtonsProps {
   className?: string; 
 }

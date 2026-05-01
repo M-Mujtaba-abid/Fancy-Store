@@ -4,6 +4,7 @@
 
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
 import { productService } from "@/service/productservice/product.service";
+// import { productService } from "@/service/product.service";
 
 // export const revalidate = 3600; 
 

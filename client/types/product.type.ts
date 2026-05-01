@@ -5,7 +5,7 @@ export interface Product {
   price: number;
   stock: number;
   category: string;
-  subCategory?: string;
+  subCategory?: string | null; 
   vehicleType: "car" | "bike" | string;
   carModel: string;
   color: string;
@@ -26,7 +26,7 @@ export interface ProductMutationInput {
   price: number;
   stock: number;
   category: string;
-  subCategory?: string;
+  subCategory?: string | null; 
   vehicleType: "car" | "bike";
   carModel: string;
   color: string;
