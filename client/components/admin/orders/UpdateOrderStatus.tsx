@@ -6,7 +6,7 @@ import React from "react";
 // import { useUpdateOrderStatus, ORDER_STATUSES } from "@/hooks/useOrders"; // Apna sahi path check kar lein
 
 interface UpdateOrderStatusProps {
-  orderId: string | number;
+  orderId: string ;
   currentStatus: string;
 }
 
@@ -17,7 +17,7 @@ export const UpdateOrderStatus = ({ orderId, currentStatus }: UpdateOrderStatusP
     const newStatus = e.target.value;
     if (newStatus !== currentStatus) {
       // ✅ API call for update. (Make sure your service expects this structure e.g., { id, status })
-      updateStatus({ id: orderId, status: newStatus });
+      updateStatus({ id: String(orderId), status: newStatus });
     }
   };
 
