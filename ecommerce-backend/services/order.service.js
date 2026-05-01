@@ -123,12 +123,13 @@ export const placeOrderService = async (userId, orderData) => {
       const emailPromises = [];
 
       // 1. Customer ko bhejien (agar email exist karti hai)
-      if (user && user.email) {
+      if (orderData.email) {
         emailPromises.push(
           sendEmail(
-            user.email,
+            // user.email,
+            orderData.email,
             "Order Confirmed — Fancy Store 🎉",
-            orderConfirmationTemplate(user.name, order)
+           orderConfirmationTemplate(user ? user.name : "Customer", order)
           )
         );
       }
@@ -139,7 +140,7 @@ export const placeOrderService = async (userId, orderData) => {
           sendEmail(
             process.env.ADMIN_EMAIL,
             "📦 New Order Received!",
-            adminNewOrderTemplate(user.name, user.email || 'N/A', order)
+           adminNewOrderTemplate(user ? user.name : "Customer", orderData.email || 'N/A', order)
           )
         );
       }
