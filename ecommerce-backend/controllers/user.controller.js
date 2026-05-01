@@ -81,7 +81,12 @@ export const getProfile = asyncHandler(async (req, res) => {
 });
 
 // ================= UPDATE PROFILE =================
+// controllers/user.controller.js
 export const updateProfile = asyncHandler(async (req, res) => {
+  // Agar file upload hui hai, to usay process karo
+  // Filhal ke liye, agar tum sirf URL string bhej rahe ho toh req.body.avatar hi chalega
+  // Lekin agar file aa rahi hai, toh req.file check karna hoga
+  
   const updatedData = await updateProfileService(req.user.id, req.body);
   res.status(200).json(new ApiResponse(200, updatedData, "Profile updated"));
 });
