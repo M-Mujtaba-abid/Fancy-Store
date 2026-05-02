@@ -13,6 +13,8 @@ import {
 import passport from "../config/passport.js"; //  add
 import authMiddleware from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
+import { getDashboardStats } from "../controllers/admin.controller.js";
+import adminMiddleware from "../middleware/admin.middleware.js";
 
 const router = express.Router();
 
@@ -54,4 +56,5 @@ router.patch(
   upload.single("avatar"),
   updateProfile,
 );
+router.get("/dashboard-stats",authMiddleware, adminMiddleware, getDashboardStats);
 export default router;
