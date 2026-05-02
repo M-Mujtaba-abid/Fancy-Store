@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
 
-const allowedOrigins = [
+const baseAllowedOrigins = [
   "http://localhost:3000",
   process.env.FRONTEND_URL,
   process.env.CLIENT_URL,
@@ -30,6 +30,25 @@ const allowedOrigins = [
 ]
   .map((origin) => normalizeOrigin(origin?.trim()))
   .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set(
+    baseAllowedOrigins.flatMap((origin) => {
+      try {
+        const parsed = new URL(origin);
+        if (parsed.hostname.startsWith("www.")) {
+          return [origin, `${parsed.protocol}//${parsed.hostname.replace("www.", "")}`];
+        }
+        if (!parsed.hostname.startsWith("localhost")) {
+          return [origin, `${parsed.protocol}//www.${parsed.hostname}`];
+        }
+      } catch {
+        return [origin];
+      }
+      return [origin];
+    }),
+  ),
+);
 
 app.use(
   cors({

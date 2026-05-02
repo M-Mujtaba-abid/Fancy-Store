@@ -46,17 +46,7 @@ export const useLogin = () => {
 
       const userRole = res.data.role;
       if (userRole === "admin") {
-        queryClient
-          .fetchQuery({
-            queryKey: ["profile"],
-            queryFn: authService.getProfile,
-            retry: 1,
-          })
-          .then(() => router.push("/dashboard"))
-          .catch(() => {
-            toast.error("Session verification failed. Please login again.");
-            router.push("/login");
-          });
+        router.push("/dashboard");
         return;
       }
 
