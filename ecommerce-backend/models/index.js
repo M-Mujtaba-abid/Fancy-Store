@@ -32,5 +32,5 @@ Object.values(models).forEach((model) => {
   }
 });
 
-export { sequelize, User, UserIdentity };  // ✅ export bhi karo
+export { sequelize, User, UserIdentity, Order ,OrderItem};
 export default models;
