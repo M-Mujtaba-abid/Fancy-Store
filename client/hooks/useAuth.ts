@@ -31,6 +31,7 @@ export const useRegister = () => {
 
 export const useLogin = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: authService.login,
@@ -38,28 +39,28 @@ export const useLogin = () => {
     onSuccess: (res: AuthResponse) => {
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
-        // ✅ VERCEL FIX: Also store role in localStorage as fallback
         localStorage.setItem("userRole", res.data.role || "user");
       }
 
       toast.success(res.message || "Welcome back!");
 
       const userRole = res.data.role;
-      
-      // ✅ DEBUG: Log the role
-      toast("Role detected: " + userRole, { duration: 3000 });
-      console.log("✅ Login successful - Extracted role:", userRole);
+      if (userRole === "admin") {
+        queryClient
+          .fetchQuery({
+            queryKey: ["profile"],
+            queryFn: authService.getProfile,
+            retry: 1,
+          })
+          .then(() => router.push("/dashboard"))
+          .catch(() => {
+            toast.error("Session verification failed. Please login again.");
+            router.push("/login");
+          });
+        return;
+      }
 
-      // ✅ Redirect based on role with small delay to ensure cookie is set
-      setTimeout(() => {
-        if (userRole === "admin") {
-          console.log("🎯 Redirecting admin to /dashboard");
-          router.push("/dashboard");
-        } else {
-          console.log("🎯 Redirecting user to /");
-          router.push("/");
-        }
-      }, 100); // Small delay to ensure httpOnly cookie is set
+      router.push("/");
     },
 
     onError: (error: AxiosError<{ message: string }>) => {

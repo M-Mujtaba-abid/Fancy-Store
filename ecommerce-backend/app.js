@@ -20,22 +20,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(cookieParser());
 
-// ⚡ CHANGE 1: Production (Vercel) URL aur Localhost dono ko allow karein
+const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
+
 const allowedOrigins = [
-  "http://localhost:3000", // local dev
-  process.env.FRONTEND_URL // Vercel dashboard mein frontend ka live URL yahan set karna hoga
-];
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  ...(process.env.CORS_ORIGINS || "").split(","),
+]
+  .map((origin) => normalizeOrigin(origin?.trim()))
+  .filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); 
-      if (!allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (!allowedOrigins.includes(normalizedOrigin)) {
         return callback(new Error("CORS policy: Not allowed by server"), false);
       }
       return callback(null, true);
     },
-    credentials: true, // Cookies frontend tak bhejne ke liye zaroori hai
+    credentials: true,
   }),
 );
 
