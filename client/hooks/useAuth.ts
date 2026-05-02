@@ -1,9 +1,9 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/service/authService/auth.service";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast"; 
-import { AxiosError, AxiosResponse } from "axios";
-import { AuthResponse, ForgetPasswordPayload, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
+import { AxiosError } from "axios";
+import { AuthResponse, ForgetPasswordPayload, ProfileResponse, ResetPasswordPayload, UpdateProfileInput, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
 
 export const useRegister = () => {
   const router = useRouter();
@@ -87,6 +87,33 @@ export const useResetPassword = () => {
     mutationFn: (data: ResetPasswordPayload) => authService.resetPassword(data),
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to reset password");
+    },
+  });
+};
+
+
+
+// 1. Get Profile Hook
+export const useGetProfile = () => {
+  return useQuery<ProfileResponse>({
+    queryKey: ["profile"],
+    queryFn: authService.getProfile,
+  });
+};
+
+// 2. Update Profile Hook
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateProfileInput) => authService.updateProfile(data),
+    onSuccess: (res: ProfileResponse) => {
+      toast.success(res.message || "Profile updated successfully");
+      // Cache invalidate karein taake naya data foran screen par show ho
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      toast.error(error.response?.data?.message || "Failed to update profile");
     },
   });
 };
