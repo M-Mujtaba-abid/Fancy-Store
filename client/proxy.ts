@@ -4,10 +4,16 @@ import type { NextRequest } from 'next/server';
 function decodeJwt(token: string) {
   try {
     const payloadBase64Url = token.split('.')[1];
-    const payloadBase64 = payloadBase64Url.replace(/-/g, '+').replace(/_/g, '/');
+    let payloadBase64 = payloadBase64Url.replace(/-/g, '+').replace(/_/g, '/');
+    // ✅ VERCEL FIX: String ki length 4 ke multiple mein honi chahiye, warna Vercel crash kar dega
+    while (payloadBase64.length % 4 !== 0) {
+      payloadBase64 += '=';
+    }
     const decodedJson = JSON.parse(atob(payloadBase64)); 
     return decodedJson;
   } catch (error) {
+    console.error("Middleware JWT Decode Error:", error);
+    console.log("error",error)
     return null;
   }
 }
