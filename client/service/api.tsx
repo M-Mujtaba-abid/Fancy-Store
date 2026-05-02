@@ -5,9 +5,6 @@ const api = axios.create({
   // baseURL: "http://localhost:5000/api", // Aapka Backend URL
   baseURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`, // Aapka Backend URL
   withCredentials: true, // Takay cookies (JWT) automatically backend par jayein
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Response Interceptor: Backend ke standardized response ko handle karne ke liye

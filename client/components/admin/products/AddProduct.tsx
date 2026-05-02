@@ -26,7 +26,63 @@ const defaultFormState: ProductMutationInput = {
   isOnSale: false,
   discountPrice: 0,
   images: [], // ✅ Files array
+  subCategory: "",
 };
+
+const MAX_IMAGE_COUNT = 5;
+const MAX_IMAGE_DIMENSION = 1600;
+const IMAGE_QUALITY = 0.8;
+
+const compressImageFile = (file: File): Promise<File> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = Math.min(
+        1,
+        MAX_IMAGE_DIMENSION / image.width,
+        MAX_IMAGE_DIMENSION / image.height,
+      );
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not initialize image compressor"));
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(objectUrl);
+          if (!blob) {
+            reject(new Error("Image compression failed"));
+            return;
+          }
+          const compressedFile = new File([blob], file.name.replace(/\.\w+$/, ".webp"), {
+            type: "image/webp",
+            lastModified: Date.now(),
+          });
+          resolve(compressedFile);
+        },
+        "image/webp",
+        IMAGE_QUALITY,
+      );
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Invalid image file"));
+    };
+
+    image.src = objectUrl;
+  });
 
 const AddProduct = ({
   mode,
@@ -36,6 +92,8 @@ const AddProduct = ({
   onSubmit,
 }: AddProductProps) => {
   const [form, setForm] = useState<ProductMutationInput>(defaultFormState);
+  const [imageError, setImageError] = useState("");
+  const [isPreparingImages, setIsPreparingImages] = useState(false);
 
   // Edit Mode ke liye initial data set karna
   useEffect(() => {
@@ -46,6 +104,7 @@ const AddProduct = ({
         price: Number(initialData.price) || 0,
         stock: Number(initialData.stock) || 0,
         category: initialData.category || "",
+        subCategory: initialData.subCategory || "",
         vehicleType: initialData.vehicleType === "bike" ? "bike" : "car",
         carModel: initialData.carModel || "",
         color: initialData.color || "",
@@ -91,11 +150,48 @@ const AddProduct = ({
   // Images ko File[] mein convert karna
   const onImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files ? Array.from(event.target.files) : [];
-    setForm((prev) => ({ ...prev, images: files }));
+    if (files.length > MAX_IMAGE_COUNT) {
+      setImageError(`You can upload max ${MAX_IMAGE_COUNT} images.`);
+      return;
+    }
+
+    setImageError("");
+    setIsPreparingImages(true);
+
+    Promise.allSettled(files.map((file) => compressImageFile(file)))
+      .then((results) => {
+        const preparedFiles = results.map((result, index) =>
+          result.status === "fulfilled" ? result.value : files[index],
+        );
+
+        const failedCount = results.filter((result) => result.status === "rejected").length;
+        if (failedCount > 0) {
+          setImageError(
+            `${failedCount} image(s) could not be compressed, using original files for upload.`,
+          );
+        }
+
+        setForm((prev) => ({ ...prev, images: preparedFiles }));
+      })
+      .catch(() => {
+        setImageError("Image processing failed. Please select images again.");
+      })
+      .finally(() => {
+        setIsPreparingImages(false);
+      });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (isPreparingImages) return;
+    if (mode === "create" && (!form.images || form.images.length === 0)) {
+      setImageError("At least one product image is required.");
+      return;
+    }
+    if (form.discountPrice > form.price) {
+      setImageError("Discount price cannot be greater than regular price.");
+      return;
+    }
     onSubmit(form); // ✅ Yahan se exact ProductMutationInput type pass hogi
   };
 
@@ -127,10 +223,13 @@ const AddProduct = ({
               <label className="text-sm font-medium text-text-muted">Category *</label>
               <select className="bg-background border border-border rounded-lg px-4 py-3 text-sm outline-none focus:border-primary" value={form.category} onChange={onFieldChange("category")} required>
                 <option value="" disabled>Select Category</option>
-                <option value="interior">Interior Accessories</option>
-                <option value="exterior">Exterior Accessories</option>
-                <option value="electronics">Car Electronics</option>
-                <option value="care">Car Care & Cleaning</option>
+                <option value="floor_mat">Floor Mat</option>
+                <option value="trunk_tray">Trunk Tray</option>
+                <option value="dashboard_mat">Dashboard Mat</option>
+                <option value="seat_cover">Seat Cover</option>
+                <option value="steering_cover">Steering Cover</option>
+                <option value="car_topCover">Car Top Cover</option>
+                <option value="bike_topCover">Bike Top Cover</option>
               </select>
             </div>
 
@@ -175,7 +274,12 @@ const AddProduct = ({
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-text-muted">Compatible Model(s)</label>
+              <label className="text-sm font-medium text-text-muted">Sub Category</label>
+              <input className="bg-background border border-border rounded-lg px-4 py-3 text-sm outline-none focus:border-primary" placeholder="e.g. premium, universal, luxury series" value={form.subCategory || ""} onChange={onFieldChange("subCategory")} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-text-muted">Compatible Car/Bike Model(s)</label>
               <input className="bg-background border border-border rounded-lg px-4 py-3 text-sm outline-none focus:border-primary" placeholder="e.g. Honda Civic 2022+" value={form.carModel} onChange={onFieldChange("carModel")} />
             </div>
 
@@ -218,9 +322,12 @@ const AddProduct = ({
               multiple 
               accept="image/*" 
               onChange={onImageChange} 
+              disabled={isPreparingImages}
               required={mode === "create"} // Create mode mein required hai
             />
-            <p className="text-xs text-text-muted mt-1">First image will be used as the main product image.</p>
+            <p className="text-xs text-text-muted mt-1">Max {MAX_IMAGE_COUNT} images. Images are auto-compressed for faster upload. First image will be used as the main product image.</p>
+            {isPreparingImages && <p className="text-xs text-primary mt-1">Optimizing selected images for faster upload...</p>}
+            {imageError && <p className="text-xs text-error mt-1">{imageError}</p>}
           </div>
         </div>
 
@@ -237,10 +344,15 @@ const AddProduct = ({
           )}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isPreparingImages}
             className="bg-primary text-white px-8 py-3 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting ? (
+            {isPreparingImages ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Preparing Images...
+              </>
+            ) : isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Processing...
