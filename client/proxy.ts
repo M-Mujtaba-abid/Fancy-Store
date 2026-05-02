@@ -46,27 +46,6 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // ========== RULE 2: Dashboard access without token ==========
-  if (!token && pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  // ========== RULE 3: Dashboard access with non-admin token ==========
-  if (token && pathname.startsWith("/dashboard")) {
-    const decodedToken = decodeJwt(token);
-    const userRole = decodedToken?.role;
-
-    // Token might be invalid or decode failed
-    if (!decodedToken || !userRole) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    // User is not admin
-    if (userRole !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 
