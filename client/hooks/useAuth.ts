@@ -35,38 +35,36 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authService.login,
 
-    // ✅ Yahan se type hata di. Ab TS khud infer karega!
     onSuccess: (res: AuthResponse) => {
-      // console.log("res.msg => ",res, "res.data.msg => ",res.data )
-
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
+        // ✅ VERCEL FIX: Also store role in localStorage as fallback
+        localStorage.setItem("userRole", res.data.role || "user");
       }
 
       toast.success(res.message || "Welcome back!");
 
       const userRole = res.data.role;
-      // toast("Live Server se ye role aya hai: " + userRole, { duration: 5000 });
+      
+      // ✅ DEBUG: Log the role
+      toast("Role detected: " + userRole, { duration: 3000 });
+      console.log("✅ Login successful - Extracted role:", userRole);
 
-      // ✅ YEH LINE ADD KAREIN DEBUGGING KE LIYE
-      toast("Live Server se ye role aya hai: " + userRole, { duration: 5000 });
-
-      if (userRole === "admin") {
-        router.push("/dashboard");
-      } else {
-        router.push("/");
-      }
-      console.log("Extracted role => ", userRole); // Ab yahan 'admin' aayega!
-
-      if (userRole === "admin") {
-        router.push("/dashboard");
-      } else {
-        router.push("/");
-      }
+      // ✅ Redirect based on role with small delay to ensure cookie is set
+      setTimeout(() => {
+        if (userRole === "admin") {
+          console.log("🎯 Redirecting admin to /dashboard");
+          router.push("/dashboard");
+        } else {
+          console.log("🎯 Redirecting user to /");
+          router.push("/");
+        }
+      }, 100); // Small delay to ensure httpOnly cookie is set
     },
 
     onError: (error: AxiosError<{ message: string }>) => {
       toast.error(error.response?.data?.message || "Login failed");
+      console.error("❌ Login error:", error.response?.data?.message);
     },
   });
 };
