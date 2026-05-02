@@ -256,6 +256,7 @@ export const addProductService = async (body, files) => {
     price,
     stock,
     category,
+    subCategory,
     carModel,
     color,
     material,
@@ -268,12 +269,17 @@ export const addProductService = async (body, files) => {
 
   const uploadedImages = await uploadImagesToCloudinary(files);
 
+  const normalizedPrice = Number(price);
+  const normalizedStock = Number(stock);
+  const normalizedDiscountPrice = Number(discountPrice || 0);
+
   return await Product.create({
     name,
     description,
-    price,
-    stock,
+    price: Number.isNaN(normalizedPrice) ? 0 : normalizedPrice,
+    stock: Number.isNaN(normalizedStock) ? 0 : normalizedStock,
     category,
+    subCategory: subCategory || null,
     carModel,
     color,
     material,
@@ -281,7 +287,7 @@ export const addProductService = async (body, files) => {
     isNewArrival: isNewArrival === "true" || isNewArrival === true,
     isOnSale: isOnSale === "true" || isOnSale === true,
     vehicleType: vehicleType || null,
-    discountPrice: discountPrice || 0,
+    discountPrice: Number.isNaN(normalizedDiscountPrice) ? 0 : normalizedDiscountPrice,
     imageUrl: uploadedImages[0],
     images: uploadedImages,
   });
@@ -399,6 +405,12 @@ export const updateProductService = async (id, body, files) => {
   if (!product) throw new ApiError(404, "Product not found");
 
   const updateData = { ...body };
+  if (updateData.price !== undefined) updateData.price = Number(updateData.price);
+  if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
+  if (updateData.discountPrice !== undefined) {
+    updateData.discountPrice = Number(updateData.discountPrice);
+  }
+  if (updateData.subCategory === "") updateData.subCategory = null;
 
   if (files && files.length > 0) {
     const uploadedImages = await uploadImagesToCloudinary(files);

@@ -128,22 +128,14 @@ export const productService = {
   // 10. Admin: Create Product
   createProduct: async (payload: ProductMutationInput) => {
     const formData = toProductFormData(payload);
-    const res = await api.post<ApiResponse<Product>>("/products", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const res = await api.post<ApiResponse<Product>>("/products", formData);
     return res.data.data;
   },
 
   // 11. Admin: Update Product
   updateProduct: async (id: string, payload: ProductUpdateInput) => {
     const formData = toProductFormData(payload);
-    const res = await api.patch<ApiResponse<Product>>(`/products/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const res = await api.patch<ApiResponse<Product>>(`/products/${id}`, formData);
     return res.data.data;
   },
 

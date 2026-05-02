@@ -37,13 +37,13 @@ const ShowProduct = ({ onEdit }: ShowProductProps) => {
   return (
     <div className="space-y-6">
       
-      {/* --- HEADER --- */}
+       {/* --- HEADER --- */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card rounded-2xl p-6 shadow-sm border border-border/50">
         <div>
           <h2 className="text-2xl font-bold text-text-main">All Products</h2>
-          <p className="text-sm text-text-muted mt-1">Manage your inventory. Total: {data?.totalItems || 0} products</p>
+          {/* <p className="text-sm text-text-muted mt-1">Manage your inventory. Total: {data?.totalItems || 0} products</p> */}
         </div>
-      </div>
+      </div> 
 
       {/* --- GRID CARDS --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
