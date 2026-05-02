@@ -1,13 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/service/authService/auth.service";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast"; 
+import { toast } from "react-hot-toast";
 import { AxiosError } from "axios";
-import { AuthResponse, ForgetPasswordPayload, ProfileResponse, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
+import {
+  AuthResponse,
+  ForgetPasswordPayload,
+  ProfileResponse,
+  ResetPasswordPayload,
+  VerifyOtpPayload,
+} from "@/types/user.type"; // Path check kar lijiyega
 
 export const useRegister = () => {
   const router = useRouter();
-  
+
   return useMutation({
     mutationFn: authService.register,
     // ✅ 'res' ko type di
@@ -23,48 +29,53 @@ export const useRegister = () => {
   });
 };
 
-
-
-
 export const useLogin = () => {
   const router = useRouter();
-  
+
   return useMutation({
-    mutationFn: authService.login, 
-    
+    mutationFn: authService.login,
+
     // ✅ Yahan se type hata di. Ab TS khud infer karega!
-    onSuccess: (res: AuthResponse) => { 
+    onSuccess: (res: AuthResponse) => {
       // console.log("res.msg => ",res, "res.data.msg => ",res.data )
 
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
       }
-      
+
       toast.success(res.message || "Welcome back!");
 
-      const userRole = res.data.role; 
+      const userRole = res.data.role;
+      // toast("Live Server se ye role aya hai: " + userRole, { duration: 5000 });
 
-      console.log("Extracted role => " , userRole); // Ab yahan 'admin' aayega!
-
+      // ✅ YEH LINE ADD KAREIN DEBUGGING KE LIYE
+      toast("Live Server se ye role aya hai: " + userRole, { duration: 5000 });
 
       if (userRole === "admin") {
-        router.push("/dashboard"); 
+        router.push("/dashboard");
       } else {
-        router.push("/"); 
+        router.push("/");
+      }
+      console.log("Extracted role => ", userRole); // Ab yahan 'admin' aayega!
+
+      if (userRole === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/");
       }
     },
-    
+
     onError: (error: AxiosError<{ message: string }>) => {
       toast.error(error.response?.data?.message || "Login failed");
     },
   });
 };
 
-
 // 1. Send OTP
 export const useForgetPassword = () => {
   return useMutation({
-    mutationFn: (data: ForgetPasswordPayload) => authService.forgetPassword(data),
+    mutationFn: (data: ForgetPasswordPayload) =>
+      authService.forgetPassword(data),
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to send OTP");
     },
@@ -91,8 +102,6 @@ export const useResetPassword = () => {
   });
 };
 
-
-
 // 1. Get Profile Hook
 export const useGetProfile = () => {
   return useQuery<ProfileResponse>({
@@ -104,7 +113,7 @@ export const useGetProfile = () => {
 // 2. Update Profile Hook
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: FormData) => authService.updateProfile(data),
     onSuccess: (res: ProfileResponse) => {
