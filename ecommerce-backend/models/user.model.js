@@ -11,6 +11,16 @@ User.init(
     role: { type: DataTypes.STRING, defaultValue: "user" },
   },
   { sequelize, modelName: "User" }
-);
 
+);
+// models/user.model.js
+
+// ... baki ka code ...
+
+User.associate = (models) => {
+  // Yahan batana hai ke User ke paas bahut saare Orders hain
+  User.hasMany(models.Order, { foreignKey: "userId", onDelete: "CASCADE" });
+};
+
+// ...
 export default User;

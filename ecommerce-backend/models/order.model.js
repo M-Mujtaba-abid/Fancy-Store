@@ -36,9 +36,13 @@ const Order = sequelize.define(
   {}
 );
 
+// / ASSOCIATION YAHAN LIKHNA HAI
 Order.associate = (models) => {
+  // Order ka User ke saath relation
   Order.belongsTo(models.User, { foreignKey: "userId" });
-  Order.hasMany(models.OrderItem, { foreignKey: "orderId" });
+  
+  // Order ka OrderItem ke saath relation
+  Order.hasMany(models.OrderItem, { foreignKey: "orderId", onDelete: "CASCADE" });
 };
 
 export default Order;
