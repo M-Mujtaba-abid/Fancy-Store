@@ -20,7 +20,7 @@
 //   },
 // };
 
-import { AuthResponse, ForgetPasswordPayload, LoginInput, ProfileResponse, RegisterInput, ResetPasswordPayload, UpdateProfileInput, VerifyOtpPayload } from "@/types/user.type";
+import { AuthResponse, ForgetPasswordPayload, LoginInput, ProfileResponse, RegisterInput, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type";
 import api from "../api";
 export const authService = {
   // ✅ 2. 'any' ki jagah strictly types assign karein
@@ -70,7 +70,7 @@ export const authService = {
     return res.data;
   },
 
-  updateProfile: async (data: UpdateProfileInput): Promise<ProfileResponse> => {
+  updateProfile: async (data: FormData): Promise<ProfileResponse> => {
     const res = await api.patch("/user/profile", data, {
       headers: {
         "Content-Type": "multipart/form-data", // Ye line Axios ko batati hai ke file aa rahi hai

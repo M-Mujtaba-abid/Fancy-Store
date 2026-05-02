@@ -66,9 +66,8 @@ export interface ProfileResponse {
   data: ProfileData;
 }
 
-export interface UpdateProfileInput {
-  name?: string;
-  avatar?: string;
-}
-// Ab humein yahan FormData use karna hai file ke liye
-export type UpdateProfileInput = FormData;
+
+
+// export interface UpdateProfileInput { name?: string; avatar?: string; } 
+// // Aur uske foran baad:
+// export type UpdateProfileInput = FormData;

@@ -3,7 +3,7 @@ import { authService } from "@/service/authService/auth.service";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast"; 
 import { AxiosError } from "axios";
-import { AuthResponse, ForgetPasswordPayload, ProfileResponse, ResetPasswordPayload, UpdateProfileInput, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
+import { AuthResponse, ForgetPasswordPayload, ProfileResponse, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type"; // Path check kar lijiyega
 
 export const useRegister = () => {
   const router = useRouter();
@@ -106,7 +106,7 @@ export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: UpdateProfileInput) => authService.updateProfile(data),
+    mutationFn: (data: FormData) => authService.updateProfile(data),
     onSuccess: (res: ProfileResponse) => {
       toast.success(res.message || "Profile updated successfully");
       // Cache invalidate karein taake naya data foran screen par show ho
