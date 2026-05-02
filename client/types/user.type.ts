@@ -64,6 +64,7 @@ export interface ProfileResponse {
   success: boolean;
   message: string;
   data: ProfileData;
+  orderCount?: number; 
 }
 
 
