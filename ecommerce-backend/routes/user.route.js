@@ -6,14 +6,13 @@ import {
   forgetPassword,
   verifyOtp,
   resetPassword,
-   googleAuthCallback,
-   getProfile,
-   updateProfile,     
+  googleAuthCallback,
+  getProfile,
+  updateProfile,
 } from "../controllers/user.controller.js";
-import passport from "../config/passport.js";        //  add
+import passport from "../config/passport.js"; //  add
 import authMiddleware from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
-
 
 const router = express.Router();
 
@@ -30,18 +29,29 @@ router.post("/forget-password", forgetPassword); // send OTP
 router.post("/verify-otp", verifyOtp); // check OTP
 router.post("/reset-password", resetPassword); // reset password
 // / Google OAuth
-router.get("/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"], session: false })
+router.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  }),
 );
 
-router.get("/auth/google/callback",
+router.get(
+  "/auth/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: `${process.env.CLIENT_URL}/login?error=google_failed`
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=google_failed`,
   }),
-  googleAuthCallback
+  googleAuthCallback,
 );
 
 // Profile Routes
 router.get("/profile", authMiddleware, getProfile);
-router.patch("/profile", authMiddleware, upload.single("avatar"), updateProfile);export default router;
+router.patch(
+  "/profile",
+  authMiddleware,
+  upload.single("avatar"),
+  updateProfile,
+);
+export default router;

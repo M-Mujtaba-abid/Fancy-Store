@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import generateToken from "../utils/jwt.js";
 import ApiError from "../utils/apiError.js";
 import sendEmail from "../utils/sendEmail.js";
+import { uploadImagesToCloudinary } from "./product.service.js";
 // Yeh hona chahiye bilkul top pe
 // ================= REGISTER =================
 export const registerUserService = async ({ name, email, password, role }) => {
@@ -71,7 +72,10 @@ export const forgetPasswordService = async (email) => {
   });
 
   if (!localIdentity) {
-    throw new ApiError(400, "Your account is linked with  Google  Please 'Continue with Google' to reset password.");
+    throw new ApiError(
+      400,
+      "Your account is linked with  Google  Please 'Continue with Google' to reset password.",
+    );
   }
 
   // OTP banao aur save karo
@@ -141,34 +145,42 @@ export const googleAuthService = (user) => {
   };
 };
 
-
-
 // ================= GET PROFILE =================
 export const getProfileService = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: ["id", "name", "email", "avatar", "role"],
-    include: [{ 
-      model: UserIdentity, 
-      attributes: ["provider"] // Sirf provider ka pata chal jaye
-    }],
+    include: [
+      {
+        model: UserIdentity,
+        attributes: ["provider"], // Sirf provider ka pata chal jaye
+      },
+    ],
   });
   if (!user) throw new ApiError(404, "User not found");
   return user;
 };
 
 // ================= UPDATE PROFILE =================
-// services/user.service.js
-export const updateProfileService = async (userId, { name, avatar }) => {
+export const updateProfileService = async (userId, body, file) => {
   const user = await User.findByPk(userId);
   if (!user) throw new ApiError(404, "User not found");
 
-  user.name = name || user.name;
-  
-  // SIRF tab update karo agar avatar ek VALID STRING ho
-  if (avatar && typeof avatar === 'string') {
-    user.avatar = avatar;
+  const { name } = body;
+
+  // 1. Agar name aaya hai toh update karo
+  if (name) {
+    user.name = name;
   }
-  
+
+  // 2. Agar file aayi hai, toh pehle usko Cloudinary pe upload karo, phir DB me URL save karo
+  if (file) {
+    // Single image Cloudinary par upload kar rahe hain
+    const uploadedImageUrl = await uploadImagesToCloudinary([file]);
+    user.avatar = uploadedImageUrl[0];
+  }
+
   await user.save();
-  return { id: user.id, name: user.name, avatar: user.avatar };
+
+  // Return updated profile
+  return await getProfileService(userId);
 };
