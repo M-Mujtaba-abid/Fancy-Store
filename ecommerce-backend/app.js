@@ -76,7 +76,7 @@ app.use("/api/search", searchRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/admin", userRoutes); // Yeh line missing thi
+app.use("/api/admin", userRoutes);
 
 dbConnection();
 app.use(errorHandler);
