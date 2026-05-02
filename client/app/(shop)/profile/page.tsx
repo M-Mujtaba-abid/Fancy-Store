@@ -139,7 +139,9 @@ console.log("profile => ", profile)
               <div className="w-full border-t border-border/50 pt-6 space-y-3 text-sm">
                 <div className="flex items-center justify-between text-text-main p-2 hover:bg-background rounded-lg cursor-pointer transition-colors">
                   <span className="flex items-center gap-2"><Box size={16} className="text-text-muted"/> My Orders</span>
-                  <span className="bg-background px-2 py-0.5 rounded-md font-semibold border border-border/50">0</span>
+                <span className="bg-background px-2 py-0.5 rounded-md font-semibold border border-border/50">
+  {profile.orderCount || 0}
+</span>
                 </div>
                 <div className="flex items-center justify-between text-text-main p-2 hover:bg-background rounded-lg cursor-pointer transition-colors">
                   <span className="flex items-center gap-2"><MapPin size={16} className="text-text-muted"/> Shipping Addresses</span>

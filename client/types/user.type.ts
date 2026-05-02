@@ -57,6 +57,7 @@ export interface UserIdentity {
 export interface ProfileData extends User {
   avatar?: string | null;
   UserIdentities?: UserIdentity[];
+    orderCount?: number; 
 }
 
 export interface ProfileResponse {
@@ -64,6 +65,7 @@ export interface ProfileResponse {
   success: boolean;
   message: string;
   data: ProfileData;
+
 }
 
 

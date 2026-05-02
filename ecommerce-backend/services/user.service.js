@@ -4,6 +4,7 @@ import generateToken from "../utils/jwt.js";
 import ApiError from "../utils/apiError.js";
 import sendEmail from "../utils/sendEmail.js";
 import { uploadImagesToCloudinary } from "./product.service.js";
+import Order from "../models/order.model.js";
 // Yeh hona chahiye bilkul top pe
 // ================= REGISTER =================
 export const registerUserService = async ({ name, email, password, role }) => {
@@ -146,18 +147,34 @@ export const googleAuthService = (user) => {
 };
 
 // ================= GET PROFILE =================
+// ================= GET PROFILE =================
 export const getProfileService = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: ["id", "name", "email", "avatar", "role"],
     include: [
       {
         model: UserIdentity,
-        attributes: ["provider"], // Sirf provider ka pata chal jaye
+        attributes: ["provider"],
       },
+      {
+        model: Order, // ✅ Yeh line database se orders fetch karegi
+        attributes: ["id"], // Sirf ID chahiye counting ke liye
+      }
     ],
   });
+
   if (!user) throw new ApiError(404, "User not found");
-  return user;
+
+  // user object ko JSON mein badlo taaki hum custom field (orderCount) add kar sakein
+  const userObj = user.toJSON();
+  
+  // Orders array ki length nikaal lo (agar orders hain toh count karo, warna 0)
+  userObj.orderCount = userObj.Orders ? userObj.Orders.length : 0;
+  
+  // Ab 'Orders' array ko delete kar do taaki response clean rahe
+  delete userObj.Orders; 
+
+  return userObj;
 };
 
 // ================= UPDATE PROFILE =================
