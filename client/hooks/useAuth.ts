@@ -31,6 +31,7 @@ export const useRegister = () => {
 
 export const useLogin = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: authService.login,
