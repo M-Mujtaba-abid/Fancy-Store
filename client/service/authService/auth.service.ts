@@ -20,7 +20,7 @@
 //   },
 // };
 
-import { AuthResponse, ForgetPasswordPayload, LoginInput, RegisterInput, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type";
+import { AuthResponse, ForgetPasswordPayload, LoginInput, ProfileResponse, RegisterInput, ResetPasswordPayload, VerifyOtpPayload } from "@/types/user.type";
 import api from "../api";
 export const authService = {
   // ✅ 2. 'any' ki jagah strictly types assign karein
@@ -63,7 +63,21 @@ export const authService = {
   console.log("clicked")
 },
 
+// ================= PROFILE FLOW =================
+  getProfile: async (): Promise<ProfileResponse> => {
+    // Note: Agar aapka route /profile hai toh usay yahan theek kar lein (e.g. "/user/profile")
+    const res = await api.get("/user/profile"); 
+    return res.data;
+  },
 
+  updateProfile: async (data: FormData): Promise<ProfileResponse> => {
+    const res = await api.patch("/user/profile", data, {
+      headers: {
+        "Content-Type": "multipart/form-data", // Ye line Axios ko batati hai ke file aa rahi hai
+      },
+    });
+    return res.data;
+  },
 
 
 };

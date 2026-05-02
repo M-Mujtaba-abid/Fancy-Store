@@ -48,3 +48,26 @@ export interface ResetPasswordPayload {
   email: string;
   newPassword: string;
 }
+
+// Naye Interfaces Profile ke liye
+export interface UserIdentity {
+  provider: string;
+}
+
+export interface ProfileData extends User {
+  avatar?: string | null;
+  UserIdentities?: UserIdentity[];
+}
+
+export interface ProfileResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: ProfileData;
+}
+
+
+
+// export interface UpdateProfileInput { name?: string; avatar?: string; } 
+// // Aur uske foran baad:
+// export type UpdateProfileInput = FormData;
