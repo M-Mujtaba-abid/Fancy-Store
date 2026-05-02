@@ -11,6 +11,23 @@ import {
   updateProfileService,
 } from "../services/user.service.js";
 
+const getAuthCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+    path: "/",
+  };
+
+  if (isProduction && process.env.BACKEND_DOMAIN) {
+    cookieOptions.domain = process.env.BACKEND_DOMAIN;
+  }
+
+  return cookieOptions;
+};
+
 // ================= REGISTER =================
 export const registerUser = asyncHandler(async (req, res) => {
   const data = await registerUserService(req.body);
@@ -22,42 +39,14 @@ export const registerUser = asyncHandler(async (req, res) => {
 // ================= LOGIN =================
 export const loginUser = asyncHandler(async (req, res) => {
   const data = await loginUserService(req.body);
-
-  console.log("data login response  ->", data);
-  
-  // ✅ VERCEL FIX: Ensure cookie works on both localhost and production
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction, // Only secure on production (HTTPS)
-    sameSite: isProduction ? 'none' : 'lax', // 'none' requires secure: true
-    maxAge: 24 * 60 * 60 * 1000,
-    path: '/', // ✅ IMPORTANT: Ensure cookie is sent to entire domain
-  };
-
-  // ✅ Add domain for cross-subdomain cookies on production
-  if (isProduction && process.env.BACKEND_DOMAIN) {
-    cookieOptions.domain = process.env.BACKEND_DOMAIN;
-  }
-
-  res.cookie("token", data.token, cookieOptions);
+  res.cookie("token", data.token, getAuthCookieOptions());
   res.status(200).json(new ApiResponse(200, data, "Login successful"));
 });
 
 // ================= LOGOUT =================
 export const logoutUser = asyncHandler(async (req, res) => {
-  // ✅ VERCEL FIX: Clear cookie with same settings
-  const isProduction = process.env.NODE_ENV === 'production';
-  const clearCookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    path: '/',
-  };
-
-  if (isProduction && process.env.BACKEND_DOMAIN) {
-    clearCookieOptions.domain = process.env.BACKEND_DOMAIN;
-  }
+  const clearCookieOptions = { ...getAuthCookieOptions() };
+  delete clearCookieOptions.maxAge;
 
   res.clearCookie("token", clearCookieOptions);
   res.status(200).json(new ApiResponse(200, null, "Logout successful"));
@@ -78,22 +67,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
 export const googleAuthCallback = asyncHandler(async (req, res) => {
   const data = await googleAuthService(req.user);
-
-  // ✅ VERCEL FIX: Same cookie settings as login
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-    path: '/',
-  };
-
-  if (isProduction && process.env.BACKEND_DOMAIN) {
-    cookieOptions.domain = process.env.BACKEND_DOMAIN;
-  }
-
-  res.cookie("token", data.token, cookieOptions);
+  res.cookie("token", data.token, getAuthCookieOptions());
   res.redirect(`${process.env.CLIENT_URL}/?login=success`);
 });
 
