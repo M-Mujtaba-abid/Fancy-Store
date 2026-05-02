@@ -194,7 +194,11 @@ import Product from "../models/product.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/apiError.js";
 import { Op } from "sequelize";
-import { CATEGORIES, VEHICLE_TYPES, DEFAULT_LIMITS } from "../constants/index.js"; // ✅ import
+import {
+  CATEGORIES,
+  VEHICLE_TYPES,
+  DEFAULT_LIMITS,
+} from "../constants/index.js"; // ✅ import
 
 // ============================================================
 // PAGINATION HELPERS
@@ -216,19 +220,24 @@ export const formatPagingResponse = (data, page, limit) => {
 // CLOUDINARY UPLOAD HELPER
 // ============================================================
 export const uploadImagesToCloudinary = (files) => {
+  // Agar single file aayi hai, to usko khud hi array me convert kar do
+  if (!Array.isArray(files)) {
+    files = [files];
+  }
   return Promise.all(
-    files.map((file) =>
-      new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "products" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result.secure_url);
-          }
-        );
-        stream.end(file.buffer);
-      })
-    )
+    files.map(
+      (file) =>
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "products" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            },
+          );
+          stream.end(file.buffer);
+        }),
+    ),
   );
 };
 
@@ -238,19 +247,36 @@ export const uploadImagesToCloudinary = (files) => {
 
 // 1. Add Product
 export const addProductService = async (body, files) => {
-  if (!files || files.length === 0) throw new ApiError(400, "At least one image file is required");
+  if (!files || files.length === 0)
+    throw new ApiError(400, "At least one image file is required");
 
   const {
-    name, description, price, stock, category,
-    carModel, color, material, isFeatured,
-    isNewArrival, isOnSale, discountPrice,vehicleType, // ✅ yeh add karo
+    name,
+    description,
+    price,
+    stock,
+    category,
+    carModel,
+    color,
+    material,
+    isFeatured,
+    isNewArrival,
+    isOnSale,
+    discountPrice,
+    vehicleType, // ✅ yeh add karo
   } = body;
 
   const uploadedImages = await uploadImagesToCloudinary(files);
 
   return await Product.create({
-    name, description, price, stock, category,
-    carModel, color, material,
+    name,
+    description,
+    price,
+    stock,
+    category,
+    carModel,
+    color,
+    material,
     isFeatured: isFeatured === "true" || isFeatured === true,
     isNewArrival: isNewArrival === "true" || isNewArrival === true,
     isOnSale: isOnSale === "true" || isOnSale === true,
@@ -265,7 +291,11 @@ export const addProductService = async (body, files) => {
 export const searchProductsService = async (q, queryPage, queryLimit) => {
   if (!q) throw new ApiError(400, "Search query is required");
 
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.SEARCH); // ✅
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.SEARCH,
+  ); // ✅
 
   const term = `%${q.toLowerCase()}%`;
 
@@ -277,7 +307,8 @@ export const searchProductsService = async (q, queryPage, queryLimit) => {
         { carModel: { [Op.iLike]: term } },
       ],
     },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -286,11 +317,16 @@ export const searchProductsService = async (q, queryPage, queryLimit) => {
 
 // 3. Get Featured Products
 export const getFeaturedProductsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.FEATURED); // ✅
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.FEATURED,
+  ); // ✅
 
   const data = await Product.findAndCountAll({
     where: { isFeatured: true },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -299,11 +335,16 @@ export const getFeaturedProductsService = async (queryPage, queryLimit) => {
 
 // 4. Get New Arrivals
 export const getNewArrivalsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.NEW_ARRIVALS); // ✅
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.NEW_ARRIVALS,
+  ); // ✅
 
   const data = await Product.findAndCountAll({
     where: { isNewArrival: true },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -312,11 +353,16 @@ export const getNewArrivalsService = async (queryPage, queryLimit) => {
 
 // 5. Get On Sale Products
 export const getOnSaleProductsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.ON_SALE); // ✅
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.ON_SALE,
+  ); // ✅
 
   const data = await Product.findAndCountAll({
     where: { isOnSale: true },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -325,10 +371,15 @@ export const getOnSaleProductsService = async (queryPage, queryLimit) => {
 
 // 6. Get All Products
 export const getProductsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS); // ✅
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.PRODUCTS,
+  ); // ✅
 
   const data = await Product.findAndCountAll({
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -382,14 +433,18 @@ export const getTotalProductsService = async () => {
   return await Product.count();
 };
 
-
 // 11. Get Cars
 export const getCarProductsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.PRODUCTS,
+  );
 
   const data = await Product.findAndCountAll({
     where: { vehicleType: VEHICLE_TYPES.CAR },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -398,26 +453,38 @@ export const getCarProductsService = async (queryPage, queryLimit) => {
 
 // 12. Get Bikes
 export const getBikeProductsService = async (queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.PRODUCTS,
+  );
 
   const data = await Product.findAndCountAll({
-    where: { vehicleType: VEHICLE_TYPES.BIKE},
-    limit, offset,
+    where: { vehicleType: VEHICLE_TYPES.BIKE },
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
   return formatPagingResponse(data, page, limit);
 };
 
-
-
 // ✅ 1 Generic Function — sab categories handle karega
-export const getProductsByCategoryService = async (category, queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+export const getProductsByCategoryService = async (
+  category,
+  queryPage,
+  queryLimit,
+) => {
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.PRODUCTS,
+  );
 
   const data = await Product.findAndCountAll({
     where: { category },
-    limit, offset,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 
@@ -425,17 +492,27 @@ export const getProductsByCategoryService = async (category, queryPage, queryLim
 };
 
 // ✅ Vehicle Type + Category filter — dono saath
-export const getProductsByFilterService = async (filters, queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(queryPage, queryLimit, DEFAULT_LIMITS.PRODUCTS);
+export const getProductsByFilterService = async (
+  filters,
+  queryPage,
+  queryLimit,
+) => {
+  const { page, limit, offset } = getPaginationData(
+    queryPage,
+    queryLimit,
+    DEFAULT_LIMITS.PRODUCTS,
+  );
 
   // Sirf woh filters rakho jo undefined nahi hain
   const where = {};
   if (filters.vehicleType) where.vehicleType = filters.vehicleType;
-  if (filters.category)    where.category    = filters.category;
+  if (filters.category) where.category = filters.category;
   if (filters.subCategory) where.subCategory = filters.subCategory;
 
   const data = await Product.findAndCountAll({
-    where, limit, offset,
+    where,
+    limit,
+    offset,
     order: [["createdAt", "DESC"]],
   });
 

@@ -1,4 +1,3 @@
-
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
 import {
@@ -15,14 +14,16 @@ import {
 // ================= REGISTER =================
 export const registerUser = asyncHandler(async (req, res) => {
   const data = await registerUserService(req.body);
-  res.status(201).json(new ApiResponse(201, data, "User registered successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, data, "User registered successfully"));
 });
 
 // ================= LOGIN =================
 export const loginUser = asyncHandler(async (req, res) => {
   const data = await loginUserService(req.body);
 
-  console.log("data login response  ->", data)
+  console.log("data login response  ->", data);
   res.cookie("token", data.token, {
     httpOnly: true,
     secure: true,
@@ -63,15 +64,13 @@ export const googleAuthCallback = asyncHandler(async (req, res) => {
   }); // Removed the extra }) that was here
 
   res.redirect(`${process.env.CLIENT_URL}/?login=success`);
-}); 
+});
 
 // ================= VERIFY OTP =================
 export const verifyOtp = asyncHandler(async (req, res) => {
   await verifyOtpService(req.body);
   res.status(200).json(new ApiResponse(200, null, "OTP verified successfully"));
 });
-
-
 
 // ================= GET PROFILE =================
 export const getProfile = asyncHandler(async (req, res) => {
@@ -83,10 +82,17 @@ export const getProfile = asyncHandler(async (req, res) => {
 // ================= UPDATE PROFILE =================
 // controllers/user.controller.js
 export const updateProfile = asyncHandler(async (req, res) => {
-  // Agar file upload hui hai, to usay process karo
-  // Filhal ke liye, agar tum sirf URL string bhej rahe ho toh req.body.avatar hi chalega
-  // Lekin agar file aa rahi hai, toh req.file check karna hoga
-  
-  const updatedData = await updateProfileService(req.user.id, req.body);
-  res.status(200).json(new ApiResponse(200, updatedData, "Profile updated"));
+  // req.user.id token se aayega
+  // req.body me text data (name) hoga
+  // req.file me image aayegi (multer ki wajah se)
+
+  const updatedData = await updateProfileService(
+    req.user.id,
+    req.body,
+    req.file,
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, updatedData, "Profile updated successfully"));
 });
