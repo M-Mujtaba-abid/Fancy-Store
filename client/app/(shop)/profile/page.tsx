@@ -95,7 +95,8 @@ console.log("profile => ", profile)
           {/* <p className="text-text-muted mt-1">Manage your personal information and security.</p> */}
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div 
+        className="flex flex-col lg:flex-row gap-8">
           
           {/* ================= LEFT COLUMN: PROFILE SUMMARY ================= */}
           <div className="w-full lg:w-1/3">
