@@ -2,6 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { Product, ProductMutationInput } from "@/types/product.type";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import styles from "./AddProduct.module.css";
 
 interface AddProductProps {
   mode: "create" | "edit";
@@ -123,29 +126,29 @@ const AddProduct = ({
   // Input fields ko handle karna
   const onFieldChange =
     (field: keyof ProductMutationInput) =>
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const value = event.target.value;
-      const checked = event.target instanceof HTMLInputElement ? event.target.checked : false;
-      const isCheckbox = event.target instanceof HTMLInputElement && event.target.type === "checkbox";
+      (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const value = event.target.value;
+        const checked = event.target instanceof HTMLInputElement ? event.target.checked : false;
+        const isCheckbox = event.target instanceof HTMLInputElement && event.target.type === "checkbox";
 
-      setForm((prev) => {
-        const updatedForm = {
-          ...prev,
-          [field]: isCheckbox
-            ? checked
-            : field === "price" || field === "stock" || field === "discountPrice"
-            ? Number(value)
-            : value,
-        };
+        setForm((prev) => {
+          const updatedForm = {
+            ...prev,
+            [field]: isCheckbox
+              ? checked
+              : field === "price" || field === "stock" || field === "discountPrice"
+                ? Number(value)
+                : value,
+          };
 
-        // UX Feature: Agar item sale se hata dein, toh discount automatically 0 ho jaye
-        if (field === "isOnSale" && !checked) {
-          updatedForm.discountPrice = 0;
-        }
+          // UX Feature: Agar item sale se hata dein, toh discount automatically 0 ho jaye
+          if (field === "isOnSale" && !checked) {
+            updatedForm.discountPrice = 0;
+          }
 
-        return updatedForm;
-      });
-    };
+          return updatedForm;
+        });
+      };
 
   // Images ko File[] mein convert karna
   const onImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +212,7 @@ const AddProduct = ({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        
+
         {/* --- SECTION 1: Basic Information --- */}
         <div>
           <h3 className="text-lg font-semibold text-text-main mb-4">1. Basic Information</h3>
@@ -235,7 +238,15 @@ const AddProduct = ({
 
             <div className="flex flex-col gap-1 md:col-span-2">
               <label className="text-sm font-medium text-text-muted">Description *</label>
-              <textarea className="bg-background border border-border rounded-lg px-4 py-3 text-sm min-h-24 outline-none focus:border-primary" placeholder="Enter detailed product description..." value={form.description} onChange={onFieldChange("description")} required />
+              <ReactQuill
+                theme="snow"
+                value={form.description}
+                onChange={(value) =>
+                  setForm((prev) => ({ ...prev, description: value }))
+                }
+                placeholder="Enter detailed product description..."
+                className={styles.quillEditor}
+              />
             </div>
           </div>
         </div>
@@ -298,7 +309,7 @@ const AddProduct = ({
         {/* --- SECTION 4: Status & Media --- */}
         <div className="border-t border-border/50 pt-6">
           <h3 className="text-lg font-semibold text-text-main mb-4">4. Status & Media</h3>
-          
+
           <div className="flex flex-wrap gap-6 mb-6 bg-background p-4 rounded-xl border border-border">
             <label className="text-sm font-medium text-text-main flex items-center gap-2 cursor-pointer">
               <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.isFeatured} onChange={onFieldChange("isFeatured")} />
@@ -316,12 +327,12 @@ const AddProduct = ({
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-text-muted">Upload Product Images *</label>
-            <input 
-              className="bg-background border border-border rounded-lg px-4 py-3 text-sm outline-none file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20" 
-              type="file" 
-              multiple 
-              accept="image/*" 
-              onChange={onImageChange} 
+            <input
+              className="bg-background border border-border rounded-lg px-4 py-3 text-sm outline-none file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={onImageChange}
               disabled={isPreparingImages}
               required={mode === "create"} // Create mode mein required hai
             />

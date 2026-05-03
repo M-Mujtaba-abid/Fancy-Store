@@ -119,12 +119,14 @@ const ProductModal = ({ product, onClose }: ProductModalProps) => {
             </div>
 
             {/* Description */}
-            <div className="mb-6 mt-auto">
-              <p className="text-[10px] text-text-muted uppercase font-bold mb-2">Description</p>
-              <p className="text-sm text-text-main leading-relaxed bg-background p-4 rounded-xl border border-border/50">
-                {product.description || "No description provided."}
-              </p>
-            </div>
+           {/* Description */}
+<div className="mb-6 mt-auto">
+  <p className="text-[10px] text-text-muted uppercase font-bold mb-2">Description</p>
+  <div
+    className="text-sm text-text-main leading-relaxed bg-background p-4 rounded-xl border border-border/50 product-description max-w-full overflow-hidden"
+    dangerouslySetInnerHTML={{ __html: product.description || "No description provided." }}
+  />
+</div>
 
           </div>
         </div>
