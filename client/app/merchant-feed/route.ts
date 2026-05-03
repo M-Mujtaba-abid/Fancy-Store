@@ -1,17 +1,28 @@
 import { productService } from '@/service/productservice/product.service';
 import { NextResponse } from 'next/server';
+// Is utility function ko file mein upar add kar dein
+function escapeXml(unsafe: string) {
+  return unsafe
+    .replace(/<[^>]*>?/gm, '') // HTML tags remove karein
+    .replace(/&nbsp;/g, ' ')   // &nbsp; ko space se badlein
+    .replace(/[<>&"']/g, (c) => { // XML special characters escape karein
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '"': return '&quot;';
+        case "'": return '&apos;';
+        default: return c;
+      }
+    });
+}
 
 export async function GET() {
   try {
-    // Merchant feed ke liye humein pagination nahi, balki saare products chahiye.
-    // Isliye limit ko 1000 ya koi bara number rakhen.
     const data = await productService.getAllProducts(1, 1000); 
-    
-    // Aapki service res.data.data return kar rahi hai, 
-    // to yahan check karein ke products array kahan hai.
     const products = data.products || []; 
 
-    const xml = `<?xml version="1.0"?>
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
   <channel>
     <title>Fancy Store</title>
@@ -20,8 +31,8 @@ export async function GET() {
     ${products.map((p: any) => `
     <item>
       <g:id>${p.id || p._id}</g:id>
-      <g:title>${p.name}</g:title>
-      <g:description>${p.description ? p.description.replace(/<[^>]*>?/gm, '').substring(0, 5000) : ''}</g:description>
+      <g:title>${escapeXml(p.name)}</g:title>
+      <g:description>${p.description ? escapeXml(p.description).substring(0, 5000) : ''}</g:description>
       <g:link>https://fancystore.store/products/${p.id || p._id}</g:link>
       <g:image_link>${p.imageUrl || p.image}</g:image_link>
       <g:condition>new</g:condition>
@@ -35,11 +46,10 @@ export async function GET() {
 
     return new NextResponse(xml, {
       headers: {
-        'Content-Type': 'application/xml',
+        'Content-Type': 'application/xml; charset=utf-8',
       },
     });
   } catch (error) {
-    console.error("Feed Error:", error);
     return new NextResponse("Error fetching products", { status: 500 });
   }
 }
