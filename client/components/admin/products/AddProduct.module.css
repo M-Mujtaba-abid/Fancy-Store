@@ -1,0 +1,59 @@
+.quillEditor :global(.ql-toolbar) {
+  border-radius: 8px 8px 0 0;
+  border-color: #e2e8f0;
+  background: transparent;
+}
+
+.quillEditor :global(.ql-container) {
+  border-radius: 0 0 8px 8px;
+  border-color: #e2e8f0;
+  font-size: 14px;
+}
+
+.quillEditor :global(.ql-editor) {
+  min-height: 120px;
+  font-size: 14px;
+  color: inherit;
+}
+
+.quillEditor :global(.ql-editor.ql-blank::before) {
+  color: #94a3b8;
+  font-style: normal;
+}
+
+.product-description {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.product-description p {
+  margin-bottom: 0.5rem;
+}
+
+.product-description strong {
+  font-weight: 700;
+}
+
+.product-description ul,
+.product-description ol {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.product-description ul li {
+  list-style-type: disc;
+  margin-bottom: 0.25rem;
+}
+
+.product-description ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.25rem;
+}
+.product-description {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+  overflow: hidden;
+}

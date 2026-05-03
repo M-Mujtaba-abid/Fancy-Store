@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, ChevronLeft, ShieldCheck, Truck, RotateCcw, PackageX } from "lucide-react";
 import Image from "next/image";
-import { Product } from "@/types/product.type"; 
+import { Product } from "@/types/product.type";
 import RelatedProducts from "../mainPage/categories/RelatedProducts";
 import AddToCart from "./AddToCart";
 import { useAddToCart } from "@/hooks/useCart"; // ✅ Hook import kiya
@@ -16,25 +16,25 @@ interface Props {
 }
 
 export default function ProductDetailsClient({ product }: Props) {
-  const router = useRouter(); 
-// ✅ 1. Yeh line add karein button ki loading state ke liye
+  const router = useRouter();
+  // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
   // Main image state: Jab user thumbnail par click kare toh main image badle
   const [activeImage, setActiveImage] = useState<string>(
-  product?.imageUrl || (product?.images && product.images.length > 0 ? product.images[0] : "/placeholder.png")
-);
+    product?.imageUrl || (product?.images && product.images.length > 0 ? product.images[0] : "/placeholder.png")
+  );
 
   // Stock Check
   const isOutOfStock = product.stock <= 0;
 
   // All Images Array
-  const galleryImages = product.images 
-    ? [product.imageUrl, ...product.images.filter((img: string) => img !== product.imageUrl)] 
+  const galleryImages = product.images
+    ? [product.imageUrl, ...product.images.filter((img: string) => img !== product.imageUrl)]
     : [product.imageUrl];
 
 
 
-    // ✅ Buy Now Function (AddToCart Hook nikal dein isme se)
+  // ✅ Buy Now Function (AddToCart Hook nikal dein isme se)
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
 
@@ -63,18 +63,19 @@ export default function ProductDetailsClient({ product }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      
+
       {/* Auto Back Button */}
-      <button 
-        onClick={() => router.back()} 
+      <button
+        onClick={() => router.back()}
         className="inline-flex items-center text-sm text-text-muted hover:text-primary mb-8 transition-colors bg-transparent border-none cursor-pointer p-0"
       >
         <ChevronLeft size={18} className="mr-1" /> Back
       </button>
 
       {/* --- UPPER SECTION: 2 COLUMNS (Image & Details) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-12"> */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 overflow-hidden">
+
         {/* Left: Image Gallery */}
         <div className="space-y-4">
           {/* Main Active Image */}
@@ -84,11 +85,11 @@ export default function ProductDetailsClient({ product }: Props) {
               alt={product.name}
               fill
               className="object-contain p-4 transition-all duration-300 ease-in-out"
-              priority 
+              priority
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
-          
+
           {/* Thumbnails (Sub Images) */}
           {galleryImages.length > 1 && (
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
@@ -108,7 +109,7 @@ export default function ProductDetailsClient({ product }: Props) {
         </div>
 
         {/* Right: Content */}
-        <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
           {/* Categories / Badges */}
           <div className="flex gap-2 mb-3">
             {product.isNewArrival && <span className="bg-green-100 text-green-700 text-[10px] uppercase font-bold px-2 py-1 rounded">New Arrival</span>}
@@ -116,11 +117,11 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-text-main mb-2">{product.name}</h1>
-          
+
           {/* Meta Info */}
           {(product.carModel || product.material) && (
             <p className="text-sm text-text-muted mb-6 capitalize">
-              {product.vehicleType} • {product.carModel} 
+              {product.vehicleType} • {product.carModel}
             </p>
           )}
 
@@ -134,7 +135,7 @@ export default function ProductDetailsClient({ product }: Props) {
             ) : (
               <span className="text-3xl font-bold text-primary">Rs. {product.price.toLocaleString()}</span>
             )}
-            
+
             {/* Stock Badge */}
             <span className={`ml-auto text-sm font-medium px-3 py-1 rounded-full ${isOutOfStock ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
               {isOutOfStock ? "Out of Stock" : `${product.stock} in Stock`}
@@ -142,10 +143,11 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
 
           {/* Description */}
-          <div className="prose prose-sm sm:prose-base dark:prose-invert mb-8">
-            <p className="text-text-main leading-relaxed">{product.description}</p>
-          </div>
-
+        {/* Description */}
+          <div
+            className="text-text-main leading-relaxed product-description mb-8 w-full"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
           {/* Specifications Grid */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             {product.color && (
@@ -165,14 +167,14 @@ export default function ProductDetailsClient({ product }: Props) {
           {/* Actions */}
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 mb-10 mt-auto">
-            
+
             {/* ✅ Outer <button> ko hata kar seedha <AddToCart> use kiya */}
-            <AddToCart 
-              productId={product.id} 
+            <AddToCart
+              productId={product.id}
               stock={product.stock}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto
-                ${isOutOfStock 
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                ${isOutOfStock
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-primary text-white hover:shadow-lg hover:-translate-y-1"
                 }
               `}
@@ -184,9 +186,9 @@ export default function ProductDetailsClient({ product }: Props) {
                 <><ShoppingCart size={20} /> <span>Add to Cart</span></>
               )}
             </AddToCart>
-            
+
             {/* ✅ Buy Now Button */}
-            <button 
+            <button
               onClick={handleBuyNow}
               disabled={isOutOfStock || isBuyNowPending}
               className={`flex-1 h-14 rounded-full font-bold transition-all duration-200 border-2 flex items-center justify-center
@@ -215,9 +217,9 @@ export default function ProductDetailsClient({ product }: Props) {
               <span className="font-medium">7 Days Return</span>
             </div>
           </div>
-          
+
         </div>
-      </div> 
+      </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
 
       {/* --- LOWER SECTION: FULL WIDTH --- */}
