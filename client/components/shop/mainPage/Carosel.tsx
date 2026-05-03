@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 const slides = [
   {
@@ -82,9 +83,9 @@ const Carousel = () => {
                 {slides[current].para}
               </p>
               <div>
-                <button className="bg-primary hover:bg-white hover:text-black text-white px-8 py-4 text-sm font-bold uppercase tracking-widest transition-all duration-300 rounded-none shadow-2xl">
+                <Link href={'/products'} className="bg-primary hover:bg-white hover:text-black text-white px-8 py-4 text-sm font-bold uppercase tracking-widest transition-all duration-300 rounded-none shadow-2xl">
                   Shop Now
-                </button>
+                </Link>
               </div>
             </motion.div>
           </div>
