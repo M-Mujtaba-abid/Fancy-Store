@@ -16,15 +16,16 @@ const Footer = () => {
   const logoSrc = resolvedTheme === "dark" ? "/logoB.png" : "/logoW.png";
 
   // Social Links with Custom SVG Icons for consistency and theme support
+  // Only Instagram and TikTok are active in the footer right now.
   const socialLinks = [
-    {
-      name: 'Facebook',
-      href: '#',
-      svg: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-    },
+    // {
+    //   name: 'Facebook',
+    //   href: '#',
+    //   svg: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+    // },
     {
       name: 'Instagram',
-      href: '#',
+      href: 'https://www.instagram.com/fancy.store62/',
       svg: (
         <>
           <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -33,26 +34,26 @@ const Footer = () => {
         </>
       )
     },
-    {
-      name: 'X',
-      href: '#',
-      svg: <path d="M4 4l11.733 16h4.267l-11.733-16zM4 20l6.768-6.768m2.464-2.464l6.768-6.768"></path>
-    },
+    // {
+    //   name: 'X',
+    //   href: '#',
+    //   svg: <path d="M4 4l11.733 16h4.267l-11.733-16zM4 20l6.768-6.768m2.464-2.464l6.768-6.768"></path>
+    // },
     {
       name: 'TikTok',
-      href: '#',
+      href: 'https://www.tiktok.com/@fancystore62',
       svg: <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
     },
-    {
-      name: 'Youtube',
-      href: '#',
-      svg: (
-        <>
-          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path>
-          <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon>
-        </>
-      )
-    }
+    // {
+    //   name: 'Youtube',
+    //   href: '#',
+    //   svg: (
+    //     <>
+    //       <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.11 1 12 1 12s0 3.89.46 5.58a2.78 2.78 0 0 0 1.94 2c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.89 23 12 23 12s0-3.89-.46-5.58z"></path>
+    //       <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon>
+    //     </>
+    //   )
+    // }
   ];
 
   return (
@@ -76,11 +77,13 @@ const Footer = () => {
               Providing premium quality vehicle covers for cars and bikes.
               Protect your passion with our all-weather durable shields.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex gap-3">
               {socialLinks.map((social) => (
                 <Link
                   key={social.name}
                   href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="p-2 bg-border-custom/30 rounded-full hover:bg-primary hover:text-white transition-all text-text-main"
                   aria-label={social.name}
                 >
@@ -105,11 +108,17 @@ const Footer = () => {
           <div>
             <h4 className="font-bold text-lg mb-6 uppercase tracking-widest text-text-main">Quick Links</h4>
             <ul className="space-y-4">
-              {['Shop All', 'New Arrivals', 'Car Covers', 'Bike Covers', 'Sale'].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-text-muted hover:text-primary flex items-center group text-sm transition-colors">
+              {[
+                { label: 'Shop All', href: '/products' },
+                { label: 'New Arrivals', href: '/viewMore?filter=new-arrivals' },
+                { label: 'Car Covers', href: '/viewMore?filter=car-covers' },
+                { label: 'Bike Covers', href: '/viewMore?filter=bike-covers' },
+                { label: 'Sale', href: '/viewMore?filter=on-sale' }
+              ].map((item) => (
+                <li key={item.label}>
+                  <Link href={item.href} className="text-text-muted hover:text-primary flex items-center group text-sm transition-colors">
                     <ArrowUpRight size={14} className="mr-2 opacity-0 group-hover:opacity-100 transition-all" />
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -149,7 +158,12 @@ const Footer = () => {
               </li>
               <li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Mail size={20} className="text-primary shrink-0" />
-                <span>support@fancystore.com</span>
+                <a
+                  href="mailto:fancystore0078@gmail.com"
+                  className="hover:text-primary transition-colors duration-200"
+                >
+                  fancystore0078@gmail.com
+                </a>
               </li>
             </ul>
           </div>
