@@ -129,10 +129,16 @@ const Footer = () => {
           <div>
             <h4 className="font-bold text-lg mb-6 uppercase tracking-widest text-text-main">Support</h4>
             <ul className="space-y-4">
-              {['Track Order', 'Shipping Policy', 'Return & Exchange', 'FAQs', 'Privacy Policy'].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-text-muted hover:text-primary text-sm transition-colors">
-                    {item}
+              {[
+                { label: 'Track Order', href: '/track-order' },
+                { label: 'Shipping Policy', href: '/shipping-policy' },
+                { label: 'Return & Exchange', href: '/return-policy' },
+                { label: 'FAQs', href: '/faqs' },
+                { label: 'Privacy Policy', href: '/privacy-policy' }
+              ].map((item) => (
+                <li key={item.label}>
+                  <Link href={item.href} className="text-text-muted hover:text-primary text-sm transition-colors">
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -143,18 +149,35 @@ const Footer = () => {
           <div>
             <h4 className="font-bold text-lg mb-6 uppercase tracking-widest text-text-main">Get In Touch</h4>
             <ul className="space-y-5">
-              <li className="flex items-start space-x-3 text-sm text-text-muted">
+            <li className="flex items-start space-x-3 text-sm text-text-muted">
                 <MapPin size={20} className="text-primary shrink-0" />
-                <span>Lahore, Punjab, Pakistan<br />Dha phase 1 , Fancy Store LAhore</span>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Sham+Nagar+Chuburji+Lahore"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors duration-200"
+                >
+                  Sham Nager Chuburji
+                </a>
               </li>
-              <li className="flex items-center space-x-3 text-sm text-text-muted">
+            <li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Phone size={20} className="text-primary shrink-0" />
-                <span>+92 333 4140461</span>
+                <a
+                  href="tel:+923334140461"
+                  className="hover:text-primary transition-colors duration-200"
+                >
+                  +92 333 4140461
+                </a>
               </li>
 
-              <li className="flex items-center space-x-3 text-sm text-text-muted">
+<li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Phone size={20} className="text-primary shrink-0" />
-                <span>+92 305 1365856</span>
+                <a
+                  href="tel:+923051365856"
+                  className="hover:text-primary transition-colors duration-200"
+                >
+                  +92 305 1365856
+                </a>
               </li>
               <li className="flex items-center space-x-3 text-sm text-text-muted">
                 <Mail size={20} className="text-primary shrink-0" />
