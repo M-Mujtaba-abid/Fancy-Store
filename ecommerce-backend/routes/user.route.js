@@ -12,7 +12,7 @@ import {
 } from "../controllers/user.controller.js";
 import passport from "../config/passport.js"; //  add
 import authMiddleware from "../middleware/auth.middleware.js";
-import { upload } from "../middleware/multer.middleware.js";
+import { upload, uploadWithLimits } from "../middleware/multer.middleware.js";
 import { getDashboardStats } from "../controllers/admin.controller.js";
 import adminMiddleware from "../middleware/admin.middleware.js";
 
@@ -50,11 +50,12 @@ router.get(
 
 // Profile Routes
 router.get("/profile", authMiddleware, getProfile);
-router.patch(
-  "/profile",
-  authMiddleware,
-  upload.single("avatar"),
-  updateProfile,
-);
+// router.patch(
+//   "/profile",
+//   authMiddleware,
+//   upload.single("avatar"),
+//   updateProfile,
+// );
+router.post("/profile", authMiddleware, uploadWithLimits.array("avatar"), updateProfile);
 router.get("/dashboard-stats",authMiddleware, adminMiddleware, getDashboardStats);
 export default router;
