@@ -414,7 +414,9 @@ export const updateProductService = async (id, body, files) => {
 
   if (files && files.length > 0) {
     const uploadedImages = await uploadImagesToCloudinary(files);
-    updateData.images = uploadedImages;
+// Purani images aur nayi images ko merge karein
+    const existingImages = product.images || []; 
+    updateData.images = [...existingImages, ...uploadedImages];
     updateData.imageUrl = uploadedImages[0];
   }
 

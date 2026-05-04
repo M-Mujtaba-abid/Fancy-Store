@@ -20,12 +20,8 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
       </div>
     );
   }
-
-  // ✅ 2. Yahan humne PagingResponse (data) ke andar se asal products ka array nikal liya
-  const productsArray = data?.products || [];
-
   // ✅ 3. Ab hum confidently .length use kar sakte hain kyunke yeh ab array hai
-  if (isError || productsArray.length === 0) return null;
+  if (isError || !data || data.length === 0) return null;
 
   return (
     <div className="mt-20 pt-12 border-t border-border/50">
@@ -37,7 +33,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
       </div>
 
       {/* ✅ 4. Carousel ko bhi pure array pass kar diya */}
-      <ProductCarousel products={productsArray} cardVariant="default" />
+      <ProductCarousel products={data} cardVariant="default" />
     </div>
   );
 };

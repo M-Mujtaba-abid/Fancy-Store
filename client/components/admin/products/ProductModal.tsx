@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Product } from "@/types/product.type";
 import { X, Truck, Tag, Settings } from "lucide-react";
+import ExpandableDescription from "@/components/shop/share/ExpandableDescription";
 
 interface ProductModalProps {
   product: Product;
@@ -119,14 +120,7 @@ const ProductModal = ({ product, onClose }: ProductModalProps) => {
             </div>
 
             {/* Description */}
-           {/* Description */}
-<div className="mb-6 mt-auto">
-  <p className="text-[10px] text-text-muted uppercase font-bold mb-2">Description</p>
-  <div
-    className="text-sm text-text-main leading-relaxed bg-background p-4 rounded-xl border border-border/50 product-description max-w-full overflow-hidden"
-    dangerouslySetInnerHTML={{ __html: product.description || "No description provided." }}
-  />
-</div>
+<ExpandableDescription description={product.description} />
 
           </div>
         </div>
