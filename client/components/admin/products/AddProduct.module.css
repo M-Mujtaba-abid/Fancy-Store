@@ -1,3 +1,4 @@
+/* Quill Editor Styles (Basics) */
 .quillEditor :global(.ql-toolbar) {
   border-radius: 8px 8px 0 0;
   border-color: #e2e8f0;
@@ -21,39 +22,73 @@
   font-style: normal;
 }
 
+/* --- Product Description (Optimized for Readability) --- */
+
+
+.product-description * {
+    max-width: 100%;
+    white-space: normal !important;
+    
+    /* ❌ In do lines ko DELETE kar dein ya niche wala likhein */
+    /* overflow-wrap: anywhere !important; */
+    /* word-break: break-word !important; */
+
+    /* ✅ Sirf ye rehne dein (Bina !important ke) */
+    overflow-wrap: break-word;
+    word-break: normal;
+}
 .product-description {
-  word-break: break-word;
-  overflow-wrap: break-word;
+  display: block;
+  width: 100%;
   white-space: normal;
+  -webkit-font-smoothing: antialiased;
+  
+  /* ✅ Word-Breaking Fix: Words beech mein se nahi tootenge */
+  word-break: normal; 
+  overflow-wrap: break-word; 
+  hyphens: none;
 }
 
-.product-description p {
-  margin-bottom: 0.5rem;
+/* Smooth Transition Logic */
+.product-description.transition-all {
+  transition-property: max-height;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.product-description strong {
+/* Typography Inside Description */
+.product-description div {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  hyphens: none !important;
+}
+
+.product-description strong, 
+.product-description b {
   font-weight: 700;
 }
 
+/* List Styles */
 .product-description ul,
 .product-description ol {
   padding-left: 1.5rem;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 1rem;
 }
 
 .product-description ul li {
   list-style-type: disc;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .product-description ol li {
   list-style-type: decimal;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
 }
-.product-description {
-  word-break: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
+
+/* Images inside Description */
+.product-description img {
   max-width: 100%;
-  overflow: hidden;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
 }
