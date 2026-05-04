@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, ChevronDown, ClipboardList, LayoutDashboard, X } from "lucide-react";
-import React from "react";
+import { Box, ChevronDown, ClipboardList, LayoutDashboard, X, MessageSquare } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import AuthButtons from "@/components/shop/share/AuthButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getAllContacts } from "@/service/contactService/contact.service";
 
 interface SidebarNavProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   const pathname = usePathname();
   const [openProducts, setOpenProducts] = React.useState(true);
   const [openOrders, setOpenOrders] = React.useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const isActive = (path: string) => pathname === path;
   const handleLinkClick = () => onClose();
@@ -23,6 +25,21 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   React.useEffect(() => {
     onClose();
   }, [pathname, onClose]);
+
+  // Fetch pending contact count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const contacts = await getAllContacts();
+        const pending = contacts.filter((c) => !c.is_replied).length;
+        setPendingCount(pending);
+      } catch (error) {
+        console.error("Failed to fetch pending count:", error);
+      }
+    };
+
+    fetchPendingCount();
+  }, []);
 
   return (
     <>
@@ -126,6 +143,24 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
             </div>
           )}
         </div>
+
+        <Link
+          href="/dashboard/contacts"
+          onClick={handleLinkClick}
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm ${
+            isActive("/dashboard/contacts") ? "bg-primary text-white" : "bg-background text-text-main hover:bg-background/80"
+          }`}
+        >
+          <span className="flex items-center gap-3">
+            <MessageSquare size={18} />
+            Contact Messages
+          </span>
+          {pendingCount > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              {pendingCount}
+            </span>
+          )}
+        </Link>
       </nav>
 
       <div className="mt-auto pt-4 border-t border-border/50">

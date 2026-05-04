@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/context/Providers"; // Naya Providers import karein
 import AppShell from "@/components/layout/AppShell";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>
+        <Toaster position="top-right" />
       </body>
     </html>
   );
