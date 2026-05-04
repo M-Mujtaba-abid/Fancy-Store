@@ -56,6 +56,6 @@ router.get("/profile", authMiddleware, getProfile);
 //   upload.single("avatar"),
 //   updateProfile,
 // );
-router.post("/profile", authMiddleware, uploadWithLimits.array("avatar"), updateProfile);
+router.patch("/profile", authMiddleware, uploadWithLimits.single("avatar"), updateProfile);
 router.get("/dashboard-stats",authMiddleware, adminMiddleware, getDashboardStats);
 export default router;
