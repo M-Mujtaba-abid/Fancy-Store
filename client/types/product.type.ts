@@ -53,7 +53,7 @@ export interface PagingResponse {
   totalItems: number;
   totalPages: number;
   currentPage: number;
-  products: Product[];
+  products: Product[] | undefined;
 }
 
 export interface ApiResponse<T> {

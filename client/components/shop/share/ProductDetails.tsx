@@ -77,11 +77,11 @@ export default function ProductDetailsClient({ product }: Props) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
       {/* Auto Back Button */}
       <button
         onClick={() => router.back()}
-        className="inline-flex items-center text-sm text-text-muted hover:text-primary mb-8 transition-colors bg-transparent border-none cursor-pointer p-0"
+        className="inline-flex items-center text-sm text-text-muted hover:text-primary mb-4 transition-colors bg-transparent border-none cursor-pointer p-0"
       >
         <ChevronLeft size={18} className="mr-1" /> Back
       </button>
@@ -274,6 +274,10 @@ export default function ProductDetailsClient({ product }: Props) {
       {/* --- LOWER SECTION: FULL WIDTH --- */}
       {/* ✅ Related Products ab grid ke baahar aur poori screen par aaye ga */}
       <div className="mt-16">
+        {/* <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-text-main">
+          You May Also Like
+        </h1> */}
+        {/* <div className="">{product.id}</div> */}
         <RelatedProducts productId={product.id} />
       </div>
     </div>

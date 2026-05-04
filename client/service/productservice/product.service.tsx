@@ -152,9 +152,9 @@ export const productService = {
     );
     return res.data.data;
   },
-  getRelatedProducts: async (id: string) => {
-    const res = await api.get<ApiResponse<PagingResponse>>(`/products/${id}/related`);
-    console.log("related profucts ",res.data.data)
+  getRelatedProducts: async (id: string):Promise<Product[]> => {
+    const res = await api.get<ApiResponse<Product[]>>(`/products/${id}/related`);
+    // console.log("related profucts ***********",res)
     return res.data.data; // Yeh aapko wo 6 products ka array dega
   },
 };
