@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
+import { useGetAllContacts, useReplyToContact } from "./useContact";
 import { ContactMessage } from "@/types/contact.types";
-import { getAllContacts, replyToContact } from "@/service/contactService/contact.service";
-import toast from "react-hot-toast";
 
 export const useAdminContacts = () => {
-  const [contacts, setContacts] = useState<ContactMessage[]>([]);
+  const { data: contacts = [], isLoading, isError, error } = useGetAllContacts();
+  const { mutate: replyToContact, isPending } = useReplyToContact();
+
   const [filteredContacts, setFilteredContacts] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied">("all");
@@ -15,26 +14,7 @@ export const useAdminContacts = () => {
 
   const [selectedContact, setSelectedContact] = useState<ContactMessage | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
   const [replyError, setReplyError] = useState("");
-
-  // Fetch contacts on mount
-  useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await getAllContacts();
-        setContacts(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load contact messages.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContacts();
-  }, []);
 
   // Apply filters
   useEffect(() => {
@@ -63,32 +43,16 @@ export const useAdminContacts = () => {
     setFilteredContacts(filtered);
   }, [contacts, searchTerm, statusFilter, categoryFilter]);
 
-  const handleReply = async () => {
+  const handleReply = () => {
     if (!selectedContact || !replyMessage.trim()) {
       setReplyError("Reply message cannot be empty.");
       return;
     }
 
-    try {
-      setIsReplying(true);
-      setReplyError("");
-
-      await replyToContact(selectedContact.id, replyMessage);
-      setContacts((prev) =>
-        prev.map((contact) =>
-          contact.id === selectedContact.id ? { ...contact, is_replied: true } : contact
-        )
-      );
-      
-      toast.success("Reply sent successfully!");
-      setSelectedContact(null);
-      setReplyMessage("");
-    } catch (err: any) {
-      setReplyError(err.message || "Failed to send reply.");
-      toast.error(err.message || "Failed to send reply.");
-    } finally {
-      setIsReplying(false);
-    }
+    setReplyError("");
+    replyToContact({ id: selectedContact.id, replyMessage });
+    setSelectedContact(null);
+    setReplyMessage("");
   };
 
   const resetFilters = () => {
@@ -109,14 +73,15 @@ export const useAdminContacts = () => {
     // State
     contacts,
     filteredContacts,
-    loading,
+    isLoading,
+    isError,
     error,
     searchTerm,
     statusFilter,
     categoryFilter,
     selectedContact,
     replyMessage,
-    isReplying,
+    isReplying: isPending,
     replyError,
     pendingCount,
     // Handlers

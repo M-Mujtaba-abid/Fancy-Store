@@ -7,7 +7,8 @@ import { CONTACT_CATEGORY_COLORS, CONTACT_CATEGORY_LABELS } from "@/constants/co
 export default function AdminContacts() {
   const {
     filteredContacts,
-    loading,
+    isLoading,
+    isError,
     error,
     searchTerm,
     statusFilter,
@@ -96,16 +97,16 @@ export default function AdminContacts() {
         </div>
       </div>
 
-      {error && (
+      {isError && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 text-sm text-red-400">
           <div className="flex items-center gap-3">
             <AlertCircle size={18} />
-            <span>{error}</span>
+            <span>{error?.response?.data?.message || error?.message || "Failed to load contact messages"}</span>
           </div>
         </div>
       )}
 
-      {loading && (
+      {isLoading && (
         <div className="space-y-4">
           {[1, 2, 3].map((item) => (
             <div key={item} className="bg-card rounded-2xl border border-border/50 p-6 shadow-sm">
@@ -119,7 +120,7 @@ export default function AdminContacts() {
         </div>
       )}
 
-      {!loading && filteredContacts.length === 0 && (
+      {!isLoading && filteredContacts.length === 0 && (
         <div className="bg-card rounded-2xl border border-border/50 p-12 text-center shadow-sm">
           <Mail className="mx-auto mb-4 text-text-muted" size={48} />
           <p className="text-lg font-semibold text-text-main">No contact messages found</p>
@@ -127,7 +128,7 @@ export default function AdminContacts() {
         </div>
       )}
 
-      {!loading && filteredContacts.length > 0 && (
+      {!isLoading && filteredContacts.length > 0 && (
         <div className="space-y-4">
           <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">

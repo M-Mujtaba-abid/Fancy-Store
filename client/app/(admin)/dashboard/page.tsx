@@ -5,7 +5,7 @@ import { Box, ClipboardList, Users, TrendingUp } from "lucide-react";
 import { useGetDashboardStats } from "@/hooks/useAdmin"; // Apna sahi path check kar lein
 
 export default function DashboardSummary() {
-  // ✅ Hook se live data, loading aur error states nikal lein
+  //  Hook se live data, loading aur error states nikal lein
   const { data, isLoading, isError } = useGetDashboardStats();
 
   // Data extract karein
