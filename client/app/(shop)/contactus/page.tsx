@@ -1,60 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
-import { submitContactForm, ContactFormData } from '@/service/contactService/contact.service';
-import toast from 'react-hot-toast';
+import React from 'react';
+import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
+import { useContactForm } from '@/hooks/useContactForm';
+import { CONTACT_CATEGORIES } from '@/constants/contactCategories';
 
 const ContactPage = () => {
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: "",
-    email: "",
-    category: "general",
-    subject: "",
-    message: "",
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Save data before reset
-    const dataToSend = { ...formData };
-
-    // Reset form immediately
-    setFormData({
-      name: "",
-      email: "",
-      category: "general",
-      subject: "",
-      message: "",
-    });
-
-    // Show loading toast
-    const toastId = toast.loading("Sending your message... ⏳", {
-      position: "top-right",
-    });
-
-    // Call API in background
-    submitContactForm(dataToSend)
-      .then(() => {
-        toast.success("Message sent! We'll get back to you soon 🎉", {
-          id: toastId,
-          duration: 4000,
-        });
-      })
-      .catch((err: any) => {
-        toast.error("Something went wrong, please try again!", {
-          id: toastId,
-          duration: 4000,
-        });
-      });
-  };
+  const { formData, handleChange, handleSubmit } = useContactForm();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -239,11 +191,11 @@ const ContactPage = () => {
                       onChange={handleChange}
                       className="w-full px-4 py-4 rounded-2xl bg-background border-2 border-border/50 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-text-main appearance-none"
                     >
-                      <option value="general">General Inquiry</option>
-                      <option value="order_issue">Order Issue</option>
-                      <option value="payment">Payment Problem</option>
-                      <option value="return_refund">Return / Refund</option>
-                      <option value="other">Other</option>
+                      {CONTACT_CATEGORIES.map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </option>
+                      ))}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

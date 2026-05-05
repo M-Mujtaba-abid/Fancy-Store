@@ -1,116 +1,32 @@
 ﻿"use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Mail, Send, Search, AlertCircle, MessageSquare, X } from "lucide-react";
-import { getAllContacts, replyToContact, ContactMessage } from "@/service/contactService/contact.service";
+import { useAdminContacts } from "@/hooks/useAdminContacts";
+import { CONTACT_CATEGORY_COLORS, CONTACT_CATEGORY_LABELS } from "@/constants/contactCategories";
 
 export default function AdminContacts() {
-  const [contacts, setContacts] = useState<ContactMessage[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied">("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-
-  const [selectedContact, setSelectedContact] = useState<ContactMessage | null>(null);
-  const [replyMessage, setReplyMessage] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
-  const [replyError, setReplyError] = useState("");
-
-  useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await getAllContacts();
-        setContacts(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load contact messages.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContacts();
-  }, []);
-
-  useEffect(() => {
-    let filtered = contacts;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (contact) =>
-          contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          contact.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(
-        (contact) =>
-          (statusFilter === "replied" && contact.is_replied) ||
-          (statusFilter === "pending" && !contact.is_replied)
-      );
-    }
-
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((contact) => contact.category === categoryFilter);
-    }
-
-    setFilteredContacts(filtered);
-  }, [contacts, searchTerm, statusFilter, categoryFilter]);
-
-  const handleReply = async () => {
-    if (!selectedContact || !replyMessage.trim()) {
-      setReplyError("Reply message cannot be empty.");
-      return;
-    }
-
-    try {
-      setIsReplying(true);
-      setReplyError("");
-
-      await replyToContact(selectedContact.id, replyMessage);
-      setContacts((prev) =>
-        prev.map((contact) =>
-          contact.id === selectedContact.id ? { ...contact, is_replied: true } : contact
-        )
-      );
-      setSelectedContact(null);
-      setReplyMessage("");
-    } catch (err: any) {
-      setReplyError(err.message || "Failed to send reply.");
-    } finally {
-      setIsReplying(false);
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-      general: "General",
-      order_issue: "Order Issue",
-      payment: "Payment",
-      return_refund: "Return / Refund",
-      other: "Other",
-    };
-
-    return labels[category] || category;
-  };
-
-  const getCategoryColor = (category: string) => {
-    const styles: Record<string, string> = {
-      general: "bg-gray-500/10 text-gray-400 border border-gray-500/30",
-      order_issue: "bg-orange-500/10 text-orange-400 border border-orange-500/30",
-      payment: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30",
-      return_refund: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
-      other: "bg-purple-500/10 text-purple-400 border border-purple-500/30",
-    };
-
-    return styles[category] || styles.general;
-  };
-
-  const pendingCount = contacts.filter((contact) => !contact.is_replied).length;
+  const {
+    filteredContacts,
+    loading,
+    error,
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    selectedContact,
+    replyMessage,
+    isReplying,
+    replyError,
+    pendingCount,
+    contacts,
+    setSearchTerm,
+    setStatusFilter,
+    setCategoryFilter,
+    setSelectedContact,
+    setReplyMessage,
+    handleReply,
+    resetFilters,
+    closeReplyModal,
+  } = useAdminContacts();
 
   return (
     <div className="space-y-6">
@@ -172,11 +88,7 @@ export default function AdminContacts() {
           </select>
 
           <button
-            onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("all");
-              setCategoryFilter("all");
-            }}
+            onClick={resetFilters}
             className="rounded-2xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/20"
           >
             Reset Filters
@@ -237,8 +149,8 @@ export default function AdminContacts() {
                       <td className="p-4 font-medium text-text-main">{contact.name}</td>
                       <td className="p-4 text-text-muted">{contact.email}</td>
                       <td className="p-4">
-                        <span className={`text-xs rounded-full px-2 py-1 font-medium ${getCategoryColor(contact.category)}`}>
-                          {getCategoryLabel(contact.category)}
+                        <span className={`text-xs rounded-full px-2 py-1 font-medium ${CONTACT_CATEGORY_COLORS[contact.category] || CONTACT_CATEGORY_COLORS.general}`}>
+                          {CONTACT_CATEGORY_LABELS[contact.category] || contact.category}
                         </span>
                       </td>
                       <td className="p-4 text-text-main max-w-xs truncate">{contact.subject || "—"}</td>
@@ -277,8 +189,8 @@ export default function AdminContacts() {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <span className={`text-xs rounded-full px-2 py-1 font-medium ${getCategoryColor(contact.category)}`}>
-                      {getCategoryLabel(contact.category)}
+                    <span className={`text-xs rounded-full px-2 py-1 font-medium ${CONTACT_CATEGORY_COLORS[contact.category] || CONTACT_CATEGORY_COLORS.general}`}>
+                      {CONTACT_CATEGORY_LABELS[contact.category] || contact.category}
                     </span>
                     <span className="text-xs text-text-muted">{new Date(contact.created_at).toLocaleDateString()}</span>
                   </div>
@@ -305,11 +217,7 @@ export default function AdminContacts() {
                 <p className="text-sm text-text-muted">{selectedContact.email}</p>
               </div>
               <button
-                onClick={() => {
-                  setSelectedContact(null);
-                  setReplyMessage("");
-                  setReplyError("");
-                }}
+                onClick={closeReplyModal}
                 className="rounded-full p-2 text-text-muted hover:bg-background/80 hover:text-text-main transition-colors"
               >
                 <X size={18} />
@@ -356,11 +264,7 @@ export default function AdminContacts() {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedContact(null);
-                        setReplyMessage("");
-                        setReplyError("");
-                      }}
+                      onClick={closeReplyModal}
                       className="rounded-2xl border border-border/50 bg-background px-5 py-3 text-sm font-semibold text-text-main hover:bg-background/90"
                     >
                       Cancel
@@ -379,3 +283,5 @@ export default function AdminContacts() {
     </div>
   );
 }
+// hy
+hh

@@ -1,23 +1,8 @@
 import api from "../api";
+import { ContactFormData, ContactMessage } from "@/types/contact.types";
 
-export interface ContactFormData {
-  name: string;
-  email: string;
-  category: "order_issue" | "payment" | "return_refund" | "general" | "other";
-  subject: string;
-  message: string;
-}
-
-export interface ContactMessage {
-  id: number;
-  name: string;
-  email: string;
-  category: string;
-  subject: string;
-  message: string;
-  is_replied: boolean;
-  created_at: string;
-}
+// Re-export types for backward compatibility
+export type { ContactFormData, ContactMessage };
 
 // Customer → Submit contact form
 export const submitContactForm = async (formData: ContactFormData) => {
