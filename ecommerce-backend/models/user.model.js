@@ -20,6 +20,8 @@ User.init(
 User.associate = (models) => {
   // Yahan batana hai ke User ke paas bahut saare Orders hain
   User.hasMany(models.Order, { foreignKey: "userId", onDelete: "CASCADE" });
+  // Ye line add karein
+    User.hasMany(models.Review, { foreignKey: "userId", onDelete: "CASCADE" });
 };
 
 // ...

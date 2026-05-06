@@ -1,239 +1,185 @@
-// import models from "../models/index.js";
-// const { Review, User, Product, Order, OrderItem } = models;
-// import ApiError from "../utils/apiError.js";
-// import cloudinary from "../utils/cloudinary.js";
-// import { Op } from "sequelize";
-
-// // ============== CLOUDINARY UPLOAD ==============
-// const uploadImagesToCloudinary = (files) => {
-//   return Promise.all(
-//     files.map((file) =>
-//       new Promise((resolve, reject) => {
-//         const stream = cloudinary.uploader.upload_stream(
-//           { folder: "reviews" },
-//           (error, result) => {
-//             if (error) reject(error);
-//             else resolve(result.secure_url);
-//           }
-//         );
-//         stream.end(file.buffer);
-//       })
-//     )
-//   );
-// };
-
-// // ============== ADD REVIEW ==============
-// export const addReviewService = async (userId, productId, rating, comment, files) => {
-
-//   const orders = await Order.findAll({
-//     where: { userId, status: "delivered" },
-//   });
-
-//   if (!orders || orders.length === 0) {
-//     throw new ApiError(403, "You can only review products you have purchased");
-//   }
-
-//   const orderIds = orders.map(o => o.id);
-
-//   const orderItem = await OrderItem.findOne({
-//     where: {
-//       orderId: { [Op.in]: orderIds },
-//       productId: Number(productId),
-//     },
-//   });
-
-//   if (!orderItem) {
-//     throw new ApiError(403, "You can only review products you have purchased");
-//   }
-
-//   const existing = await Review.findOne({ where: { userId, productId } });
-//   if (existing) throw new ApiError(400, "You have already reviewed this product");
-
-//   let images = [];
-//   if (files && files.length > 0) {
-//     images = await uploadImagesToCloudinary(files);
-//   }
-
-//   const review = await Review.create({ userId, productId, rating, comment, images });
-//   return review;
-// };
-
-// // ============== GET PRODUCT REVIEWS ==============
-// export const getProductReviewsService = async (productId) => {
-//   const product = await Product.findByPk(productId);
-//   if (!product) throw new ApiError(404, "Product not found");
-
-//   const reviews = await Review.findAll({
-//     where: { productId },
-//     include: [{ model: User, attributes: ["id", "name"] }],
-//     order: [["createdAt", "DESC"]],
-//   });
-
-//   const avgRating = reviews.length
-//     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-//     : 0;
-
-//   return { avgRating, totalReviews: reviews.length, reviews };
-// };
-
-// // ============== UPDATE REVIEW ==============
-// export const updateReviewService = async (reviewId, userId, rating, comment, files) => {
-//   const review = await Review.findOne({ where: { id: reviewId, userId } });
-//   if (!review) throw new ApiError(404, "Review not found or not authorized");
-
-//   if (files && files.length > 0) {
-//     review.images = await uploadImagesToCloudinary(files);
-//   }
-
-//   if (rating) review.rating = rating;
-//   if (comment) review.comment = comment;
-
-//   await review.save();
-//   return review;
-// };
-
-// // ============== DELETE REVIEW ==============
-// export const deleteReviewService = async (reviewId, userId, role) => {
-//   const where = role === "admin" ? { id: reviewId } : { id: reviewId, userId };
-//   const review = await Review.findOne({ where });
-//   if (!review) throw new ApiError(404, "Review not found or not authorized");
-
-//   await review.destroy();
-// };
-
-// // ============== ADMIN REPLY ==============
-// export const adminReplyService = async (reviewId, reply) => {
-//   const review = await Review.findByPk(reviewId);
-//   if (!review) throw new ApiError(404, "Review not found");
-
-//   review.adminReply = reply;
-//   await review.save();
-//   return review;
-// };
-
-
-// n
 import models from "../models/index.js";
 const { Review, User, Product, Order, OrderItem } = models;
+import sequelize from "../config/db.js";
 import ApiError from "../utils/apiError.js";
 import cloudinary from "../utils/cloudinary.js";
 import { Op } from "sequelize";
-import { ROLES, RATING_MIN, RATING_MAX } from "../constants/index.js"; // ✅ import
+import { ROLES, RATING_MIN, RATING_MAX } from "../constants/index.js";
 
-// ============== CLOUDINARY UPLOAD ==============
-const uploadImagesToCloudinary = (files) => {
-  return Promise.all(
-    files.map((file) =>
-      new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "reviews" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result.secure_url);
-          }
-        );
+// ============== UTILS: CLOUDINARY & RATING HELPERS ==============
+
+const uploadToCloudinary = (file) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ folder: "fancy_store_reviews" }, (err, res) => {
+            if (err) reject(err); else resolve(res.secure_url);
+        });
         stream.end(file.buffer);
-      })
-    )
-  );
+    });
 };
 
-// ============== ADD REVIEW ==============
+const deleteFromCloudinary = async (url) => {
+    try {
+        const publicId = url.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(`fancy_store_reviews/${publicId}`);
+    } catch (err) { console.error("Cloudinary Delete Fail:", err); }
+};
+
+// Internal Helper: Sirf Approved reviews ka average nikal kar Product table update karega
+const syncProductStats = async (productId, transaction) => {
+    const stats = await Review.findAll({
+        where: { productId, isApproved: true },
+        attributes: [
+            [sequelize.fn("AVG", sequelize.col("rating")), "avgRating"],
+            [sequelize.fn("COUNT", sequelize.col("id")), "totalReviews"],
+        ],
+        raw: true,
+        transaction
+    });
+
+    await Product.update(
+        {
+            averageRating: parseFloat(stats[0].avgRating || 0).toFixed(1),
+            totalReviews: parseInt(stats[0].totalReviews || 0)
+        },
+        { where: { id: productId }, transaction }
+    );
+};
+
+// ============== CORE SERVICES ==============
+// done
 export const addReviewService = async (userId, productId, rating, comment, files) => {
+    if (rating < RATING_MIN || rating > RATING_MAX) throw new ApiError(400, "Invalid Rating");
+// console.log("User ke delivered orders:", JSON.stringify(checkOrders, null, 2));
+    // Check purchase status (Single Query Join)
+    const hasPurchased = await OrderItem.findOne({
+        where: { productId: Number(productId) },
+        include: [{ model: Order, where: { userId, status: "delivered" }, required: true }]
+    });
+    console.log("Purchase Record found:", hasPurchased);
+    if (!hasPurchased) throw new ApiError(403, "Aap sirf delivered orders par review de sakte hain");
 
-  // ✅ Rating validate karo
-  if (rating < RATING_MIN || rating > RATING_MAX) {
-    throw new ApiError(400, `Rating must be between ${RATING_MIN} and ${RATING_MAX}`);
-  }
+    const existing = await Review.findOne({ where: { userId, productId } });
+    if (existing) throw new ApiError(400, "Aap is product ka review pehle hi de chuke hain");
 
-  const orders = await Order.findAll({
-    where: { userId, status: "delivered" },
-  });
+    let imageUrls = files?.length ? await Promise.all(files.map(uploadToCloudinary)) : [];
 
-  if (!orders || orders.length === 0) {
-    throw new ApiError(403, "You can only review products you have purchased");
-  }
-
-  const orderIds = orders.map(o => o.id);
-
-  const orderItem = await OrderItem.findOne({
-    where: {
-      orderId: { [Op.in]: orderIds },
-      productId: Number(productId),
-    },
-  });
-
-  if (!orderItem) {
-    throw new ApiError(403, "You can only review products you have purchased");
-  }
-
-  const existing = await Review.findOne({ where: { userId, productId } });
-  if (existing) throw new ApiError(400, "You have already reviewed this product");
-
-  let images = [];
-  if (files && files.length > 0) {
-    images = await uploadImagesToCloudinary(files);
-  }
-
-  const review = await Review.create({ userId, productId, rating, comment, images });
-  return review;
+    // Note: isApproved default 'false' hoga model definition mein
+    return await Review.create({ userId, productId, rating, comment, images: imageUrls });
 };
 
-// ============== GET PRODUCT REVIEWS ==============
+// done
 export const getProductReviewsService = async (productId) => {
-  const product = await Product.findByPk(productId);
-  if (!product) throw new ApiError(404, "Product not found");
+    const reviews = await Review.findAll({
+        where: { productId, isApproved: true },
+        include: [{ model: User, attributes: ["id", "name", "avatar"] }],
+        order: [["createdAt", "DESC"]]
+    });
 
-  const reviews = await Review.findAll({
-    where: { productId },
-    include: [{ model: User, attributes: ["id", "name"] }],
-    order: [["createdAt", "DESC"]],
-  });
+    // Product table se cached rating uthayen (Super Fast)
+    const productStats = await Product.findByPk(productId, {
+        attributes: ["averageRating", "totalReviews"]
+    });
 
-  const avgRating = reviews.length
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
-  return { avgRating, totalReviews: reviews.length, reviews };
+    return { 
+        avgRating: productStats?.averageRating || 0, 
+        totalReviews: productStats?.totalReviews || 0, 
+        reviews 
+    };
 };
 
-// ============== UPDATE REVIEW ==============
+// done
 export const updateReviewService = async (reviewId, userId, rating, comment, files) => {
-  const review = await Review.findOne({ where: { id: reviewId, userId } });
-  if (!review) throw new ApiError(404, "Review not found or not authorized");
+    const review = await Review.findOne({ where: { id: reviewId, userId } });
+    if (!review) throw new ApiError(404, "Review unauthorized");
 
-  // ✅ Rating validate karo
-  if (rating && (rating < RATING_MIN || rating > RATING_MAX)) {
-    throw new ApiError(400, `Rating must be between ${RATING_MIN} and ${RATING_MAX}`);
-  }
+    const t = await sequelize.transaction();
+    try {
+        if (files?.length) {
+            if (review.images?.length) await Promise.all(review.images.map(deleteFromCloudinary));
+            review.images = await Promise.all(files.map(uploadToCloudinary));
+        }
 
-  if (files && files.length > 0) {
-    review.images = await uploadImagesToCloudinary(files);
-  }
+        if (rating) review.rating = rating;
+        if (comment) review.comment = comment;
 
-  if (rating) review.rating = rating;
-  if (comment) review.comment = comment;
+        // User edit karega to review dobara un-approved ho sakta hai (Optional Logic)
+        // review.isApproved = false; 
 
-  await review.save();
-  return review;
+        await review.save({ transaction: t });
+        await syncProductStats(review.productId, t);
+        
+        await t.commit();
+        return review;
+    } catch (err) {
+        await t.rollback();
+        throw err;
+    }
 };
 
-// ============== DELETE REVIEW ==============
 export const deleteReviewService = async (reviewId, userId, role) => {
-  //  ROLES constant use karo
-  const where = role === ROLES.ADMIN ? { id: reviewId } : { id: reviewId, userId };
-  const review = await Review.findOne({ where });
-  if (!review) throw new ApiError(404, "Review not found or not authorized");
+    const where = role === ROLES.ADMIN ? { id: reviewId } : { id: reviewId, userId };
+    const review = await Review.findOne({ where });
+    if (!review) throw new ApiError(404, "Not found");
 
-  await review.destroy();
+    const t = await sequelize.transaction();
+    try {
+        const pId = review.productId;
+        if (review.images?.length) await Promise.all(review.images.map(deleteFromCloudinary));
+        
+        await review.destroy({ transaction: t });
+        await syncProductStats(pId, t);
+        
+        await t.commit();
+    } catch (err) {
+        await t.rollback();
+        throw err;
+    }
 };
 
-// ============== ADMIN REPLY ==============
+
+
+// for admin 
+// done
 export const adminReplyService = async (reviewId, reply) => {
-  const review = await Review.findByPk(reviewId);
-  if (!review) throw new ApiError(404, "Review not found");
+    const review = await Review.findByPk(reviewId);
+    if (!review) throw new ApiError(404, "Review not found");
 
-  review.adminReply = reply;
-  await review.save();
-  return review;
+    review.adminReply = reply;
+    await review.save();
+    return review;
 };
+
+
+// Admin 'Tick' logic: Jab admin approve kare tabhi public ko dikhe aur rating update ho
+// done
+export const approveReviewService = async (reviewId) => {
+    const review = await Review.findByPk(reviewId);
+    if (!review) throw new ApiError(404, "Review nahi mila");
+
+    const t = await sequelize.transaction();
+    try {
+        review.isApproved = true;
+        await review.save({ transaction: t });
+
+        // Ab stats update honge kyunki ab ye review 'Public' ho gaya hai
+        await syncProductStats(review.productId, t);
+        
+        await t.commit();
+        return review;
+    } catch (err) {
+        await t.rollback();
+        throw err;
+    }
+};
+
+// done
+export const getPendingReviewsService = async () => {
+    return await Review.findAll({
+        where: { isApproved: false },
+        include: [
+            { model: User, attributes: ['name'] },
+            { model: Product, attributes: ['name'] }
+        ]
+    });
+};
+
