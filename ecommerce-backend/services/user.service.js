@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import generateToken from "../utils/jwt.js";
 import ApiError from "../utils/apiError.js";
 import sendEmail from "../utils/sendEmail.js";
-import { uploadImagesToCloudinary } from "./product.service.js";
+import { uploadManyBuffers } from "../utils/cloudinaryMedia.js";
 import Order from "../models/order.model.js";
 // Yeh hona chahiye bilkul top pe
 // ================= REGISTER =================
@@ -192,7 +192,10 @@ export const updateProfileService = async (userId, body, file) => {
   // 2. Agar file aayi hai, toh pehle usko Cloudinary pe upload karo, phir DB me URL save karo
   if (file) {
     // Single image Cloudinary par upload kar rahe hain
-    const uploadedImageUrl = await uploadImagesToCloudinary([file]);
+    const uploadedImageUrl = await uploadManyBuffers({
+      files: [file],
+      folder: "avatars",
+    });
     user.avatar = uploadedImageUrl[0];
   }
 
