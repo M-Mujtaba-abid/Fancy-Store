@@ -27,7 +27,7 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   const [openOrders, setOpenOrders] = React.useState(true);
   const { data: contacts = [] } = useGetAllContacts();
   const [openReview, setOpenReview] = React.useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
+  // const [pendingCount, setPendingCount] = useState(0);
 
   const isActive = (path: string) => pathname === path;
   const handleLinkClick = () => onClose();
@@ -37,7 +37,7 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   }, [pathname, onClose]);
 
   // Calculate pending contact count
-  // const pendingCount = contacts.filter((c) => !c.is_replied).length;
+  const pendingCount = contacts.filter((c) => !c.is_replied).length;
 
   return (
     <>
