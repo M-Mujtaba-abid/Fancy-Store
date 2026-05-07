@@ -2,27 +2,14 @@ import models from "../models/index.js";
 const { Review, User, Product, Order, OrderItem } = models;
 import sequelize from "../config/db.js";
 import ApiError from "../utils/apiError.js";
-import cloudinary from "../utils/cloudinary.js";
 import { Op } from "sequelize";
 import { ROLES, RATING_MIN, RATING_MAX } from "../constants/index.js";
+import {
+    uploadManyBuffers,
+    destroyManyByUrls,
+} from "../utils/cloudinaryMedia.js";
 
 // ============== UTILS: CLOUDINARY & RATING HELPERS ==============
-
-const uploadToCloudinary = (file) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream({ folder: "fancy_store_reviews" }, (err, res) => {
-            if (err) reject(err); else resolve(res.secure_url);
-        });
-        stream.end(file.buffer);
-    });
-};
-
-const deleteFromCloudinary = async (url) => {
-    try {
-        const publicId = url.split('/').pop().split('.')[0];
-        await cloudinary.uploader.destroy(`fancy_store_reviews/${publicId}`);
-    } catch (err) { console.error("Cloudinary Delete Fail:", err); }
-};
 
 // Internal Helper: Sirf Approved reviews ka average nikal kar Product table update karega
 const syncProductStats = async (productId, transaction) => {
@@ -61,7 +48,9 @@ export const addReviewService = async (userId, productId, rating, comment, files
     const existing = await Review.findOne({ where: { userId, productId } });
     if (existing) throw new ApiError(400, "Aap is product ka review pehle hi de chuke hain");
 
-    let imageUrls = files?.length ? await Promise.all(files.map(uploadToCloudinary)) : [];
+    let imageUrls = files?.length
+        ? await uploadManyBuffers({ files, folder: "fancy_store_reviews" })
+        : [];
 
     // Note: isApproved default 'false' hoga model definition mein
     return await Review.create({ userId, productId, rating, comment, images: imageUrls });
@@ -95,8 +84,16 @@ export const updateReviewService = async (reviewId, userId, rating, comment, fil
     const t = await sequelize.transaction();
     try {
         if (files?.length) {
-            if (review.images?.length) await Promise.all(review.images.map(deleteFromCloudinary));
-            review.images = await Promise.all(files.map(uploadToCloudinary));
+            if (review.images?.length) {
+                await destroyManyByUrls({
+                    urls: review.images,
+                    folder: "fancy_store_reviews",
+                });
+            }
+            review.images = await uploadManyBuffers({
+                files,
+                folder: "fancy_store_reviews",
+            });
         }
 
         if (rating) review.rating = rating;
@@ -124,7 +121,12 @@ export const deleteReviewService = async (reviewId, userId, role) => {
     const t = await sequelize.transaction();
     try {
         const pId = review.productId;
-        if (review.images?.length) await Promise.all(review.images.map(deleteFromCloudinary));
+        if (review.images?.length) {
+            await destroyManyByUrls({
+                urls: review.images,
+                folder: "fancy_store_reviews",
+            });
+        }
         
         await review.destroy({ transaction: t });
         await syncProductStats(pId, t);

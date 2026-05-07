@@ -191,9 +191,12 @@
 // nn
 
 import Product from "../models/product.model.js";
-import cloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/apiError.js";
 import { Op } from "sequelize";
+import {
+  uploadManyBuffers,
+  destroyManyByUrls,
+} from "../utils/cloudinaryMedia.js";
 import {
   CATEGORIES,
   VEHICLE_TYPES,
@@ -220,25 +223,7 @@ export const formatPagingResponse = (data, page, limit) => {
 // CLOUDINARY UPLOAD HELPER
 // ============================================================
 export const uploadImagesToCloudinary = (files) => {
-  // Agar single file aayi hai, to usko khud hi array me convert kar do
-  if (!Array.isArray(files)) {
-    files = [files];
-  }
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: "products" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result.secure_url);
-            },
-          );
-          stream.end(file.buffer);
-        }),
-    ),
-  );
+  return uploadManyBuffers({ files, folder: "products" });
 };
 
 // ============================================================
@@ -434,10 +419,7 @@ export const deleteProductService = async (id) => {
     imageList.push(product.imageUrl);
   }
 
-  for (const url of imageList) {
-    const publicId = url.split("/").pop().split(".")[0];
-    await cloudinary.uploader.destroy(`products/${publicId}`);
-  }
+  await destroyManyByUrls({ urls: imageList, folder: "products" });
 
   await product.destroy();
 };
