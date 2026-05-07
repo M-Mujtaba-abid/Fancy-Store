@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useGetAllContacts, useReplyToContact } from "./useContact";
 import { ContactMessage } from "@/types/contact.types";
+import { AxiosError } from "axios";
 
 export const useAdminContacts = () => {
   const { data: contacts = [], isLoading, isError, error } = useGetAllContacts();
+   const axiosError = error as AxiosError<{ message: string }>; 
   const { mutate: replyToContact, isPending } = useReplyToContact();
 
   const [filteredContacts, setFilteredContacts] = useState<ContactMessage[]>([]);
