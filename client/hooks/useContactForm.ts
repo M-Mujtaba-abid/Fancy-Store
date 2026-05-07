@@ -8,11 +8,11 @@ export const useContactForm = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const { mutate: submitForm } = useSubmitContactForm();
 
-  const handleChange = (e) => {
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const dataToSend = { ...formData };
 
