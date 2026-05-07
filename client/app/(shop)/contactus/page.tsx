@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
-import { useContactForm } from '@/hooks/useContactForm';
+import { useContactForm } from '@/hooks/useContact';
 import { CONTACT_CATEGORIES } from '@/constants/contactCategories';
 
 const ContactPage = () => {

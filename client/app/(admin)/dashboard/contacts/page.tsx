@@ -1,7 +1,7 @@
 ﻿"use client";
 import React from "react";
 import { Mail, Send, Search, AlertCircle, MessageSquare, X } from "lucide-react";
-import { useAdminContacts } from "@/hooks/useAdminContacts";
+import { useAdminContacts } from "@/hooks/useContact";
 import { CONTACT_CATEGORY_COLORS, CONTACT_CATEGORY_LABELS } from "@/constants/contactCategories";
 
 export default function AdminContacts() {
