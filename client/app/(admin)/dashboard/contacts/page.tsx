@@ -101,7 +101,7 @@ export default function AdminContacts() {
         <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 text-sm text-red-400">
           <div className="flex items-center gap-3">
             <AlertCircle size={18} />
-            <span>{error?.response?.data?.message || error?.message || "Failed to load contact messages"}</span>
+           <span>{(error as any)?.response?.data?.message || error?.message || "Failed to load contact messages"}</span>
           </div>
         </div>
       )}
