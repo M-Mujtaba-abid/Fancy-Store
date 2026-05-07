@@ -37,7 +37,7 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   }, [pathname, onClose]);
 
   // Calculate pending contact count
-  const pendingCount = contacts.filter((c) => !c.is_replied).length;
+  // const pendingCount = contacts.filter((c) => !c.is_replied).length;
 
   return (
     <>
