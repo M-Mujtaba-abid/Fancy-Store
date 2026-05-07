@@ -10,9 +10,15 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: 'your-backend-app.vercel.app', // Agar backend se images aa rahi hain
-      }
+        protocol: "https",
+        hostname: "cdn-icons-png.flaticon.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "your-backend-app.vercel.app",
+        pathname: "/**", // Pathname yahan bhi add kar dein safe side ke liye
+      },
     ],
   },
 };

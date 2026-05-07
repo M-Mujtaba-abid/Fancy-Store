@@ -17,6 +17,7 @@ import AddToCart from "./AddToCart";
 import { useAddToCart } from "@/hooks/useCart"; // ✅ Hook import kiya
 import toast from "react-hot-toast";
 import ExpandableDescription from "./ExpandableDescription";
+import ProductReviews from "../reviews/ProductReviews";
 
 interface Props {
   product: Product;
@@ -268,6 +269,8 @@ export default function ProductDetailsClient({ product }: Props) {
             </div>
           </div>
         </div>
+        {/* 2. REVIEWS SECTION (Bilkul neechay) */}
+      <ProductReviews productId={product.id} />
       </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
 

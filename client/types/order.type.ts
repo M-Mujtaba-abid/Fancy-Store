@@ -1,4 +1,5 @@
 import { Product } from "./product.type";
+import { ReviewUser } from "./review.type";
 import { User } from "./user.type"; // Agar user type bani hui hai
 
 export interface OrderItem {
@@ -8,6 +9,9 @@ export interface OrderItem {
   quantity: number;
   price: number;
   Product?: Product;
+  // 👇 YEH 2 LINES ADD KAREIN:
+  isReviewed?: boolean; 
+  Review?: ReviewUser;
 }
 
 export interface Order {

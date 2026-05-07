@@ -16,6 +16,7 @@ function ProductsContent() {
   // ✅ API Hit ho rahi hai
   const { data, isLoading, isError } = useAllProducts(page, limit);
 
+  console.log("product response=> ", data )
   if (isLoading) return <Loading />;
   if (isError) return <div className="text-center py-20 text-red-500 font-medium">Failed to load products.</div>;
 
