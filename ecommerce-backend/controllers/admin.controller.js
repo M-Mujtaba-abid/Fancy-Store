@@ -16,5 +16,3 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     new ApiResponse(200, { totalUsers, totalProducts, totalOrders }, "Stats fetched successfully")
   );
 });
-
-hy

@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 import pg  from "pg"; // 👈 CHANGE 1: pg ko import kiya
 import dotenv from "dotenv";
-hy
+
 
 dotenv.config();
 
