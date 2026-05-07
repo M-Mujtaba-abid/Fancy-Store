@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fancy Store | Premium Car Covers",
+  title: "Top Covers Fancy Store | Car Covers , Top Covers",
   description: "Get the best car covers for your vehicle",
 };
 

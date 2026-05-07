@@ -25,24 +25,44 @@ const deleteFromCloudinary = async (url) => {
 };
 
 // Internal Helper: Sirf Approved reviews ka average nikal kar Product table update karega
-const syncProductStats = async (productId, transaction) => {
-    const stats = await Review.findAll({
-        where: { productId, isApproved: true },
-        attributes: [
-            [sequelize.fn("AVG", sequelize.col("rating")), "avgRating"],
-            [sequelize.fn("COUNT", sequelize.col("id")), "totalReviews"],
-        ],
-        raw: true,
-        transaction
-    });
 
-    await Product.update(
-        {
-            averageRating: parseFloat(stats[0].avgRating || 0).toFixed(1),
-            totalReviews: parseInt(stats[0].totalReviews || 0)
-        },
-        { where: { id: productId }, transaction }
-    );
+const syncProductStats = async (productId, transaction) => {
+    try {
+        // 1. Total Reviews Count (100% Reliable method)
+        const totalReviews = await Review.count({
+            where: { productId, isApproved: true },
+            transaction
+        });
+
+        // 2. Sum of all ratings
+        const sumOfRatings = await Review.sum('rating', {
+            where: { productId, isApproved: true },
+            transaction
+        });
+
+        // 3. Average nikalna (Agar totalReviews 0 hain toh 0.0 set hoga)
+        const avgRating = totalReviews > 0 
+            ? (sumOfRatings / totalReviews).toFixed(1) 
+            : 0.0;
+
+        // 🐞 Debugging ke liye console log (Terminal mein dekhne ke liye)
+        console.log(`[SYNC STATS] Product ID: ${productId} | Total: ${totalReviews} | Avg: ${avgRating}`);
+
+        // 4. Product Table Update karna
+        await Product.update(
+            {
+                averageRating: avgRating,
+                totalReviews: totalReviews
+            },
+            { 
+                where: { id: productId }, 
+                transaction 
+            }
+        );
+    } catch (error) {
+        console.error("[SYNC STATS ERROR]:", error);
+        throw error;
+    }
 };
 
 // ============== CORE SERVICES ==============
