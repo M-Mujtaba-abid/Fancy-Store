@@ -115,7 +115,7 @@ export const metadata: Metadata = {
     siteName: "Fancy Store",
     images: [
       {
-        url: "https://fancystore.store/odashboardMat.png", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
+        url: "https://fancystore.store/category/steeringCover.png", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
         width: 1200,
         height: 630,
         alt: "Fancy Store Home Banner",
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fancy Store | Top Covers",
     description: "Discover amazing deals on car accessories and lifestyle products.",
-    images: ["https://fancystore.store/odashboardMat.png"],
+    images: ["https://fancystore.store/category/steeringCover.png"],
   },
 };
 
