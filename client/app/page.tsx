@@ -13,7 +13,7 @@ import { productService } from "@/service/productservice/product.service";
 // ==========================================
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.fancystore.store"), // Add this line
-  title: "Fancy Store | Best Online Shopping for Car Accessories in Pakistan",
+  title: "Fancy Store | Top Covers & Dashboard Mats Best Online Shopping for Car Accessories in Pakistan",
   description: "Shop the best car accessories, Top Covers, and dashboard mats at Fancy Store. Get hot deals, new arrivals, and fast delivery all over Pakistan.",
   keywords: [
     "Fancy Store",
