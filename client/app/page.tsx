@@ -116,7 +116,7 @@ export const metadata: Metadata = {
     siteName: "Fancy Store",
     images: [
       {
-        url: "https://www.fancystore.store/category/steeringCover.png", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
+        url: "https://www.fancystore.store/steeringCover_compressed.jpg", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
         width: 1200,
         height: 630,
         alt: "Fancy Store Home Banner",
@@ -128,8 +128,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Fancy Store | Top Covers",
-    description: "Discover amazing deals on car accessories and lifestyle products.",
-    images: ["https://www.fancystore.store/category/steeringCover.png"],
+    description: "Discover amazing deals on car accessories like Top Covers and dashboard mats.",
+    images: ["https://www.fancystore.store/steeringCover_compressed.jpg"],
   },
 };
 
