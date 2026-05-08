@@ -83,6 +83,7 @@ import { productService } from "@/service/productservice/product.service";
 // 🌟 1. SEO METADATA SECTION
 // ==========================================
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.fancystore.store"), // Add this line
   title: "Fancy Store | Best Online Shopping for Car Accessories in Pakistan",
   description: "Shop the best car accessories, Top Covers, and dashboard mats at Fancy Store. Get hot deals, new arrivals, and fast delivery all over Pakistan.",
   keywords: [
@@ -106,16 +107,16 @@ export const metadata: Metadata = {
     "best car gadgets pk"
   ],
   alternates: {
-    canonical: "https://fancystore.store", // ✅ Duplicate content issue se bachne ke liye
+    canonical: "https://www.fancystore.store", // ✅ Duplicate content issue se bachne ke liye
   },
   openGraph: {
     title: "Fancy Store | Top Covers ",
     description: "Discover amazing deals on car accessories and lifestyle products with Fast Delivery.",
-    url: "https://fancystore.store",
+    url: "https://www.fancystore.store",
     siteName: "Fancy Store",
     images: [
       {
-        url: "https://fancystore.store/category/steeringCover.png", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
+        url: "https://www.fancystore.store/category/steeringCover.png", // 👈 Apne public folder mein ek achi si banner image rakh kar uska path yahan dein (1200x630 size best hai)
         width: 1200,
         height: 630,
         alt: "Fancy Store Home Banner",
@@ -128,7 +129,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fancy Store | Top Covers",
     description: "Discover amazing deals on car accessories and lifestyle products.",
-    images: ["https://fancystore.store/category/steeringCover.png"],
+    images: ["https://www.fancystore.store/category/steeringCover.png"],
   },
 };
 
