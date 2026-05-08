@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import AuthButtons from "@/components/shop/share/AuthButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { getAllContacts } from "@/service/contactService/contact.service";
+import { useGetAllContacts } from "@/hooks/useContact";
 
 interface SidebarNavProps {
   isOpen: boolean;
@@ -25,8 +25,9 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
   const pathname = usePathname();
   const [openProducts, setOpenProducts] = React.useState(true);
   const [openOrders, setOpenOrders] = React.useState(true);
+  const { data: contacts = [] } = useGetAllContacts();
   const [openReview, setOpenReview] = React.useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
+  // const [pendingCount, setPendingCount] = useState(0);
 
   const isActive = (path: string) => pathname === path;
   const handleLinkClick = () => onClose();
@@ -35,20 +36,8 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
     onClose();
   }, [pathname, onClose]);
 
-  // Fetch pending contact count
-  useEffect(() => {
-    const fetchPendingCount = async () => {
-      try {
-        const contacts = await getAllContacts();
-        const pending = contacts.filter((c) => !c.is_replied).length;
-        setPendingCount(pending);
-      } catch (error) {
-        console.error("Failed to fetch pending count:", error);
-      }
-    };
-
-    fetchPendingCount();
-  }, []);
+  // Calculate pending contact count
+  const pendingCount = contacts.filter((c) => !c.is_replied).length;
 
   return (
     <>

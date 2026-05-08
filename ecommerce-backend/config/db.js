@@ -2,6 +2,7 @@ import { Sequelize } from "sequelize";
 import pg  from "pg"; // 👈 CHANGE 1: pg ko import kiya
 import dotenv from "dotenv";
 
+
 dotenv.config();
 
 // Use the DATABASE_URL directly if it exists, otherwise fallback to separate vars
