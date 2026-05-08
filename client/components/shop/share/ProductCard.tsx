@@ -1,186 +1,3 @@
-// "use client";
-
-// import React from "react";
-// import Link from "next/link";
-// import { ShoppingCart, PackageX } from "lucide-react";
-// import { Product } from "@/types/product.type";
-// import Image from "next/image";
-// import WishlistButton from "@/components/shop/share/WishlistButton";
-// import AddToCart from "./AddToCart"; // ✅ AddToCart Import
-
-// const formatText = (text?: string) => {
-//   if (!text) return "";
-//   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-// };
-
-// interface ProductCardProps extends Product {
-//   variant?: "default" | "overlay" | "minimal";
-// }
-
-// const ProductCard: React.FC<ProductCardProps> = (props) => {
-//   const {
-//     id, name, price, discountPrice, imageUrl, images, isOnSale,
-//     isNewArrival, category, carModel, vehicleType, stock,
-//     variant = "default",
-//   } = props;
-
-//   const displayImage = imageUrl || (images?.length ? images[0] : "/placeholder.png");
-//   const isOutOfStock = stock <= 0;
-//   const metaData = [formatText(vehicleType), formatText(carModel), formatText(category)].filter(Boolean).join(" • ");
-
-//   // ------------------------------------------------------------------
-//   // VARIANT 2: OVERLAY DESIGN
-//   // ------------------------------------------------------------------
-//   if (variant === "overlay") {
-//     return (
-//       <Link href={`/products/${id}`} className="group relative block w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-//         <Image
-//           src={displayImage} alt={name} fill
-//           className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-//           sizes="(max-width: 768px) 100vw, 25vw"
-//         />
-//         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
-
-//         {/* Wishlist Component */}
-//         <WishlistButton 
-//           productId={id as string} 
-//           className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
-//           iconClassName="text-white fill-transparent"
-//         />
-
-//         {/* Content Area (Bottom) */}
-//         <div className="absolute bottom-0 left-0 w-full p-5 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-//           <div className="flex gap-2 mb-2">
-//             {isOnSale && <span className="bg-red-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Sale</span>}
-//             {isNewArrival && <span className="bg-green-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">New</span>}
-//           </div>
-//           <p className="text-xs text-gray-300 mb-1 line-clamp-1">{metaData}</p>
-//           <h3 className="text-lg font-bold line-clamp-1 mb-1">{name}</h3>
-          
-//           <div className="flex items-center justify-between mt-2">
-//             <div>
-//               {isOnSale && discountPrice ? (
-//                 <div className="flex flex-col">
-//                   <span className="text-lg font-bold text-primary">Rs. {discountPrice.toLocaleString()}</span>
-//                   <span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span>
-//                 </div>
-//               ) : (
-//                 <span className="text-lg font-bold text-primary">Rs. {price.toLocaleString()}</span>
-//               )}
-//             </div>
-
-//             {/* ✅ OVERLAY CART BUTTON */}
-//             <AddToCart 
-//               productId={id as string} 
-//               stock={stock}
-//               className={`p-2 rounded-full backdrop-blur-md ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}
-//             >
-//               {isOutOfStock ? <PackageX size={18} className="text-white" /> : <ShoppingCart size={18} className="text-white" />}
-//             </AddToCart>
-
-//           </div>
-//         </div>
-//       </Link>
-//     );
-//   }
-
-//   // ------------------------------------------------------------------
-//   // VARIANT 3: MINIMAL DESIGN
-//   // ------------------------------------------------------------------
-//   if (variant === "minimal") {
-//     return (
-//       <div className="group relative flex flex-col h-full bg-transparent">
-//         <div className="relative w-full aspect-[4/5] mb-3">
-//           <Link href={`/products/${id}`} className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-//             <Image
-//               src={displayImage} alt={name} fill
-//               className="object-cover group-hover:scale-105 transition-transform duration-500"
-//               sizes="(max-width: 768px) 100vw, 25vw"
-//             />
-//           </Link>
-//           {isOnSale && <span className="absolute top-3 left-3 pointer-events-none bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">Sale</span>}
-
-//           {/* Wishlist Component */}
-//           <WishlistButton 
-//             productId={id as string} 
-//             className="absolute top-3 right-3 bg-white/70 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
-//           />
-
-//           {/* ✅ MINIMAL CART BUTTON (Hover par aayega) */}
-//           <AddToCart 
-//             productId={id as string} 
-//             stock={stock}
-//             className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm text-gray-700 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-//           >
-//             {isOutOfStock ? <PackageX size={18} /> : <ShoppingCart size={18} />}
-//           </AddToCart>
-//         </div>
-
-//         <Link href={`/products/${id}`} className="flex flex-col flex-grow text-center">
-//           <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{category?.replace(/_/g, " ")}</p>
-//           <h3 className="text-sm font-medium text-gray-900 line-clamp-1 mb-2 group-hover:text-primary transition-colors">{name}</h3>
-//           <div className="flex justify-center items-center gap-2">
-//             {isOnSale && discountPrice ? (
-//               <><span className="text-sm font-bold text-red-600">Rs. {discountPrice.toLocaleString()}</span><span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span></>
-//             ) : (
-//               <span className="text-sm font-semibold text-gray-900">Rs. {price.toLocaleString()}</span>
-//             )}
-//           </div>
-//         </Link>
-//       </div>
-//     );
-//   }
-
-//   // ------------------------------------------------------------------
-//   // VARIANT 1: DEFAULT DESIGN
-//   // ------------------------------------------------------------------
-//   return (
-//     <div className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
-//       <div className="relative w-full aspect-square bg-gray-50">
-//         <Link href={`/products/${id}`} className="block w-full h-full overflow-hidden">
-//           <Image
-//             src={displayImage} alt={name} fill
-//             className="object-cover group-hover:scale-105 transition-transform duration-500"
-//           />
-//         </Link>
-
-//         {/* Wishlist Component */}
-//         <WishlistButton 
-//           productId={id as string} 
-//           className="absolute top-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
-//         />
-//       </div>
-
-//       <div className="p-4 flex flex-col grow">
-//         <Link href={`/products/${id}`}>
-//           <h3 className="text-sm font-semibold line-clamp-2 mb-2 group-hover:text-primary transition-colors">{name}</h3>
-//         </Link>
-//         <span className="text-lg font-bold text-primary mb-4">Rs. {price?.toLocaleString()}</span>
-        
-//         {/* ✅ DEFAULT CART BUTTON (Full Width Text Button) */}
-//         <AddToCart 
-//           productId={id as string} 
-//           stock={stock}
-//           className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mt-auto flex justify-center items-center gap-2"
-//         >
-//           {isOutOfStock ? (
-//             <>
-//               <PackageX size={16} /> Out of Stock
-//             </>
-//           ) : (
-//             <>
-//               <ShoppingCart size={16} /> Add to Cart
-//             </>
-//           )}
-//         </AddToCart>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ProductCard;
-
-
 "use client";
 
 import React from "react";
@@ -190,7 +7,7 @@ import { Product } from "@/types/product.type";
 import Image from "next/image";
 import WishlistButton from "@/components/shop/share/WishlistButton";
 import AddToCart from "./AddToCart";
-import ReviewStars from "@/components/shop/reviews/ReviewStars"; // ✅ Import ReviewStars
+import ReviewStars from "@/components/shop/reviews/ReviewStars";
 
 const formatText = (text?: string) => {
   if (!text) return "";
@@ -199,7 +16,6 @@ const formatText = (text?: string) => {
 
 interface ProductCardProps extends Product {
   variant?: "default" | "overlay" | "minimal";
-  // Fallback if not in Product type yet:
   averageRating?: number; 
   totalReviews?: number;  
 }
@@ -208,8 +24,8 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   const {
     id, name, price, discountPrice, imageUrl, images, isOnSale,
     isNewArrival, category, carModel, vehicleType, stock,
-    averageRating = 0, // ✅ Extract Rating
-    totalReviews = 0,  // ✅ Extract Reviews Count
+    averageRating = 0, 
+    totalReviews = 0,  
     variant = "default",
   } = props;
 
@@ -222,33 +38,41 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   // ------------------------------------------------------------------
   if (variant === "overlay") {
     return (
-      <Link href={`/products/${id}`} className="group relative block w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-        <Image
-          src={displayImage} alt={name} fill
-          className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-          sizes="(max-width: 768px) 100vw, 25vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+      // ✅ Semantic <article> Tag added
+      <article className="group relative w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+        
+        {/* ✅ Image Link separate to keep HTML valid */}
+        <Link href={`/products/${id}`} className="absolute inset-0 z-0 block" aria-label={`View details of ${name}`}>
+          <Image
+            src={displayImage} alt={name} fill
+            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+            sizes="(max-width: 768px) 100vw, 25vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
+        </Link>
 
+        {/* Buttons are now separate siblings, positioned with z-index */}
         <WishlistButton 
           productId={id as string} 
-          className="absolute top-4 right-4 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
+          className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
           iconClassName="text-white fill-transparent"
         />
 
-        <div className="absolute bottom-0 left-0 w-full p-5 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+        <div className="absolute bottom-0 left-0 w-full p-5 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
           <div className="flex gap-2 mb-2">
             {isOnSale && <span className="bg-red-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Sale</span>}
             {isNewArrival && <span className="bg-green-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">New</span>}
           </div>
           
           <p className="text-xs text-gray-300 mb-1 line-clamp-1">{metaData}</p>
-          <h3 className="text-lg font-bold line-clamp-1 mb-1">{name}</h3>
           
-          {/* ✅ RATING (Overlay mein text white ya bright dikhana behtar hai, isliye showCount=false kar ke sirf stars dikhaye hain taake clean lage) */}
-          <ReviewStars productId={id} rating={averageRating}  totalReviews={totalReviews} className="mb-2" />
+          <Link href={`/products/${id}`} className="inline-block pointer-events-auto">
+            <h3 className="text-lg font-bold line-clamp-1 mb-1 hover:underline">{name}</h3>
+          </Link>
           
-          <div className="flex items-center justify-between mt-2">
+          <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} className="mb-2" />
+          
+          <div className="flex items-center justify-between mt-2 pointer-events-auto">
             <div>
               {isOnSale && discountPrice ? (
                 <div className="flex flex-col">
@@ -263,13 +87,13 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             <AddToCart 
               productId={id as string} 
               stock={stock}
-              className={`p-2 rounded-full backdrop-blur-md ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}
+              className={`p-2 rounded-full backdrop-blur-md z-10 ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}
             >
               {isOutOfStock ? <PackageX size={18} className="text-white" /> : <ShoppingCart size={18} className="text-white" />}
             </AddToCart>
           </div>
         </div>
-      </Link>
+      </article>
     );
   }
 
@@ -278,9 +102,10 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   // ------------------------------------------------------------------
   if (variant === "minimal") {
     return (
-      <div className="group relative flex flex-col h-full bg-transparent">
+      // ✅ Semantic <article> Tag added
+      <article className="group relative flex flex-col h-full bg-transparent">
         <div className="relative w-full aspect-[4/5] mb-3">
-          <Link href={`/products/${id}`} className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden">
+          <Link href={`/products/${id}`} className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden" aria-label={`View ${name}`}>
             <Image
               src={displayImage} alt={name} fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -307,9 +132,8 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{category?.replace(/_/g, " ")}</p>
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1 group-hover:text-primary transition-colors">{name}</h3>
           
-          {/* ✅ RATING (Minimal design mein center align rakha hai) */}
           <div className="flex justify-center mb-2">
-            <ReviewStars productId={id } rating={averageRating} totalReviews={totalReviews} size={12} />
+            <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} size={12} />
           </div>
 
           <div className="flex justify-center items-center gap-2">
@@ -320,7 +144,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             )}
           </div>
         </Link>
-      </div>
+      </article>
     );
   }
 
@@ -328,9 +152,10 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   // VARIANT 3: DEFAULT DESIGN
   // ------------------------------------------------------------------
   return (
-    <div className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
+    // ✅ Semantic <article> Tag added
+    <article className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
       <div className="relative w-full aspect-square bg-gray-50">
-        <Link href={`/products/${id}`} className="block w-full h-full overflow-hidden">
+        <Link href={`/products/${id}`} className="block w-full h-full overflow-hidden" aria-label={`View ${name}`}>
           <Image
             src={displayImage} alt={name} fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -339,7 +164,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
 
         <WishlistButton 
           productId={id as string} 
-          className="absolute top-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
+          className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
         />
       </div>
 
@@ -348,8 +173,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           <h3 className="text-sm font-semibold line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">{name}</h3>
         </Link>
         
-        {/* ✅ RATING (Default design mein title ke foran baad natural lagta hai) */}
-        <ReviewStars productId={id} rating={averageRating}  totalReviews={totalReviews} className="mb-3" />
+        <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} className="mb-3" />
 
         <span className="text-lg font-bold text-primary mb-4">Rs. {price?.toLocaleString()}</span>
         
@@ -369,7 +193,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           )}
         </AddToCart>
       </div>
-    </div>
+    </article>
   );
 };
 
