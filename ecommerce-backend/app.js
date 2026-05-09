@@ -9,6 +9,7 @@ import searchRoutes from "./routes/search.routes.js";
 import contactRoutes from "./routes/contact.route.js";
 import reviewRoutes from "./routes/review.route.js";
 import wishlistRoutes from "./routes/wishlist.route.js";
+import chatRoutes from "./routes/chat.route.js";
 // import adminRoutes from "./routes/admin.route.js"; // ✅ add admin routes
 import { stripeWebhook } from "./controllers/payment.controller.js";
 import cookieParser from "cookie-parser";
@@ -76,6 +77,7 @@ app.use("/api/search", searchRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/admin", userRoutes);
 
 dbConnection();

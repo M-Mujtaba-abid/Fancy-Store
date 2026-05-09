@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
         hostname: "your-backend-app.vercel.app",
         pathname: "/**", // Pathname yahan bhi add kar dein safe side ke liye
       },
+       // ✅ ADD THIS
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
     ],
   },
 };
