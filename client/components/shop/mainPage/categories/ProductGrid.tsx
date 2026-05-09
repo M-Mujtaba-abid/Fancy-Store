@@ -257,14 +257,6 @@ const ProductGrid = () => {
   // const { data, isLoading, isError } = useAllProducts(page, limit, activeTab === "All" ? "" : activeTab);
   const { data, isLoading, isError } = useAllProducts(page, limit);
 
-  if (isLoading) return <Loading />;
-  if (isError)
-    return (
-      <div className="text-center py-20 text-red-500 font-medium">
-        Failed to load products.
-      </div>
-    );
-
   const allProducts = data?.products || [];
 
   // 📌 Temporary Client-Side Filter (Isko backend filtering par move karna zaroori hai future mein)
@@ -279,7 +271,7 @@ const ProductGrid = () => {
         });
 
   return (
-    <section className="py-20 bg-background text-text-main transition-colors duration-300">
+    <section className="py-20 bg-background text-text-main transition-colors duration-300 min-h-[800px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header & Filter */}
         <div className="flex flex-col mb-12 space-y-6">
@@ -312,8 +304,19 @@ const ProductGrid = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
-        <motion.div
+        {/* Loading / Error / Grid States */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20 min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-20 text-red-500 font-medium min-h-[400px] flex items-center justify-center">
+            Failed to load products.
+          </div>
+        ) : (
+          <>
+            {/* Products Grid */}
+            <motion.div
           layout
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
         >
@@ -352,15 +355,17 @@ const ProductGrid = () => {
           </div>
         )}
 
-        {/* Pagination Component */}
-        {(data?.totalPages || 0) > 1 && (
-          <div className="mt-16 pt-8 border-t border-border/50">
-            <Pagination
-              currentPage={data?.currentPage || page}
-              totalPages={data?.totalPages || 1}
-              onPageChange={(newPage) => setPage(newPage)}
-            />
-          </div>
+            {/* Pagination Component */}
+            {(data?.totalPages || 0) > 1 && (
+              <div className="mt-16 pt-8 border-t border-border/50">
+                <Pagination
+                  currentPage={data?.currentPage || page}
+                  totalPages={data?.totalPages || 1}
+                  onPageChange={(newPage) => setPage(newPage)}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
