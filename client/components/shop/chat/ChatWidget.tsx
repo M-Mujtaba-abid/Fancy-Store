@@ -15,13 +15,7 @@ const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content:
-        "Assalam-o-alaikum! I am your Fancy Store assistant for vehicle covers. Tell me your car make, model, and year so I can recommend the best option.",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const { mutateAsync: sendMessage, isPending } = useChat();
 
@@ -69,8 +63,8 @@ const ChatWidget = () => {
   return (
     <div className="fixed bottom-6 right-4 sm:right-6 z-50">
       {isOpen ? (
-        <div className="w-[92vw] sm:w-[360px] h-[540px] max-h-[75vh] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/90">
+        <div className="w-[calc(100vw-1.5rem)] h-[calc(100dvh-1.5rem)] max-h-[760px] sm:w-[390px] sm:h-[620px] sm:max-h-[82vh] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
             <div>
               <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
               <p className="text-xs text-text-muted">Vehicle covers support</p>
@@ -79,21 +73,27 @@ const ChatWidget = () => {
               type="button"
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-full bg-card hover:bg-background transition-colors"
+              aria-label="Close chat"
             >
               <X size={16} className="text-text-main" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-background/30">
+          <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 bg-background/30">
+            {!messages.length && !isPending && (
+              <div className="h-full min-h-40 flex items-center justify-center text-center px-4">
+                <p className="text-sm text-text-muted">Hi! How can I help you today?</p>
+              </div>
+            )}
             {messages.map((message, index) => {
               const isUser = message.role === "user";
               return (
                 <div
                   key={`${message.role}-${index}`}
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                  className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                     isUser
-                      ? "ml-auto bg-primary text-white"
-                      : "mr-auto bg-card border border-border/50 text-text-main"
+                      ? "ml-auto bg-primary text-white rounded-br-md"
+                      : "mr-auto bg-background border border-border/50 text-text-main rounded-bl-md"
                   }`}
                 >
                   {message.content}
@@ -101,14 +101,16 @@ const ChatWidget = () => {
               );
             })}
             {isPending && (
-              <div className="mr-auto max-w-[85%] rounded-2xl px-3 py-2 text-sm bg-card border border-border/50 text-text-muted">
-                Thinking...
+              <div className="mr-auto inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-background border border-border/50">
+                <span className="h-2 w-2 rounded-full bg-text-muted animate-bounce [animation-delay:-0.24s]" />
+                <span className="h-2 w-2 rounded-full bg-text-muted animate-bounce [animation-delay:-0.12s]" />
+                <span className="h-2 w-2 rounded-full bg-text-muted animate-bounce" />
               </div>
             )}
           </div>
 
-          <div className="px-3 py-2 border-t border-border/50 bg-card">
-            <div className="flex flex-wrap gap-2 mb-2">
+          <div className="px-3.5 py-3 border-t border-border/50 bg-card">
+            <div className="flex flex-wrap gap-2 mb-3">
               {SUGGESTIONS.slice(0, 2).map((suggestion) => (
                 <button
                   key={suggestion}
@@ -122,7 +124,7 @@ const ChatWidget = () => {
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <input
                 type="text"
                 value={input}
@@ -134,15 +136,16 @@ const ChatWidget = () => {
                   }
                 }}
                 placeholder="Ask about car covers..."
-                className="flex-1 h-10 px-3 rounded-xl border border-border/50 bg-background text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="flex-1 h-11 px-3.5 rounded-xl border border-border/50 bg-background text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
                 type="button"
                 onClick={() => handleSend()}
                 disabled={!canSend}
-                className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                className="h-11 w-11 rounded-xl bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                aria-label="Send message"
               >
-                <Send size={16} />
+                <Send size={17} />
               </button>
             </div>
           </div>
@@ -151,7 +154,7 @@ const ChatWidget = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+          className="h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200"
           aria-label="Open chat support"
         >
           <MessageCircle size={24} />
