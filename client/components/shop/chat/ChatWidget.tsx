@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
-import { ChatMessage } from "@/service/chatService/chat.service";
+import { ChatMessage } from "@/types/chat.types";
 
 const SUGGESTIONS = [
   "Which cover is best for Honda Civic 2022?",
