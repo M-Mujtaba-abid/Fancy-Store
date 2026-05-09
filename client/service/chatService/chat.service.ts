@@ -1,14 +1,5 @@
 import api from "../api";
-
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-export interface ChatRequestPayload {
-  messages: ChatMessage[];
-  sessionId?: string;
-}
+import { ChatRequestPayload } from "@/types/chat.types";
 
 interface ChatApiResponse {
   statusCode: number;

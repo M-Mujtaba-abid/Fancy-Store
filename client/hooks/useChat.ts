@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { chatService, ChatRequestPayload } from "@/service/chatService/chat.service";
+import { chatService } from "@/service/chatService/chat.service";
+import { ChatRequestPayload } from "@/types/chat.types";
 import toast from "react-hot-toast";
 
 export const useChat = () => {
