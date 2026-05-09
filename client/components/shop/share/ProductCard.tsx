@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import React from "react";
 import Link from "next/link";
@@ -163,6 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           <Image
             src={displayImage} alt={name} fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         </Link>
 

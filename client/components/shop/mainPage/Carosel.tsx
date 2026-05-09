@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const slides = [
   {
@@ -60,10 +61,15 @@ const Carousel = () => {
           className="relative h-full w-full"
         >
           {/* Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center transition-scale duration-10000"
-            style={{ backgroundImage: `url(${slides[current].image})` }}
-          >
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src={slides[current].image}
+              alt={slides[current].title}
+              fill
+              priority={current === 0}
+              className="object-cover object-center"
+              sizes="100vw"
+            />
             {/* Overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40" />
           </div>
