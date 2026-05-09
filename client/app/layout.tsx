@@ -51,6 +51,7 @@ import "./globals.css";
 import { Providers } from "@/context/Providers";
 import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "react-hot-toast";
+import ChatWidget from "@/components/shop/chat/ChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -133,6 +134,7 @@ export default function RootLayout({
       >
         <Providers>
           <AppShell>{children}</AppShell>
+          <ChatWidget />
         </Providers>
         <Toaster position="top-right" />
       </body>

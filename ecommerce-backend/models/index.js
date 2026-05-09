@@ -8,6 +8,7 @@ import Order from "./order.model.js";
 import OrderItem from "./orderItem.model.js";
 import Review from "./review.model.js";
 import Wishlist from "./wishlist.model.js";
+import ChatMessage from "./chatMessage.model.js";
 
 const models = {
   User,
@@ -19,11 +20,13 @@ const models = {
   OrderItem,
   Review,
   Wishlist,
+  ChatMessage,
 };
 
 // Associations
 User.hasMany(UserIdentity, { foreignKey: "userId", onDelete: "CASCADE" });
 UserIdentity.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(ChatMessage, { foreignKey: "userId", onDelete: "SET NULL" });
 
 // Baaki associations
 Object.values(models).forEach((model) => {
