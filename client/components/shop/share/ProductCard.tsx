@@ -37,15 +37,17 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   // VARIANT 1: OVERLAY DESIGN
   // ------------------------------------------------------------------
   if (variant === "overlay") {
-    return (
+  return (
       // ✅ Semantic <article> Tag added
-      <article className="group relative w-full h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+      // ✅ 1. Mobile pe 'aspect-square' aur desktop pe 'h-[320px]' kar diya
+      <article className="group relative w-full aspect-square md:aspect-auto md:h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-card">
         
         {/* ✅ Image Link separate to keep HTML valid */}
         <Link href={`/products/${id}`} className="absolute inset-0 z-0 block" aria-label={`View details of ${name}`}>
           <Image
             src={displayImage} alt={name} fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+            // ✅ 2. 'object-contain' aur thori padding (p-2) taake image poori visible ho aur kategi nahi
+            className="object-contain p-2 md:object-cover md:p-0 group-hover:scale-110 transition-transform duration-700 ease-in-out"
             sizes="(max-width: 768px) 100vw, 25vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
@@ -54,42 +56,44 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         {/* Buttons are now separate siblings, positioned with z-index */}
         <WishlistButton 
           productId={id as string} 
-          className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
+          className="absolute top-3 right-3 md:top-4 md:right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
           iconClassName="text-white fill-transparent"
         />
 
-        <div className="absolute bottom-0 left-0 w-full p-5 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
-          <div className="flex gap-2 mb-2">
-            {isOnSale && <span className="bg-red-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Sale</span>}
-            {isNewArrival && <span className="bg-green-500 text-[10px] uppercase font-bold px-2 py-0.5 rounded">New</span>}
+        {/* Content Box */}
+        <div className="absolute bottom-0 left-0 w-full p-3 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
+          
+          <div className="flex gap-1.5 mb-1">
+            {isOnSale && <span className="bg-red-500 hidden sm:block text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">Sale</span>}
+            {isNewArrival && <span className="bg-green-500 hidden sm:block  text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">New</span>}
           </div>
           
-          <p className="text-xs text-gray-300 mb-1 line-clamp-1">{metaData}</p>
+          {/* ✅ Mobile par Category hide kardi taake safai aye */}
+          <p className="text-[10px] text-gray-300 mb-0.5 line-clamp-1 hidden sm:block">{metaData}</p>
           
-          <Link href={`/products/${id}`} className="inline-block pointer-events-auto">
-            <h3 className="text-lg font-bold line-clamp-1 mb-1 hover:underline">{name}</h3>
+          <Link href={`/products/${id}`} className="inline-block pointer-events-auto w-full">
+            <h3 className="text-xs sm:text-sm md:text-lg font-bold line-clamp-1  hover:underline leading-tight">{name}</h3>
           </Link>
           
-          <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} className="mb-2" />
-          
-          <div className="flex items-center justify-between mt-2 pointer-events-auto">
+          <div className="flex items-center justify-between  pointer-events-auto">
             <div>
               {isOnSale && discountPrice ? (
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold text-primary">Rs. {discountPrice.toLocaleString()}</span>
-                  <span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">Rs. {discountPrice.toLocaleString()}</span>
+                  <span className="text-[9px] sm:text-xs line-through text-gray-300 whitespace-nowrap">Rs. {price.toLocaleString()}</span>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-primary">Rs. {price.toLocaleString()}</span>
+                <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">Rs. {price.toLocaleString()}</span>
               )}
             </div>
 
             <AddToCart 
               productId={id as string} 
               stock={stock}
-              className={`p-2 rounded-full backdrop-blur-md z-10 ${isOutOfStock ? "bg-gray-500/50" : "bg-primary/80 hover:bg-primary"}`}
+              // ✅ Button ki padding aur size chota kar diya
+              className={`p-1.5 rounded-full backdrop-blur-md z-10 ${isOutOfStock ? "bg-gray-500/50" : "bg-primary hover:bg-primary/90"}`}
             >
-              {isOutOfStock ? <PackageX size={18} className="text-white" /> : <ShoppingCart size={18} className="text-white" />}
+              {isOutOfStock ? <PackageX size={14} className="text-white" /> : <ShoppingCart size={14} className="text-white" />}
             </AddToCart>
           </div>
         </div>
