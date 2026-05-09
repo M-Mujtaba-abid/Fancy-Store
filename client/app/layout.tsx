@@ -51,7 +51,9 @@ import "./globals.css";
 import { Providers } from "@/context/Providers";
 import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "react-hot-toast";
-import ChatWidget from "@/components/shop/chat/ChatWidget";
+import dynamic from 'next/dynamic';
+
+const ChatWidget = dynamic(() => import('@/components/shop/chat/ChatWidget'), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
