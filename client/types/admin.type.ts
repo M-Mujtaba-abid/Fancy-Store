@@ -4,6 +4,7 @@ export interface DashboardStatsData {
   totalUsers: number;
   totalProducts: number;
   totalOrders: number;
+  totalReviews: number;
 }
 
 export interface DashboardStatsResponse {
