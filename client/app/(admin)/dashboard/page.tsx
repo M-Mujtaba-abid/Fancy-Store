@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Box, ClipboardList, Users, TrendingUp } from "lucide-react";
+import { Box, ClipboardList, Users, TrendingUp, Star } from "lucide-react";
 import { useGetDashboardStats } from "@/hooks/useAdmin"; // Apna sahi path check kar lein
 
 export default function DashboardSummary() {
@@ -39,7 +39,7 @@ export default function DashboardSummary() {
       </div>
 
       {/* 🎯 Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         
         {/* Total Products */}
         <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm flex items-center gap-4 transition-transform hover:-translate-y-1 hover:shadow-md duration-300">
@@ -79,6 +79,19 @@ export default function DashboardSummary() {
             {/* ✅ Live Data */}
             <h2 className="text-3xl font-black text-text-main">
               {stats?.totalUsers?.toLocaleString() || 0}
+            </h2>
+          </div>
+        </div>
+
+        {/* Total Reviews */}
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-sm flex items-center gap-4 transition-transform hover:-translate-y-1 hover:shadow-md duration-300">
+          <div className="p-4 bg-purple-500/10 text-purple-500 rounded-xl">
+            <Star size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-text-muted font-bold uppercase tracking-wider">Total Reviews</p>
+            <h2 className="text-3xl font-black text-text-main">
+              {stats?.totalReviews?.toLocaleString() || 0}
             </h2>
           </div>
         </div>
