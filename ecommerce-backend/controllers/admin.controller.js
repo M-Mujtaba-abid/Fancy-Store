@@ -18,3 +18,12 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     new ApiResponse(200, { totalUsers, totalProducts, totalOrders, totalReviews }, "Stats fetched successfully")
   );
 });
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.findAll({
+    attributes: ["id", "name", "email", "role", "avatar", "createdAt"],
+    order: [["createdAt", "DESC"]],
+  });
+
+  res.status(200).json(new ApiResponse(200, users, "Users fetched successfully"));
+});
