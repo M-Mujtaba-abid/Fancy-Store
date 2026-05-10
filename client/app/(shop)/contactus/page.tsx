@@ -1,12 +1,39 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Phone, MapPin, Send, MessageSquare } from 'lucide-react';
 import { useContactForm } from '@/hooks/useContact';
 import { CONTACT_CATEGORIES } from '@/constants/contactCategories';
 
 const ContactPage = () => {
   const { formData, handleChange, handleSubmit } = useContactForm();
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const selectedCategory = CONTACT_CATEGORIES.find((cat) => cat.value === formData.category);
+
+  const handleCategorySelect = (value: string) => {
+    handleChange({
+      target: {
+        name: 'category',
+        value,
+      },
+    } as React.ChangeEvent<HTMLSelectElement>);
+    setIsCategoryOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-surface text-text-main">
@@ -192,25 +219,37 @@ const ContactPage = () => {
                 <label htmlFor="category" className="block text-sm font-semibold text-text-main mb-2">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <select
+                <div className="relative" ref={categoryDropdownRef}>
+                  <button
+                    type="button"
                     id="category"
                     name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full appearance-none rounded-2xl border border-border/50 bg-surface px-4 py-4 pr-10 text-text-main outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    onClick={() => setIsCategoryOpen((prev) => !prev)}
+                    className="w-full rounded-2xl border border-border/50 bg-card px-4 py-4 pr-10 text-left text-text-main outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
                   >
-                    {CONTACT_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
+                    {selectedCategory?.label ?? 'Select a category'}
+                  </button>
                   <div className="pointer-events-none absolute inset-y-0 right-4 top-1/2 -translate-y-1/2 text-text-muted">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`h-5 w-5 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
+                  {isCategoryOpen && (
+                    <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border/50 bg-card shadow-lg shadow-black/10">
+                      {CONTACT_CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.value}
+                          type="button"
+                          onClick={() => handleCategorySelect(cat.value)}
+                          className={`w-full px-4 py-3 text-left text-sm transition hover:bg-primary/10 ${
+                            formData.category === cat.value ? 'text-primary' : 'text-text-main'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
