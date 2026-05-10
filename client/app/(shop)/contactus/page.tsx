@@ -25,7 +25,7 @@ const ContactPage = () => {
         </div>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-          <section className="hidden lg:block space-y-6 rounded-[28px] border border-border/50 bg-white/95 p-6 shadow-sm shadow-black/5 sm:p-8">
+          <section className="hidden lg:block space-y-6 rounded-[28px] border border-border/50 bg-card p-6 shadow-sm shadow-black/5 sm:p-8">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Mail size={22} />
@@ -60,7 +60,7 @@ const ContactPage = () => {
 
               <div className="rounded-3xl border border-border/50 bg-surface p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                     <Phone size={20} />
                   </div>
                   <div>
@@ -91,7 +91,7 @@ const ContactPage = () => {
 
               <div className="rounded-3xl border border-border/50 bg-surface p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-500">
                     <Mail size={20} />
                   </div>
                   <div>
@@ -127,7 +127,7 @@ const ContactPage = () => {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-border/50 bg-white/95 p-6 shadow-sm shadow-black/5 sm:p-8">
+          <section className="rounded-[28px] border border-border/50 bg-card p-6 shadow-sm shadow-black/5 sm:p-8">
             <div className="mb-8 flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Send size={20} />
