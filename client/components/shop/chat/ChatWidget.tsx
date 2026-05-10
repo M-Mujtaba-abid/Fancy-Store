@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { ChatMessage } from "@/types/chat.types";
@@ -16,10 +16,15 @@ const ChatWidget = () => {
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const { mutateAsync: sendMessage, isPending } = useChat();
 
   const canSend = useMemo(() => input.trim().length > 0 && !isPending, [input, isPending]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = async (customText?: string) => {
     const textToSend = (customText ?? input).trim();
@@ -61,10 +66,10 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 z-50">
+    <div className="fixed bottom-4 right-2 sm:bottom-6 sm:right-6 z-50">
       {isOpen ? (
-        <div className="w-[calc(100vw-1.5rem)] h-[calc(100dvh-1.5rem)] max-h-[760px] sm:w-[390px] sm:h-[620px] sm:max-h-[82vh] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
+        <div className="w-[95vw] h-[90vh] max-h-[760px] sm:w-[390px] sm:h-[620px] sm:max-h-[82vh] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between px-4 py-3.5 sm:px-4 sm:py-3.5 border-b border-border/50 bg-background/90">
             <div>
               <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
               <p className="text-xs text-text-muted">Vehicle covers support</p>
@@ -72,14 +77,14 @@ const ChatWidget = () => {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-full bg-card hover:bg-background transition-colors"
+              className="h-10 w-10 flex items-center justify-center rounded-full bg-card hover:bg-background transition-colors"
               aria-label="Close chat"
             >
-              <X size={16} className="text-text-main" />
+              <X size={18} className="text-text-main" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 bg-background/30">
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-3.5 space-y-3.5 bg-background/30">
             {!messages.length && !isPending && (
               <div className="h-full min-h-40 flex items-center justify-center text-center px-4">
                 <p className="text-sm text-text-muted">Hi! How can I help you today?</p>
@@ -90,7 +95,7 @@ const ChatWidget = () => {
               return (
                 <div
                   key={`${message.role}-${index}`}
-                  className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word overflow-hidden ${
                     isUser
                       ? "ml-auto bg-primary text-white rounded-br-md"
                       : "mr-auto bg-background border border-border/50 text-text-main rounded-bl-md"
@@ -107,9 +112,10 @@ const ChatWidget = () => {
                 <span className="h-2 w-2 rounded-full bg-text-muted animate-bounce" />
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-3.5 py-3 border-t border-border/50 bg-card">
+          <div className="sticky bottom-0 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-3.5 border-t border-border/50 bg-card">
             <div className="flex flex-wrap gap-2 mb-3">
               {SUGGESTIONS.slice(0, 2).map((suggestion) => (
                 <button
