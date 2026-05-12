@@ -10,3 +10,10 @@ export const useGetDashboardStats = () => {
     queryFn: adminService.getDashboardStats,
   });
 };
+
+export const useGetAllUsers = () => {
+  return useQuery({
+    queryKey: ["adminUsers"],
+    queryFn: adminService.getAllUsers,
+  });
+};
