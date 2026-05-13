@@ -61,9 +61,9 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 z-50">
+    <div className="fixed bottom-14 md:bottom-6 right-4 md:right-6 z-50">
       {isOpen ? (
-        <div className="w-[calc(100vw-1.5rem)] h-[calc(100dvh-1.5rem)] max-h-[760px] sm:w-[390px] sm:h-[620px] sm:max-h-[82vh] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+       <div className="w-[calc(100vw-2rem)] h-[calc(100dvh-7rem)] max-h-[700px] md:w-[390px] md:h-[620px] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
             <div>
               <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
@@ -154,10 +154,12 @@ const ChatWidget = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200"
+          // ✅ 3. Size classes change ki hain: Mobile pe h-12 w-12 aur Desktop pe md:h-14 md:w-14
+          className="h-9 w-9 md:h-24 md:w-24 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200"
           aria-label="Open chat support"
         >
-          <MessageCircle size={24} />
+          {/* ✅ Icon ka size bhi mobile ke liye chota aur PC ke liye bada kar diya */}
+          <MessageCircle className="w-5 h-5 md:w-12 md:h-12" />
         </button>
       )}
     </div>
