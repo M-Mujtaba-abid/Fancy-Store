@@ -13,7 +13,7 @@ import {
 import passport from "../config/passport.js"; //  add
 import authMiddleware from "../middleware/auth.middleware.js";
 import { upload, uploadWithLimits } from "../middleware/multer.middleware.js";
-import { getDashboardStats } from "../controllers/admin.controller.js";
+import { getDashboardStats, getAllUsers } from "../controllers/admin.controller.js";
 import adminMiddleware from "../middleware/admin.middleware.js";
 
 const router = express.Router();
@@ -58,4 +58,5 @@ router.get("/profile", authMiddleware, getProfile);
 // );
 router.patch("/profile", authMiddleware, uploadWithLimits.single("avatar"), updateProfile);
 router.get("/dashboard-stats",authMiddleware, adminMiddleware, getDashboardStats);
+router.get("/users", authMiddleware, adminMiddleware, getAllUsers);
 export default router;

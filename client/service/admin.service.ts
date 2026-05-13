@@ -1,6 +1,6 @@
 // service/adminService/admin.service.ts
 
-import { DashboardStatsResponse } from "@/types/admin.type";
+import { AdminUsersResponse, DashboardStatsResponse } from "@/types/admin.type";
 import api from "./api";
 
 // import api from "../api"; // Apne axios instance ka sahi path check kar lein
@@ -11,6 +11,11 @@ export const adminService = {
   getDashboardStats: async (): Promise<DashboardStatsResponse> => {
     // URL wahi hai jo aapne backend mein set kiya hai
     const response = await api.get("/admin/dashboard-stats");
+    return response.data;
+  },
+
+  getAllUsers: async (): Promise<AdminUsersResponse> => {
+    const response = await api.get("/admin/users");
     return response.data;
   },
 };

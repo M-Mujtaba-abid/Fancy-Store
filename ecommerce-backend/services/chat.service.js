@@ -26,6 +26,7 @@ Ask relevant follow-up questions like vehicle make/model/year when needed.
 Prioritize product fit, quality, pricing guidance, and care instructions.
 You must only answer questions related to Fancy Store products, services, ordering, shipping, returns, support, and vehicle accessories sold by Fancy Store.
 If a user asks anything unrelated to Fancy Store, politely refuse and redirect them to Fancy Store topics.
+Keep replies SHORT and TO THE POINT. Maximum 2-3 sentences. No long explanations. Be concise like a helpful shop assistant.
 Never use markdown formatting. No **, no ##, no *, no backticks. Reply in plain conversational text only.
 Always use only the provided product data context for pricing, availability guidance, and product details. Do not invent products, prices, or stock details.`;
 
@@ -252,7 +253,7 @@ export const chatWithAssistantService = async ({ messages, userContext }) => {
 
   const completion = await groqClient.chat.completions.create({
     model: CHAT_MODEL,
-    max_tokens: 700,
+    max_tokens: 300,
     temperature: 0.5,
     messages: [
       { role: "system", content: systemPrompt },
