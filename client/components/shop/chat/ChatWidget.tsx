@@ -157,21 +157,13 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed right-0 bottom-0 sm:bottom-6 sm:right-6 z-50 pointer-events-none">
+    <div className="fixed bottom-14 md:bottom-6 right-4 md:right-6 z-50">
       {isOpen ? (
-        <div className="pointer-events-auto w-screen h-dvh sm:w-[390px] sm:h-[620px] sm:max-h-[82vh] bg-card border border-border/50 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-6 fade-in duration-300">
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90 pt-[max(0.875rem,env(safe-area-inset-top))]">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <Bot size={18} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
-                <p className="text-xs text-text-muted flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  Online
-                </p>
-              </div>
+       <div className="w-[calc(100vw-2rem)] h-[calc(100dvh-7rem)] max-h-[700px] md:w-[390px] md:h-[620px] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
+            <div>
+              <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
+              <p className="text-xs text-text-muted">Vehicle covers support</p>
             </div>
             <button
               type="button"
@@ -294,18 +286,13 @@ const ChatWidget = () => {
       ) : (
         <button
           type="button"
-          onClick={openChat}
-          className="pointer-events-auto relative mr-2 mb-4 sm:mr-0 sm:mb-0 h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center transition-transform duration-200 hover:scale-105"
+          onClick={() => setIsOpen(true)}
+          // ✅ 3. Size classes change ki hain: Mobile pe h-12 w-12 aur Desktop pe md:h-14 md:w-14
+          className="h-9 w-9 md:h-24 md:w-24 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200"
           aria-label="Open chat support"
         >
-          <span className="absolute inset-0 rounded-full border-2 border-primary/50 animate-ping" />
-          <span className="absolute inset-0 rounded-full border border-primary/30 scale-125" />
-          <MessageCircle size={24} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold flex items-center justify-center">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
+          {/* ✅ Icon ka size bhi mobile ke liye chota aur PC ke liye bada kar diya */}
+          <MessageCircle className="w-5 h-5 md:w-12 md:h-12" />
         </button>
       )}
     </div>

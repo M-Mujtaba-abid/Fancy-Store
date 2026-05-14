@@ -10,6 +10,7 @@ import NavCartButton from "./NavCartButton";
 
 // ✅ Apna naya component import karein
 import NavbarModal from "./NavbarModal"; 
+import MobileBottomNav from "./MobileBottomNav";
 
 const Navbar = () => {
   const { resolvedTheme } = useTheme();
@@ -117,6 +118,7 @@ const Navbar = () => {
           />
         </div>
       </div>
+      <MobileBottomNav />
     </nav>
   );
 };
