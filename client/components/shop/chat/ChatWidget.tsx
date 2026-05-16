@@ -157,7 +157,7 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-14 md:bottom-6 right-4 md:right-6 z-50">
+    <div className="fixed bottom-14 md:bottom-8 right-4 md:right-8 z-50">
       {isOpen ? (
        <div className="w-[calc(100vw-2rem)] h-[calc(100dvh-7rem)] max-h-[700px] md:w-[390px] md:h-[620px] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
@@ -287,12 +287,12 @@ const ChatWidget = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          // ✅ 3. Size classes change ki hain: Mobile pe h-12 w-12 aur Desktop pe md:h-14 md:w-14
-          className="h-9 w-9 md:h-24 md:w-24 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform duration-200"
+          // ✅ Size classes unified with WhatsAppWidget for a symmetric look
+          className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
           aria-label="Open chat support"
         >
-          {/* ✅ Icon ka size bhi mobile ke liye chota aur PC ke liye bada kar diya */}
-          <MessageCircle className="w-5 h-5 md:w-12 md:h-12" />
+          {/* ✅ Icon dynamically scales across screens to match WhatsApp */}
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
         </button>
       )}
     </div>
