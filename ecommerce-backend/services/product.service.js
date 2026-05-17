@@ -202,6 +202,7 @@ import {
   VEHICLE_TYPES,
   DEFAULT_LIMITS,
 } from "../constants/index.js"; // ✅ import
+import { generateEmbedding } from "../utils/ai.util.js"; // ✅ AI Utility Import Karein
 
 // ============================================================
 // PAGINATION HELPERS
@@ -226,6 +227,46 @@ export const uploadImagesToCloudinary = (files) => {
   return uploadManyBuffers({ files, folder: "products" });
 };
 
+
+
+
+
+// ============================================================
+// AI EMBEDDING TEXT FORMATTER (Naya Helper)
+// ============================================================
+export const buildProductTextForAI = (product) => {
+  const parts = [];
+
+  // Basic Info
+  parts.push(`Product Name: ${product.name}`);
+  if (product.category) parts.push(`Category: ${product.category}`);
+  if (product.subCategory) parts.push(`Sub-Category: ${product.subCategory}`);
+
+  // Vehicle Compatibility & Specs
+  if (product.vehicleType) parts.push(`Vehicle Type: ${product.vehicleType}`);
+  if (product.carModel) parts.push(`Compatible Car Model: ${product.carModel}`);
+  if (product.color) parts.push(`Color: ${product.color}`);
+  if (product.material) parts.push(`Material: ${product.material}`);
+
+  // Pricing & Stock
+  parts.push(`Price: Rs ${product.price}`);
+  if (product.isOnSale && product.discountPrice) {
+    parts.push(`On Sale! Discount Price: Rs ${product.discountPrice}`);
+  }
+  parts.push(`Stock: ${product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}`);
+
+  // Badges & Ratings
+  if (product.isFeatured) parts.push(`Special: Featured Product`);
+  if (product.isNewArrival) parts.push(`Special: New Arrival`);
+  if (product.averageRating > 0) {
+    parts.push(`Rating: ${product.averageRating} out of 5 (${product.totalReviews} reviews)`);
+  }
+
+  // Description (Aakhir mein taa ke search keywords match hon)
+  if (product.description) parts.push(`Description: ${product.description}`);
+
+  return parts.join(". "); // Sab ko mila kar ek lamba sentence bana diya
+};
 // ============================================================
 // PRODUCT SERVICES
 // ============================================================
@@ -236,20 +277,9 @@ export const addProductService = async (body, files) => {
     throw new ApiError(400, "At least one image file is required");
 
   const {
-    name,
-    description,
-    price,
-    stock,
-    category,
-    subCategory,
-    carModel,
-    color,
-    material,
-    isFeatured,
-    isNewArrival,
-    isOnSale,
-    discountPrice,
-    vehicleType, // ✅ yeh add karo
+    name, description, price, stock, category, subCategory,
+    carModel, color, material, isFeatured, isNewArrival,
+    isOnSale, discountPrice, vehicleType
   } = body;
 
   const uploadedImages = await uploadImagesToCloudinary(files);
@@ -258,7 +288,8 @@ export const addProductService = async (body, files) => {
   const normalizedStock = Number(stock);
   const normalizedDiscountPrice = Number(discountPrice || 0);
 
-  return await Product.create({
+  // STEP 1: Pehle apna exact structured data object ready karein
+  const newProductData = {
     name,
     description,
     price: Number.isNaN(normalizedPrice) ? 0 : normalizedPrice,
@@ -275,9 +306,18 @@ export const addProductService = async (body, files) => {
     discountPrice: Number.isNaN(normalizedDiscountPrice) ? 0 : normalizedDiscountPrice,
     imageUrl: uploadedImages[0],
     images: uploadedImages,
-  });
-};
+  };
 
+  const textToEmbed = buildProductTextForAI(newProductData);
+  const vectorArray = await generateEmbedding(textToEmbed);
+  
+  // ❌ PURANI LINE: newProductData.embedding = vectorArray;
+  // ✅ NAYI LINE:
+  newProductData.embedding = `[${vectorArray.join(',')}]`;
+
+  // STEP 3: DB mein Save karein
+  return await Product.create(newProductData);
+};
 // 2. Search Products
 export const searchProductsService = async (q, queryPage, queryLimit) => {
   if (!q) throw new ApiError(400, "Search query is required");
@@ -390,21 +430,36 @@ export const updateProductService = async (id, body, files) => {
   if (!product) throw new ApiError(404, "Product not found");
 
   const updateData = { ...body };
+  
+  // Apki exact Number conversions
   if (updateData.price !== undefined) updateData.price = Number(updateData.price);
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
-  if (updateData.discountPrice !== undefined) {
-    updateData.discountPrice = Number(updateData.discountPrice);
-  }
+  if (updateData.discountPrice !== undefined) updateData.discountPrice = Number(updateData.discountPrice);
+  
+  // Apki exact Boolean conversions
+  if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === "true" || updateData.isFeatured === true;
+  if (updateData.isNewArrival !== undefined) updateData.isNewArrival = updateData.isNewArrival === "true" || updateData.isNewArrival === true;
+  if (updateData.isOnSale !== undefined) updateData.isOnSale = updateData.isOnSale === "true" || updateData.isOnSale === true;
+  
   if (updateData.subCategory === "") updateData.subCategory = null;
 
+  // Image handling
   if (files && files.length > 0) {
     const uploadedImages = await uploadImagesToCloudinary(files);
-// Purani images aur nayi images ko merge karein
     const existingImages = product.images || []; 
     updateData.images = [...existingImages, ...uploadedImages];
     updateData.imageUrl = uploadedImages[0];
   }
 
+  // STEP 1: Purane product ka data naye update data ke sath merge karein
+  const mergedProductState = { ...product.toJSON(), ...updateData };
+  
+  // STEP 2: Updated data ka AI Text banayein aur Embedding banayein
+  const textToEmbed = buildProductTextForAI(mergedProductState);
+  const vectorArray = await generateEmbedding(textToEmbed);
+  updateData.embedding = `[${vectorArray.join(',')}]`;
+
+  // STEP 3: DB update karein
   await product.update(updateData);
   return product;
 };
