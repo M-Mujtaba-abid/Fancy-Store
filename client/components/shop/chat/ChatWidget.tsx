@@ -6,7 +6,7 @@ import { useChat } from "@/hooks/useChat";
 import { ChatMessage } from "@/types/chat.types";
 import ReactMarkdown from "react-markdown"; // ✅ 1. Markdown import kiya
 
-const SUGGESTIONS = [
+const SUGGESTIONS: string[] = [
   // "Which cover is best for Honda Civic 2022?",
   // "How do I pick the right size for my car cover?",
   // "Which product is best for dust + rain protection?",
