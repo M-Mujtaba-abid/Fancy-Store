@@ -4,15 +4,16 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, ChevronDown, MessageCircle, Send, X } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { ChatMessage } from "@/types/chat.types";
+import ReactMarkdown from "react-markdown"; // ✅ 1. Markdown import kiya
 
-const SUGGESTIONS = [
-  "Which cover is best for Honda Civic 2022?",
-  "How do I pick the right size for my car cover?",
-  "Which product is best for dust + rain protection?",
+const SUGGESTIONS: string[] = [
+  // "Which cover is best for Honda Civic 2022?",
+  // "How do I pick the right size for my car cover?",
+  // "Which product is best for dust + rain protection?",
 ];
 
 const WELCOME_MESSAGE =
-  "Hi! 👋 Welcome to Fancy Store! How can I help you find the perfect car cover today?";
+  "Hi! 👋 Welcome to Fancy Store! How can I help you find the perfect car accessories today?";
 const MAX_CHARACTERS = 600;
 
 type ChatMessageWithMeta = ChatMessage & {
@@ -123,18 +124,20 @@ const ChatWidget = () => {
           createdAt: new Date().toISOString(),
         },
       ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            "I am facing a temporary issue. Please try again in a moment.",
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-    }
+    } catch (error: any) {
+  // Agar backend se rate limit ka error aaye (429) ya custom message ho
+  const errorMessage = error.response?.data?.message || "I am facing a temporary issue. Please try again in a moment.";
+  
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: errorMessage, // 👈 Yahan aapka "Agent is busy..." wala message aayega
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+}
   };
 
   const openChat = () => {
@@ -157,9 +160,9 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-14 md:bottom-8 right-4 md:right-8 z-50">
+    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-20 md:bottom-8 right-4 md:right-8"}`}>
       {isOpen ? (
-       <div className="w-[calc(100vw-2rem)] h-[calc(100dvh-7rem)] max-h-[700px] md:w-[390px] md:h-[620px] bg-card border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-full h-[85dvh] md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-t md:border border-border/50 rounded-t-2xl md:rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
             <div>
               <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
@@ -190,16 +193,25 @@ const ChatWidget = () => {
                       <div className="h-7 w-7 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                         <Bot size={14} />
                       </div>
-                      <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word overflow-hidden bg-background border border-border/50 text-text-main">
-                        {message.content}
-                        <p className="mt-1 text-[11px] text-text-muted">
+                      <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 text-sm leading-relaxed break-words overflow-hidden bg-background border border-border/50 text-text-main prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-pre:p-0 max-w-none">
+                        {/* ✅ 2. Markdown Component add kiya, aur links ko new tab mein kholne ka logic lagaya */}
+                        <ReactMarkdown
+                          components={{
+                            a: ({ node, ...props }) => (
+                              <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium break-all" />
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                        <p className="mt-1 text-[11px] text-text-muted text-right">
                           {formatTimestamp(message.createdAt)}
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl rounded-br-md px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word overflow-hidden bg-primary text-white">
-                      {message.content}
+                    <div className="rounded-2xl rounded-br-md px-3.5 py-2.5 text-sm leading-relaxed break-words overflow-hidden bg-primary text-white">
+                      <p>{message.content}</p>
                       <p className="mt-1 text-[11px] text-white/80 text-right">
                         {formatTimestamp(message.createdAt)}
                       </p>
@@ -208,6 +220,7 @@ const ChatWidget = () => {
                 </div>
               );
             })}
+            {/* Loading Indicator Remains Unchanged */}
             {isPending && (
               <div className="mr-auto max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-end gap-2">
@@ -225,6 +238,7 @@ const ChatWidget = () => {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Scroll to bottom button Remains Unchanged */}
           {showScrollToBottom && (
             <button
               type="button"
@@ -240,6 +254,7 @@ const ChatWidget = () => {
           )}
 
           <div className="sticky bottom-0 px-4 py-3 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-border/50 bg-card">
+            {/* Suggestions Remains Unchanged */}
             <div className="flex flex-wrap gap-2 mb-3">
               {SUGGESTIONS.slice(0, 2).map((suggestion) => (
                 <button
@@ -284,16 +299,23 @@ const ChatWidget = () => {
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          // ✅ Size classes unified with WhatsAppWidget for a symmetric look
-          className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
-          aria-label="Open chat support"
-        >
-          {/* ✅ Icon dynamically scales across screens to match WhatsApp */}
-          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={openChat} // ✅ 3. Yahan 'openChat' call karna tha taa ke welcome message aaye!
+            className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
+            aria-label="Open chat support"
+          >
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+          </button>
+          
+          {/* ✅ 4. Unread badge add kiya gaya */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[10px] sm:text-xs font-bold text-white animate-bounce">
+              {unreadCount}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

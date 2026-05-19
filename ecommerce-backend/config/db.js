@@ -1,10 +1,13 @@
 import { Sequelize } from "sequelize";
 import pg  from "pg"; // 👈 CHANGE 1: pg ko import kiya
 import dotenv from "dotenv";
+import pgvector from "pgvector/sequelize";
 
 
 dotenv.config();
 
+// Register pgvector type with Sequelize
+pgvector.registerType(Sequelize);
 // Use the DATABASE_URL directly if it exists, otherwise fallback to separate vars
 const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, {
@@ -47,6 +50,9 @@ export const dbConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully to Neon");
+    // 👈 ADD THIS: Enable vector extension in Neon DB
+    await sequelize.query("CREATE EXTENSION IF NOT EXISTS vector;");
+    console.log("✅ pgvector extension is ready");
   } catch (error) {
     console.error("❌ DB connection failed:", error);
   }
