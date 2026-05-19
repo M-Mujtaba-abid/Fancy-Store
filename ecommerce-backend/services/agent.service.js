@@ -1,4 +1,3 @@
-// import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 // import { sequelize } from "../config/db.js";
@@ -36,17 +35,28 @@ const searchStoreTool = tool(
       // Note: Removed strict category ILIKE filtering here. Vector similarity naturally handles 
       // semantic concepts like 'mehran car cover' much better than strict text matching.
 
-      // Sab se best matching 3 products nikal kar layein
-      sqlQuery += ` ORDER BY embedding <=> :vector LIMIT 3;`;
+      // Sab se best matching 2 products nikal kar layein taa k tokens bach sakein
+      sqlQuery += ` ORDER BY embedding <=> :vector LIMIT 2;`;
 
       const [results] = await sequelize.query(sqlQuery, { replacements });
 
       if (results.length === 0) {
         return "No exact products found. Tell the user we are out of stock for this specific item but ask if they want something else.";
       }
+      // 👇 NAYA CODE: Data ko clean karna taa ke Tokens zaya na hon
+      const cleanResults = results.map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        salePrice: product.salePrice,
+        category: product.category,
+        stock: product.stock,
+        rating: product.averageRating,
+        // similarity_score: product.similarity_score // AI ko score janne ki zaroorat nahi
+      }));
 
       // AI ko DB ka result return karein
-      return JSON.stringify(results);
+      return JSON.stringify(cleanResults);
     } catch (error) {
       console.error("Tool Error:", error);
       return "Error connecting to the database.";
@@ -54,7 +64,7 @@ const searchStoreTool = tool(
   },
   {
     name: "search_store",
-    description: "Search the Fancy Store database for ANY automotive accessory. Our available categories are: car top covers, bike top covers, scooty top covers, steering covers, seat covers, dashboard mats, cow floor mats, and car foot mats. ALWAYS use this tool to check inventory before answering.",
+    description: "Search the Fancy Store database for ANY automotive accessory. Our available categories are: car top covers, bike top covers, scooty top covers, steering covers, seat covers, dashboard mats, cow floor mats, and car foot mats. ALWAYS use this tool to check inventory before answering and price return in Pak Rupees Currency(Rs.).",
     schema: z.object({
       searchQuery: z.string().describe("The specific product to search for (e.g., 'Corolla top cover')"),
     }),
@@ -229,10 +239,13 @@ export const chatWithAgent = async (
   userId,
   userContext
 ) => {
+  // Prevent users from sending massive messages that eat up tokens
+  const safeUserMessage = userMessage.substring(0, 300);
   const llm = new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
     model: "llama-3.1-8b-instant",
-    temperature: 0,
+    // model: "llama-3.3-70b-versatile",
+    temperature: 0.1,
     maxTokens: 1024,
     maxRetries: 2,
   });
@@ -285,20 +298,23 @@ CRITICAL RULES:
 1. STRICT DOMAIN LIMIT: You ONLY answer questions related to Fancy Store, automotive accessories, products, and the user's orders. Decline unrelated topics politely.
 2. NO HIDDEN TOOLS: NEVER mention your internal tool names (like 'search_store') to the customer.
 3. COMMON SENSE PRODUCT MATCHING (NO CONTRADICTIONS):
-   - If the search results contain the item the user asked for (even with a slightly different name, like 'genz' matching 'Genz Evee Pro Scooty'), CONFIDENTLY recommend it. NEVER say an item is out of stock if it is clearly in your results!
-   - If the user asks for a cover for a specific vehicle (e.g., 'Aqua' or 'Civic') and your results ONLY show covers for COMPLETELY DIFFERENT vehicles (e.g., 'Mehran', 'Scooty', 'Swift'), you MUST politely apologize and say you do not have a cover for their specific vehicle. DO NOT offer a Mehran cover to an Aqua owner.
+   - If the search results contain the item the user asked for (even with a slightly different name), CONFIDENTLY recommend it.
+   - If the user asks for a specific vehicle cover (e.g., 'Aqua') and results show completely different vehicles (e.g., 'Mehran'), politely apologize. DO NOT offer a Mehran cover to an Aqua owner.
    - NEVER contradict yourself (e.g., absolutely NEVER say "We don't have X, but we have X").
 4. DYNAMIC CLICKABLE LINKS: Whenever you mention a product, provide its markdown link EXACTLY like this: [Actual Name of the Product](https://www.fancystore.store/products/[id]) (replace [id] with the real ID).
 5. BEAUTIFUL FORMATTING: Use Markdown. Use bullet points and bold text for readability.
 6. MANDATORY SEARCH: You MUST use the 'search_store' tool to fetch the exact ID and details from the database before recommending any product. Never guess.
-7. ORDER FLOW: ONLY ask for delivery details (Name, Phone, Email, Address, City, Postal Code) AFTER the user explicitly agrees to buy a specific product. Do not ask before they decide.
+7. ORDER FLOW: ONLY ask for delivery details AFTER the user explicitly agrees to buy a specific product. Ask for all missing details in a SINGLE message.
+8. TOOL SYNTAX SAFETY: NEVER output raw XML, HTML, or tags like <function=...> in your response. Rely strictly on the standard tool calling mechanism. Do NOT combine tool names and JSON arguments in a single string.
+9. MULTIPLE ITEMS HANDLING: The 'place_order' tool can only process ONE item at a time. If the user wants to buy "both" or multiple items, process them ONE BY ONE. Tell the user: "I will place the order for the first item now. Once confirmed, we can place the order for the second item." NEVER try to cram multiple items into a single tool call.
+10. PRICING DISPLAY: Always mention prices clearly in "PKR" (e.g., 2000 PKR). If a product has a sale/discounted price available, ALWAYS show the sale price to the customer and ignore the original higher price.
 
 ${userContextString}
 `;
   const messages = [
     new SystemMessage(systemPrompt),
 
-    ...chatHistory.slice(6)
+    ...chatHistory.slice(-4)
       // 👈 CRITICAL FIX: Ignore past messages that have the XML error so the model doesn't copy the mistake
       .filter(m => typeof m.content === "string" && !m.content.includes("<function="))
       .map((m) =>
@@ -307,7 +323,7 @@ ${userContextString}
           : new HumanMessage(m.content)
       ),
 
-    new HumanMessage(userMessage),
+    new HumanMessage(safeUserMessage),
   ];
 
   // FIRST MODEL CALL

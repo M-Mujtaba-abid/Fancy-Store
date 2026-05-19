@@ -1,27 +1,21 @@
 // utils/ai.util.js
-import { pipeline } from '@huggingface/transformers';
+import { CohereEmbeddings } from "@langchain/cohere";
 
-let extractor = null;
+// Initialize Cohere Embeddings
+const embeddings = new CohereEmbeddings({
+  apiKey: process.env.COHERE_API_KEY, // Aapki .env file se key automatically utha lega
+  model: "embed-english-light-v3.0", // Yeh fast hai aur 384 dimensions output karta hai
+});
 
 export const generateEmbedding = async (text) => {
   if (!text) return [];
-  
-  // Singleton pattern: Model bar bar load na ho, sirf pehli dafa ho
-  if (!extractor) {
-    console.log("⏳ Loading AI Embedding Model (Xenova/all-MiniLM-L6-v2)... This might take a few minutes on the first run as it downloads the model (~90MB).");
-    extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-      progress_callback: (data) => {
-        if (data.status === 'progress') {
-          process.stdout.write(`\rDownloading ${data.file}... ${Math.round(data.progress)}%`);
-        } else if (data.status === 'done') {
-          console.log(`\n✅ Downloaded ${data.file}`);
-        }
-      }
-    });
-    console.log("✅ AI Embedding Model Loaded Successfully!");
+
+  try {
+    // Text ko vector (array of numbers) mein convert karna
+    const vector = await embeddings.embedQuery(text);
+    return vector;
+  } catch (error) {
+    console.error("❌ Cohere Embedding Error:", error);
+    throw new Error("Failed to generate embeddings from Cohere");
   }
-  
-  // Text ko vector mein convert karna (384 dimensions)
-  const output = await extractor(text, { pooling: 'mean', normalize: true });
-  return Array.from(output.data);
 };
