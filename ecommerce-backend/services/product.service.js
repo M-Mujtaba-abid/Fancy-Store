@@ -309,7 +309,7 @@ export const addProductService = async (body, files) => {
   };
 
   const textToEmbed = buildProductTextForAI(newProductData);
-  const vectorArray = await generateEmbedding(textToEmbed);
+  const vectorArray = await generateEmbedding(textToEmbed, "search_document");
   
   // ❌ PURANI LINE: newProductData.embedding = vectorArray;
   // ✅ NAYI LINE:
@@ -456,7 +456,7 @@ export const updateProductService = async (id, body, files) => {
   
   // STEP 2: Updated data ka AI Text banayein aur Embedding banayein
   const textToEmbed = buildProductTextForAI(mergedProductState);
-  const vectorArray = await generateEmbedding(textToEmbed);
+  const vectorArray = await generateEmbedding(textToEmbed, "search_document");
   updateData.embedding = `[${vectorArray.join(',')}]`;
 
   // STEP 3: DB update karein

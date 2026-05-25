@@ -163,7 +163,7 @@ export const syncProductEmbeddings = asyncHandler(async (req, res) => {
     const textToEmbed = buildProductTextForAI(product);
     
     // 2. Vector Generate karein
-    const vectorArray = await generateEmbedding(textToEmbed);
+    const vectorArray = await generateEmbedding(textToEmbed, "search_document");
     
     // 3. Database mein vector save karein
     // product.embedding = vectorArray;
