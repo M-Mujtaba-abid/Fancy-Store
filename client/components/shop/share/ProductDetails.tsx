@@ -236,22 +236,30 @@ export default function ProductDetailsClient({ product }: Props) {
             <AddToCart
               productId={product.id}
               stock={product.stock}
+              // ✅ YEH LINE ADD KAREIN
+              product={{
+                id: String(product.id),
+                name: product.name,
+                price: product.discountPrice || product.price,
+                category: product.category,
+              }}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto
-                ${
-                  isOutOfStock
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:shadow-lg hover:-translate-y-1"
-                }
-              `}
+    ${
+      isOutOfStock
+        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+        : "bg-primary text-white hover:shadow-lg hover:-translate-y-1"
+    }
+  `}
             >
-              {/* ✅ Jo bhi text ya icon yahan likhenge, wo us button ke andar aa jayega */}
               {isOutOfStock ? (
                 <>
-                  <PackageX size={20} /> <span>Out of Stock</span>
+                  {" "}
+                  <PackageX size={20} /> <span>Out of Stock</span>{" "}
                 </>
               ) : (
                 <>
-                  <ShoppingCart size={20} /> <span>Add to Cart</span>
+                  {" "}
+                  <ShoppingCart size={20} /> <span>Add to Cart</span>{" "}
                 </>
               )}
             </AddToCart>

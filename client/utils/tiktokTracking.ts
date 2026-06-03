@@ -29,8 +29,16 @@ export interface CartItem extends ProductData {
  * Checks if window and ttq exist before tracking (prevents SSR errors)
  */
 const isTikTokAvailable = (): boolean => {
-  if (typeof window === "undefined") return false;
-  return typeof window.ttq !== "undefined";
+  const isWindowAvailable = typeof window !== "undefined";
+  const isTtqAvailable = isWindowAvailable && typeof window.ttq !== "undefined";
+
+  console.log("🎯 [TTQ Check] Window available:", isWindowAvailable);
+  console.log("🎯 [TTQ Check] TTQ available:", isTtqAvailable);
+  if (isWindowAvailable) {
+    console.log("🎯 [TTQ Check] window.ttq value:", window.ttq);
+  }
+
+  return isTtqAvailable;
 };
 
 /**
@@ -94,21 +102,38 @@ export const trackAddToCart = (
   quantity: number = 1,
 ): void => {
   // 🎯 TIKTOK CONTENT CODE: Add Product to Cart
-  if (!isTikTokAvailable()) return;
+  console.log("🎯 [trackAddToCart] Function called with product:", product, "quantity:", quantity);
 
-  window.ttq.track("AddToCart", {
-    contents: [
-      {
-        content_id: String(product.id),
-        content_type: "product" as const, // Hardcoded
-        content_name: product.name,
-        price: product.price,
-        ...(product.category && { content_category: product.category }),
-      },
-    ],
-    value: product.price * quantity,
-    currency: "PKR", // Hardcoded
-  });
+  if (!isTikTokAvailable()) {
+    console.warn("❌ [trackAddToCart] TTQ not available - tracking skipped");
+    return;
+  }
+
+  console.log("🎯 [trackAddToCart] TTQ is available, firing event...");
+
+  try {
+    const eventPayload = {
+      contents: [
+        {
+          content_id: String(product.id),
+          content_type: "product" as const, // Hardcoded
+          content_name: product.name,
+          price: product.price,
+          ...(product.category && { content_category: product.category }),
+        },
+      ],
+      value: product.price * quantity,
+      currency: "PKR", // Hardcoded
+    };
+
+    console.log("🎯 [trackAddToCart] Event payload:", eventPayload);
+
+    window.ttq.track("AddToCart", eventPayload);
+
+    console.log("✅ [trackAddToCart] Event fired successfully!");
+  } catch (error) {
+    console.error("❌ [trackAddToCart] Error firing event:", error);
+  }
 };
 
 /**
