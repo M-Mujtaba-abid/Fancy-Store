@@ -27,6 +27,7 @@ export interface Order {
   postalCode: string;
   country: string;
   paymentMethod: "cod" | "stripe"; // Add more as needed
+  shippingFee: number;
   createdAt: string;
   updatedAt: string;
   OrderItems?: OrderItem[];

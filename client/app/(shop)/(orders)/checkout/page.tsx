@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetCart } from "@/hooks/useCart";
 import { usePlaceOrder } from "@/hooks/useOrders";
+import { SHIPPING_FEE } from "@/constants/shipping.constants";
 import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -75,6 +76,8 @@ function CheckoutContent() {
   // ✅ Decide karein ke konsa data dikhana hai (Buy Now wala ya Cart wala)
   const displayItems = isBuyNow && buyNowItem ? [buyNowItem] : (cartData?.items || []);
   const displaySubtotal = isBuyNow && buyNowItem ? (buyNowItem.price * buyNowItem.quantity) : (cartData?.subtotal || 0);
+  const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
+  const displayTotal = displaySubtotal + displayShipping;
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -156,13 +159,13 @@ function CheckoutContent() {
             </div>
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
-              <span className="text-green-500 font-medium">Free</span>
+              <span className="font-medium text-text-main">Rs. {displayShipping.toLocaleString()}</span>
             </div>
           </div>
 
           <div className="border-t border-border/50 pt-4 mb-8 flex justify-between items-center">
             <span className="text-lg font-bold">Total</span>
-            <span className="text-2xl font-black text-primary">Rs. {displaySubtotal.toLocaleString()}</span>
+            <span className="text-2xl font-black text-primary">Rs. {displayTotal.toLocaleString()}</span>
           </div>
 
           <button 

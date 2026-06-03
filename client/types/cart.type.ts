@@ -14,6 +14,8 @@ export interface CartResponse {
   cartId?: string;
   items: CartItemType[];
   subtotal: number;
+  shippingFee?: number;
+  totalAmount?: number;
   message?: string;
 }
 
