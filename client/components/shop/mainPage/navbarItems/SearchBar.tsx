@@ -29,18 +29,30 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
   const { data, isLoading } = useSearchProducts(debouncedQuery);
 
   // 3. Track search when results arrive
+  // 3. Track search when results arrive
   useEffect(() => {
+    // 🔍 DEBUG: Check state values whenever they change
+    console.log("🔍 [SearchBar] Status Check:", { 
+      query: debouncedQuery, 
+      loading: isLoading, 
+      productsFound: data?.products?.length || 0 
+    });
+
     if (debouncedQuery && !isLoading && data?.products) {
+      // Data ko pehle ek variable mein map karein taake console mein dekh sakein
+      const mappedProducts = data.products.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: p.discountPrice || p.price,
+        category: p.category,
+      }));
+
+      console.log("🎯 [SearchBar] Conditions met! Triggering trackSearch.");
+      console.log("🎯 [SearchBar] Search Query:", debouncedQuery);
+      console.log("🎯 [SearchBar] Products Array:", mappedProducts);
+
       // 🎯 TIKTOK CONTENT CODE: User performed search
-      trackSearch(
-        debouncedQuery,
-        data.products.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          price: p.discountPrice || p.price,
-          category: p.category,
-        })),
-      );
+      trackSearch(debouncedQuery, mappedProducts);
     }
   }, [debouncedQuery, data, isLoading]);
 

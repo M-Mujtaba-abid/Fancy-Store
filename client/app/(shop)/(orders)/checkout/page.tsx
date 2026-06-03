@@ -52,6 +52,7 @@ function CheckoutContent() {
 
       if (displayItems.length > 0) {
         // 🎯 TIKTOK CONTENT CODE: Checkout initiated
+        console.log("🎯 [Checkout] 1. InitiateCheckout trigger ho raha hai!", displayItems);
         trackInitiateCheckout(
           displayItems.map((item: any) => ({
             id: item.productId || item.id,
@@ -62,6 +63,7 @@ function CheckoutContent() {
           })),
         );
         setCheckoutTracked(true);
+        console.log("✅ [Checkout] InitiateCheckout Done!");
       }
     }
   }, [isCartLoading, cartData, isBuyNow, buyNowItem, checkoutTracked]);
@@ -77,6 +79,7 @@ function CheckoutContent() {
       const displayItems =
         isBuyNow && buyNowItem ? [buyNowItem] : cartData?.items || [];
       if (displayItems.length > 0) {
+        console.log("🎯 [Checkout] 2. AddPaymentInfo trigger ho raha hai! Method:", e.target.value);
         trackAddPaymentInfo(
           displayItems.map((item: any) => ({
             id: item.productId || item.id,
@@ -86,6 +89,7 @@ function CheckoutContent() {
             category: item.category,
           })),
         );
+        console.log("✅ [Checkout] AddPaymentInfo Done!");
       }
     }
   };
@@ -95,7 +99,7 @@ function CheckoutContent() {
 
     const displayItems =
       isBuyNow && buyNowItem ? [buyNowItem] : cartData?.items || [];
-
+    console.log("🎯 [Checkout] 3. PlaceAnOrder trigger ho raha hai! (Form Submit Hua)", displayItems);
     // 🎯 TIKTOK CONTENT CODE: Order placed (before API call)
     trackPlaceAnOrder(
       displayItems.map((item: any) => ({
@@ -107,7 +111,7 @@ function CheckoutContent() {
       })),
       "submitted",
     );
-
+console.log("✅ [Checkout] PlaceAnOrder Done!");
     // ✅ Agar Buy Now hai toh API ko Product ID aur Quantity sath bhejo
     const finalPayload =
       isBuyNow && buyNowItem
@@ -121,7 +125,7 @@ function CheckoutContent() {
     placeOrder(finalPayload, {
       onSuccess: (res: any) => {
         if (isBuyNow) sessionStorage.removeItem("buyNowItem"); // Safai
-
+console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.orderId);
         // 🎯 TIKTOK CONTENT CODE: Purchase completed (MOST IMPORTANT!)
         trackPurchase(
           displayItems.map((item: any) => ({
@@ -133,6 +137,7 @@ function CheckoutContent() {
           })),
           res.orderId,
         );
+        console.log("✅ [Checkout] Purchase Event Successfully Fired! 🎉");
 
         router.push(`/order-success?orderId=${res.orderId}`);
       },
@@ -293,7 +298,7 @@ function CheckoutContent() {
                   type="radio"
                   id="cod"
                   name="paymentMethod"
-                  value="cod"
+                  value="COD"
                   checked={formData.paymentMethod === "COD"}
                   onChange={handleChange}
                   className="w-5 h-5 accent-primary"

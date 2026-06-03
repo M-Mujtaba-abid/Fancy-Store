@@ -27,6 +27,14 @@ const AddToCart: React.FC<AddToCartProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
+    // 🎯 DEBUG: Button click ka-check
+    console.log("🎯 [AddToCart] 1. Button clicked successfully!");
+    console.log("🎯 [AddToCart] Product data:", product);
+    console.log(
+      "🎯 [AddToCart] 2. Is TTQ available?:",
+      typeof window !== "undefined" && window.ttq ? "✅ YES" : "❌ NO",
+    );
+
     const isLoggedIn =
       typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
     if (!isLoggedIn) {
@@ -46,6 +54,7 @@ const AddToCart: React.FC<AddToCartProps> = ({
 
     // 🎯 TIKTOK CONTENT CODE: Product added to cart
     if (product) {
+      console.log("🎯 [AddToCart] 3. Calling trackAddToCart with:", product);
       trackAddToCart(
         {
           id: product.id,
@@ -55,6 +64,9 @@ const AddToCart: React.FC<AddToCartProps> = ({
         },
         1,
       );
+      console.log("🎯 [AddToCart] 4. trackAddToCart call completed!");
+    } else {
+      console.warn("❌ [AddToCart] Product data missing! Tracking skipped.");
     }
   };
 
