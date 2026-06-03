@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import Loading from "@/app/loading";
+import { trackInitiateCheckout } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 export default function CartPage() {
   const { data: cartData, isLoading, isError } = useGetCart();
@@ -16,10 +17,28 @@ export default function CartPage() {
   const items = cartData?.items || [];
   const subtotal = cartData?.subtotal || 0;
 
+  // 🎯 TIKTOK: Handle checkout click
+  const handleCheckoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // 🎯 TIKTOK CONTENT CODE: Checkout initiated from cart page
+    trackInitiateCheckout(
+      items.map((item) => ({
+        id: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    );
+
+    // Navigate to checkout
+    window.location.href = "/checkout";
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loading/>
+        <Loading />
       </div>
     );
   }
@@ -192,6 +211,7 @@ export default function CartPage() {
 
           <Link
             href="/checkout"
+            onClick={handleCheckoutClick}
             className="w-full py-4 px-7 bg-primary text-white rounded-xl font-bold hover:opacity-90 hover:scale-[1.02] transition-all shadow-md"
           >
             Proceed to Checkout

@@ -4,6 +4,7 @@ import { X, Search as SearchIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchProducts } from "@/hooks/useProducts"; // 👈 Apna hook yahan import karein
+import { trackSearch } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 interface SearchBarProps {
   isOpen: boolean;
@@ -27,11 +28,30 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
   // 2. React Query Hook Call
   const { data, isLoading } = useSearchProducts(debouncedQuery);
 
-  // 3. Click outside to close
+  // 3. Track search when results arrive
+  useEffect(() => {
+    if (debouncedQuery && !isLoading && data?.products) {
+      // 🎯 TIKTOK CONTENT CODE: User performed search
+      trackSearch(
+        debouncedQuery,
+        data.products.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: p.discountPrice || p.price,
+          category: p.category,
+        })),
+      );
+    }
+  }, [debouncedQuery, data, isLoading]);
+
+  // 4. Click outside to close
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         handleClose();
       }
     };
@@ -63,7 +83,10 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
           placeholder="Search for products..."
           className="w-full bg-transparent border-none outline-none text-text-main text-sm placeholder:text-text-muted"
         />
-        <button onClick={handleClose} className="p-1 hover:bg-background rounded-full transition-all text-text-muted hover:text-text-main">
+        <button
+          onClick={handleClose}
+          className="p-1 hover:bg-background rounded-full transition-all text-text-muted hover:text-text-main"
+        >
           <X size={18} strokeWidth={1.5} />
         </button>
       </div>
@@ -71,7 +94,6 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
       {/* Results Area */}
       {inputValue.trim().length > 0 && (
         <div className="max-h-[300px] overflow-y-auto no-scrollbar bg-background">
-          
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-8 text-primary">
@@ -91,22 +113,30 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
                 >
                   <div className="w-12 h-12 relative rounded-md overflow-hidden bg-white shrink-0">
                     <Image
-                      src={product.imageUrl || (product.images && product.images[0]) || "/placeholder.png"}
+                      src={
+                        product.imageUrl ||
+                        (product.images && product.images[0]) ||
+                        "/placeholder.png"
+                      }
                       alt={product.name}
                       fill
                       className="object-cover"
                     />
                   </div>
                   <div className="flex flex-col overflow-hidden">
-                    <span className="text-sm font-medium text-text-main truncate">{product.name}</span>
-                    <span className="text-xs font-bold text-primary">Rs. {product.discountPrice || product.price}</span>
+                    <span className="text-sm font-medium text-text-main truncate">
+                      {product.name}
+                    </span>
+                    <span className="text-xs font-bold text-primary">
+                      Rs. {product.discountPrice || product.price}
+                    </span>
                   </div>
                 </Link>
               ))}
-              
+
               {/* See All Button (Agar 5 se ziada results hain toh View All page pe bhej dein) */}
-              <Link 
-                href={`/viewMore?search=${debouncedQuery}`} 
+              <Link
+                href={`/viewMore?search=${debouncedQuery}`}
                 onClick={handleClose}
                 className="text-center text-xs font-medium text-primary hover:underline py-3 border-t border-border/50 mt-1 block"
               >
@@ -118,10 +148,11 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
           {/* No Results Found */}
           {!isLoading && data?.products?.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-text-muted">
-              <span className="text-sm">No products found for "{debouncedQuery}"</span>
+              <span className="text-sm">
+                No products found for "{debouncedQuery}"
+              </span>
             </div>
           )}
-
         </div>
       )}
     </div>
