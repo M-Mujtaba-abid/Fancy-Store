@@ -5,29 +5,34 @@ import { Heart } from "lucide-react";
 import { useGetWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { trackAddToWishlist } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 interface WishlistButtonProps {
   productId: string;
-  className?: string;     // Button ki custom styling ke liye
+  className?: string; // Button ki custom styling ke liye
   iconClassName?: string; // Heart icon ki custom styling ke liye (jaise default white ya gray)
+  product?: { id: string; name: string; price: number; category?: string }; // Product data for tracking
 }
 
-const WishlistButton: React.FC<WishlistButtonProps> = ({ 
-  productId, 
-  className = "", 
-  iconClassName = "text-gray-400 fill-transparent hover:text-red-500" 
+const WishlistButton: React.FC<WishlistButtonProps> = ({
+  productId,
+  className = "",
+  iconClassName = "text-gray-400 fill-transparent hover:text-red-500",
+  product,
 }) => {
   const router = useRouter();
   const { data: wishlistItems } = useGetWishlist();
   const { mutate: toggleWishlist, isPending } = useToggleWishlist();
 
-  const isWishlisted = wishlistItems?.some((item) => item.productId === productId) || false;
+  const isWishlisted =
+    wishlistItems?.some((item) => item.productId === productId) || false;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Parent link par click hone se rokay
 
-    const isLoggedIn = typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
+    const isLoggedIn =
+      typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
 
     if (!isLoggedIn) {
       toast.error("Please login to add items to your wishlist! 🔒");
@@ -35,7 +40,19 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
       return;
     }
 
-    toggleWishlist(productId);
+    toggleWishlist(productId, {
+      onSuccess: () => {
+        // 🎯 TIKTOK CONTENT CODE: Product added to wishlist
+        if (product && !isWishlisted) {
+          trackAddToWishlist({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            category: product.category,
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -50,8 +67,8 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
           isPending
             ? "text-red-500 loading-heart" // ✅ Yahan apki custom class use ho rahi hai
             : isWishlisted
-            ? "fill-red-500 text-red-500" // Liked state
-            : iconClassName // Unliked state (Parent se aayegi)
+              ? "fill-red-500 text-red-500" // Liked state
+              : iconClassName // Unliked state (Parent se aayegi)
         }`}
       />
     </button>

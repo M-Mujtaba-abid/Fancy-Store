@@ -43,8 +43,6 @@
 //   );
 // }
 
-
-
 import type { Metadata, Viewport } from "next"; // ✅ Viewport import kiya
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script"; // ✅ TikTok Pixel ke liye
@@ -100,16 +98,18 @@ export const metadata: Metadata = {
   // Default Open Graph
   openGraph: {
     title: "Fancy Store | Premium Car Covers & Accessories",
-    description: "Get the best premium car covers, dashboard mats, and accessories for your vehicle.",
+    description:
+      "Get the best premium car covers, dashboard mats, and accessories for your vehicle.",
     url: "https://www.fancystore.store", // 👈 Yeh website ka URL hoga
     siteName: "Fancy Store",
-    images: [ // 👈 Images is array ke andar jayengi
+    images: [
+      // 👈 Images is array ke andar jayengi
       {
-        url: "https://www.fancystore.store/steeringCover_compressed.jpg", 
+        url: "https://www.fancystore.store/steeringCover_compressed.jpg",
         width: 1200,
         height: 630,
         alt: "Fancy Store Global Banner",
-      }
+      },
     ],
     locale: "en_PK",
     type: "website",

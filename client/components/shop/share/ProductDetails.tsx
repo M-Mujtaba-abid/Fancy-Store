@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -18,6 +18,7 @@ import { useAddToCart } from "@/hooks/useCart"; // ✅ Hook import kiya
 import toast from "react-hot-toast";
 import ExpandableDescription from "./ExpandableDescription";
 import ProductReviews from "../reviews/ProductReviews";
+import { trackViewContent } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 interface Props {
   product: Product;
@@ -27,6 +28,24 @@ export default function ProductDetailsClient({ product }: Props) {
   const router = useRouter();
   // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
+
+  // 🎯 TIKTOK: Track product view on mount
+  useEffect(() => {
+    // 🎯 TIKTOK CONTENT CODE: Product details page viewed
+    trackViewContent({
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      category: product.category,
+    });
+  }, [
+    product.id,
+    product.name,
+    product.price,
+    product.discountPrice,
+    product.category,
+  ]);
+
   // Main image state: Jab user thumbnail par click kare toh main image badle
   const [activeImage, setActiveImage] = useState<string>(
     product?.imageUrl ||
@@ -270,7 +289,7 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
         </div>
         {/* 2. REVIEWS SECTION (Bilkul neechay) */}
-      <ProductReviews productId={product.id} />
+        <ProductReviews productId={product.id} />
       </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
 
