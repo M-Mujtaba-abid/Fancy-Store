@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { X, MapPin, Phone, Mail, CreditCard, Package, Calendar } from "lucide-react";
+import { X, MapPin, Phone, Mail, CreditCard, Package, Calendar, Printer } from "lucide-react";
+import { generateShippingLabel } from "@/utils/generateShippingLabel";
 
 interface OrderDetailsProps {
   order: any; // Aap isko proper type bhi de sakte hain agar bani hui hai
@@ -17,16 +18,25 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
         
         {/* --- HEADER --- */}
         <div className="flex items-center justify-between p-6 border-b border-border/50 sticky top-0 bg-card z-10 rounded-t-3xl">
-          <div>
-            <h2 className="text-xl font-bold text-text-main flex items-center gap-2">
-              Order #{order.id.toString().padStart(5, '0')}
-            </h2>
-            <p className="text-xs text-text-muted mt-1 flex items-center gap-1">
-              <Calendar size={12} />
-              {new Date(order.createdAt).toLocaleString("en-US", {
-                dateStyle: "medium", timeStyle: "short"
-              })}
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-text-main flex items-center gap-2">
+                Order #{order.id.toString().padStart(5, '0')}
+              </h2>
+              <p className="text-xs text-text-muted mt-1 flex items-center gap-1">
+                <Calendar size={12} />
+                {new Date(order.createdAt).toLocaleString("en-US", {
+                  dateStyle: "medium", timeStyle: "short"
+                })}
+              </p>
+            </div>
+            <button 
+              onClick={() => generateShippingLabel(order)}
+              className="px-4 py-2 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-white rounded-lg transition-colors flex items-center gap-2 ml-4"
+            >
+              <Printer size={16} />
+              Print Label
+            </button>
           </div>
           <button 
             onClick={onClose} 
