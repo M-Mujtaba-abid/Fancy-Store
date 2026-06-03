@@ -81,20 +81,11 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/admin", userRoutes);
 
 dbConnection();
-app.use(errorHandler);
 
-// ⚡ CHANGE 2: Local server listener add karein
-// Vercel par NODE_ENV default 'production' hota hai, to ye block wahan nahi chalega
-// Sirf local par chalega taake port par app listen kar sake
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server is running locally on port ${PORT}`);
-  });
-}
 app.get("/", (req, res) => {
   res.send("Hello Fancy Store!");
 });
 
-// Vercel serverless functions ke liye export karna zaroori hai
+app.use(errorHandler);
+
 export default app;
