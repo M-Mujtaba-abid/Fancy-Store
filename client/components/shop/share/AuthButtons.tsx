@@ -3,6 +3,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; 
 // ✅ Sahi path yahan rakh liya hai, agar aapka path different ho toh isey theek kar lijiye ga
 import { authService } from "@/service/authService/auth.service"; 
+import { syncGuestWishlistToServer } from "@/service/wishlistService/wishlist.service";
 import toast from "react-hot-toast";
 import Link from "next/link";
 // ✅ Icons import kiye hain
@@ -23,6 +24,7 @@ function AuthButtonsContent({ className }: { className: string }) {
       if (loginStatus === "success") {
         localStorage.setItem("isLoggedIn", "true");
         toast.success("Logged in successfully!");
+        syncGuestWishlistToServer();
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 

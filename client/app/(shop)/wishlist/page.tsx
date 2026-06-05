@@ -8,26 +8,10 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 
 export default function WishlistPage() {
-  const { data: wishlistItems, isLoading, isError } = useGetWishlist();
+  const { data: wishlistItems, isLoading } = useGetWishlist();
 
   if (isLoading) return <Loading />;
 
-  // Agar user logged in nahi hai ya error aata hai
-  if (isError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <Heart size={48} className="text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold text-text-main mb-2">Please Login</h2>
-        <p className="text-text-muted mb-6">You need to be logged in to view your wishlist.</p>
-        <Link href="/login" className="bg-primary text-white px-6 py-2 rounded-full font-medium hover:opacity-90">
-          Go to Login
-        </Link>
-      </div>
-    );
-  }
-
-  // Agar items nikal aayein toh unme se inner "Product" ko nikalna hoga
-  // Kyunke backend { id, userId, productId, Product: {...} } bhej raha hai
   const products = wishlistItems?.map((item) => item.Product) || [];
 
   return (

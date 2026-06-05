@@ -42,6 +42,12 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
   const displayImage =
     imageUrl || (images?.length ? images[0] : "/placeholder.png");
   const isOutOfStock = stock <= 0;
+  const { variant: _variant, averageRating: _avg, totalReviews: _reviews, ...productForWishlist } = props;
+  const wishlistProduct = {
+    ...productForWishlist,
+    id: String(props.id),
+    imageUrl: displayImage,
+  };
   const metaData = [
     formatText(vehicleType),
     formatText(carModel),
@@ -78,6 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         {/* Buttons are now separate siblings, positioned with z-index */}
         <WishlistButton
           productId={id as string}
+          product={wishlistProduct}
           className="absolute top-3 right-3 md:top-4 md:right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
           iconClassName="text-white fill-transparent"
         />
@@ -137,6 +144,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
                 id: String(id),
                 name,
                 price: discountPrice || price,
+                image: displayImage,
                 category,
               }}
               className={`p-1.5 rounded-full backdrop-blur-md z-10 ${isOutOfStock ? "bg-gray-500/50" : "bg-primary hover:bg-primary/90"}`}
@@ -182,6 +190,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
 
           <WishlistButton
             productId={id as string}
+            product={wishlistProduct}
             className="absolute top-3 right-3 bg-white/70 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
           />
 
@@ -193,6 +202,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
               id: String(id),
               name,
               price: discountPrice || price,
+              image: displayImage,
               category,
             }}
             className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm text-gray-700 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
@@ -265,6 +275,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
 
         <WishlistButton
           productId={id as string}
+          product={wishlistProduct}
           className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
         />
       </div>
@@ -295,6 +306,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             id: String(id),
             name,
             price: discountPrice || price,
+            image: displayImage,
             category,
           }}
           className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mt-auto flex justify-center items-center gap-2"

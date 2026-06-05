@@ -241,6 +241,7 @@ export default function ProductDetailsClient({ product }: Props) {
                 id: String(product.id),
                 name: product.name,
                 price: product.discountPrice || product.price,
+                image: activeImage,
                 category: product.category,
               }}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto

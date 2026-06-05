@@ -106,12 +106,19 @@ export default function CartPage() {
             >
               {/* Image */}
               <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-                <Image
-                  src={item.image || "/placeholder.png"}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs text-gray-400">
+                    No image
+                  </div>
+                )}
               </div>
 
               {/* Details */}
