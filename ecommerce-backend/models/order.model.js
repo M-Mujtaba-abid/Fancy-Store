@@ -4,7 +4,7 @@ import sequelize from "../config/db.js";
 const Order = sequelize.define(
   "Order",
   {
-    userId: { type: DataTypes.INTEGER, allowNull: false },
+    userId: { type: DataTypes.INTEGER, allowNull: true },
     totalAmount: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: "pending" },
 

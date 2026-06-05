@@ -133,7 +133,7 @@ import { ORDER_STATUSES, PAYMENT_METHODS } from "../constants/index.js";
 // ================= PLACE ORDER =================
 export const placeOrder = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id ?? null;
     const { fullName, phoneNumber, email, address, city, postalCode, country, paymentMethod } = req.body;
 
     if (!fullName || !phoneNumber || !email || !address || !city || !postalCode || !country) {

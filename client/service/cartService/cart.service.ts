@@ -31,7 +31,6 @@ import { isAuthenticated } from "@/utils/auth";
 
 const GUEST_CART_KEY = "fancy_store_guest_cart";
 
-// ✅ Guest Cart Helper Functions (LocalStorage)
 const guestCartHandler = {
   get: (): CartResponse => {
     if (typeof window === "undefined") return { items: [], subtotal: 0, success: true };
@@ -40,6 +39,14 @@ const guestCartHandler = {
   },
   save: (cart: CartResponse) => {
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+  },
+};
+
+export const getGuestCartItems = () => guestCartHandler.get().items;
+
+export const clearGuestCart = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(GUEST_CART_KEY);
   }
 };
 

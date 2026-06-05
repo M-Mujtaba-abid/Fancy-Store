@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/service/authService/auth.service";
-import { syncGuestWishlistToServer } from "@/service/wishlistService/wishlist.service";
+import { setAuthSession } from "@/utils/auth";
+import { syncGuestDataOnLogin } from "@/utils/guestSync";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { AxiosError } from "axios";
@@ -38,17 +39,16 @@ export const useLogin = () => {
     mutationFn: authService.login,
 
     onSuccess: async (res: AuthResponse) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userRole", res.data.role || "user");
-      }
+      const userRole = res.data?.role || "user";
+      setAuthSession(userRole);
 
-      await syncGuestWishlistToServer();
+      await syncGuestDataOnLogin();
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
 
       toast.success(res.message || "Welcome back!");
 
-      const userRole = res.data.role;
       if (userRole === "admin") {
         router.push("/dashboard");
         return;

@@ -2,8 +2,9 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; 
 // ✅ Sahi path yahan rakh liya hai, agar aapka path different ho toh isey theek kar lijiye ga
-import { authService } from "@/service/authService/auth.service"; 
-import { syncGuestWishlistToServer } from "@/service/wishlistService/wishlist.service";
+import { authService } from "@/service/authService/auth.service";
+import { clearAuthSession, setAuthSession } from "@/utils/auth";
+import { syncGuestDataOnLogin } from "@/utils/guestSync";
 import toast from "react-hot-toast";
 import Link from "next/link";
 // ✅ Icons import kiye hain
@@ -22,13 +23,12 @@ function AuthButtonsContent({ className }: { className: string }) {
     if (typeof window !== "undefined") {
       const loginStatus = searchParams.get("login");
       if (loginStatus === "success") {
-        localStorage.setItem("isLoggedIn", "true");
-        toast.success("Logged in successfully!");
-        syncGuestWishlistToServer();
+        setAuthSession("user");
+        syncGuestDataOnLogin();
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      const loggedInFlag = localStorage.getItem("isLoggedIn");    
+      const loggedInFlag = localStorage.getItem("isLoggedIn");
       if (loggedInFlag === "true") {
         setIsLoggedIn(true);
       } else {
@@ -43,9 +43,7 @@ function AuthButtonsContent({ className }: { className: string }) {
    try {
       await authService.logout();
       
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("isLoggedIn"); 
-      }
+      clearAuthSession();
       setIsLoggedIn(false);
       
       toast.success("Logged out successfully");

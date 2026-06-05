@@ -14,6 +14,61 @@ const formatText = (text?: string) => {
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const hasActiveSale = (price: number, discountPrice?: number, isOnSale?: boolean) =>
+  Boolean(
+    discountPrice &&
+      discountPrice > 0 &&
+      discountPrice < price &&
+      (isOnSale || discountPrice < price),
+  );
+
+const ProductPrice = ({
+  price,
+  discountPrice,
+  isOnSale,
+  size = "md",
+}: {
+  price: number;
+  discountPrice?: number;
+  isOnSale?: boolean;
+  size?: "sm" | "md" | "lg";
+}) => {
+  const onSale = hasActiveSale(price, discountPrice, isOnSale);
+  const saleSize =
+    size === "lg"
+      ? "text-lg font-bold"
+      : size === "sm"
+        ? "text-sm font-bold"
+        : "text-sm md:text-lg font-bold";
+  const originalSize =
+    size === "lg"
+      ? "text-sm line-through"
+      : size === "sm"
+        ? "text-xs line-through"
+        : "text-[9px] sm:text-xs line-through";
+
+  if (onSale && discountPrice) {
+    return (
+      <div className="flex flex-col leading-tight">
+        <span className={`${saleSize} text-primary whitespace-nowrap`}>
+          Rs. {discountPrice.toLocaleString()}
+        </span>
+        <span
+          className={`${originalSize} text-gray-400 dark:text-gray-500 whitespace-nowrap`}
+        >
+          Rs. {price.toLocaleString()}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <span className={`${saleSize} text-primary whitespace-nowrap`}>
+      Rs. {price.toLocaleString()}
+    </span>
+  );
+};
+
 interface ProductCardProps extends Product {
   variant?: "default" | "overlay" | "minimal";
   averageRating?: number;
@@ -48,6 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     id: String(props.id),
     imageUrl: displayImage,
   };
+  const onSale = hasActiveSale(price, discountPrice, isOnSale);
   const metaData = [
     formatText(vehicleType),
     formatText(carModel),
@@ -92,7 +148,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         {/* Content Box */}
         <div className="absolute bottom-0 left-0 w-full p-3 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
           <div className="flex gap-1.5 mb-1">
-            {isOnSale && (
+            {onSale && (
               <span className="bg-red-500 hidden sm:block text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">
                 Sale
               </span>
@@ -118,23 +174,12 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             </h3>
           </Link>
 
-          <div className="flex items-center justify-between  pointer-events-auto">
-            <div>
-              {isOnSale && discountPrice ? (
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">
-                    Rs. {discountPrice.toLocaleString()}
-                  </span>
-                  <span className="text-[9px] sm:text-xs line-through text-gray-300 whitespace-nowrap">
-                    Rs. {price.toLocaleString()}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">
-                  Rs. {price.toLocaleString()}
-                </span>
-              )}
-            </div>
+          <div className="flex items-center justify-between pointer-events-auto">
+            <ProductPrice
+              price={price}
+              discountPrice={discountPrice}
+              isOnSale={isOnSale}
+            />
 
             <AddToCart
               productId={id as string}
@@ -182,7 +227,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
               sizes="(max-width: 768px) 100vw, 25vw"
             />
           </Link>
-          {isOnSale && (
+          {onSale && (
             <span className="absolute top-3 left-3 pointer-events-none bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
               Sale
             </span>
@@ -231,21 +276,13 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             />
           </div>
 
-          <div className="flex justify-center items-center gap-2">
-            {isOnSale && discountPrice ? (
-              <>
-                <span className="text-sm font-bold text-red-600">
-                  Rs. {discountPrice.toLocaleString()}
-                </span>
-                <span className="text-xs line-through text-gray-400">
-                  Rs. {price.toLocaleString()}
-                </span>
-              </>
-            ) : (
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                Rs. {price.toLocaleString()}
-              </span>
-            )}
+          <div className="flex justify-center">
+            <ProductPrice
+              price={price}
+              discountPrice={discountPrice}
+              isOnSale={isOnSale}
+              size="sm"
+            />
           </div>
         </Link>
       </article>
@@ -259,6 +296,11 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     // ✅ Semantic <article> Tag added
     <article className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
       <div className="relative w-full aspect-square bg-gray-50">
+        {onSale && (
+          <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
+            Sale
+          </span>
+        )}
         <Link
           href={`/products/${id}`}
           className="block w-full h-full overflow-hidden"
@@ -294,9 +336,14 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           className="mb-3"
         />
 
-        <span className="text-lg font-bold text-primary mb-4">
-          Rs. {price?.toLocaleString()}
-        </span>
+        <div className="mb-4">
+          <ProductPrice
+            price={price}
+            discountPrice={discountPrice}
+            isOnSale={isOnSale}
+            size="lg"
+          />
+        </div>
 
         <AddToCart
           productId={id as string}

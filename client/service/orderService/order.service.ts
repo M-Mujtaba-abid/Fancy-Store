@@ -1,12 +1,20 @@
-// import api from "./api"; // Aapka withCredentials wala axios instance
 import { Order, PlaceOrderPayload } from "@/types/order.type";
+import { isAuthenticated } from "@/utils/auth";
+import { getGuestCartItems } from "../cartService/cart.service";
 import api from "../api";
 
 export const orderService = {
-  // ================= USER ROUTES =================
-  
   placeOrder: async (data: PlaceOrderPayload) => {
-    const res = await api.post("/orders", data);
+    const payload: PlaceOrderPayload = { ...data };
+
+    if (!isAuthenticated() && !payload.buyNowProductId) {
+      payload.guestCartItems = getGuestCartItems().map((item) => ({
+        productId: String(item.productId),
+        quantity: item.quantity,
+      }));
+    }
+
+    const res = await api.post("/orders", payload);
     return res.data;
   },
 
@@ -14,8 +22,6 @@ export const orderService = {
     const res = await api.get("/orders");
     return res.data.orders;
   },
-
-  // ================= ADMIN ROUTES =================
 
   getAllOrders: async (): Promise<Order[]> => {
     const res = await api.get("/orders/all");

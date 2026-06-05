@@ -13,7 +13,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     pathname === "/admin" ||
     pathname.startsWith("/admin/");
 
-  if (isAdminRoute) {
+  const isAuthRoute =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname.startsWith("/forget-password");
+
+  if (isAdminRoute || isAuthRoute) {
     return <>{children}</>;
   }
 

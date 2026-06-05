@@ -69,18 +69,13 @@ export default function ProductDetailsClient({ product }: Props) {
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
 
-    const isLoggedIn =
-      typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
-    if (!isLoggedIn) {
-      toast.error("Please login to buy! 🛒");
-      router.push("/login");
+    if (isOutOfStock) {
+      toast.error("Product is out of stock!");
       return;
     }
 
-    // ✅ 2. Button ko loading state mein daal dein
     setIsBuyNowPending(true);
 
-    // 1. Temporary Product save karo taake Checkout page usay parh sakay
     sessionStorage.setItem(
       "buyNowItem",
       JSON.stringify({
@@ -88,11 +83,10 @@ export default function ProductDetailsClient({ product }: Props) {
         name: product.name,
         image: product.imageUrl || product.images?.[0],
         price: product.discountPrice || product.price,
-        quantity: 1, // Ek hi piece khareed raha hai default
+        quantity: 1,
       }),
     );
 
-    // 2. Checkout par bhej do query ke sath
     router.push("/checkout?type=buynow");
   };
 
