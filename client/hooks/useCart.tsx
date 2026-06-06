@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // import { cartService } from "@/service/cart.service";
 import { CartResponse, AddToCartPayload } from "@/types/cart.type";
+import { SHIPPING_FEE } from "@/constants/shipping.constants";
 import toast from "react-hot-toast";
 import { cartService } from "@/service/cartService/cart.service";
 
@@ -80,6 +81,9 @@ export const useAddToCart = () => {
 
       const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
 
+        const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
+        const shippingFee = newItems.length ? (previousCart.shippingFee ?? SHIPPING_FEE) : 0;
+        const totalAmount = newSubtotal + shippingFee;
       queryClient.setQueryData<CartResponse>(["cart"], {
         ...previousCart,
         items: newItems,
@@ -92,6 +96,11 @@ export const useAddToCart = () => {
     onSuccess: (data) => {
       if (data?.items) {
         queryClient.setQueryData<CartResponse>(["cart"], {
+          ...previousCart,
+          items: newItems,
+          subtotal: newSubtotal,
+          shippingFee,
+          totalAmount,
           success: true,
           items: data.items,
           subtotal: data.subtotal ?? 0,
@@ -138,11 +147,15 @@ export const useUpdateCartItem = () => {
             });
 
         const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
+        const shippingFee = newItems.length ? (previousCart.shippingFee ?? SHIPPING_FEE) : 0;
+        const totalAmount = newSubtotal + shippingFee;
 
         queryClient.setQueryData<CartResponse>(["cart"], {
           ...previousCart,
           items: newItems,
           subtotal: newSubtotal,
+          shippingFee,
+          totalAmount,
         });
       }
 
@@ -166,7 +179,7 @@ export const useClearCart = () => {
   return useMutation({
     mutationFn: cartService.clearCart,
     onSuccess: () => {
-      queryClient.setQueryData(["cart"], { items: [], subtotal: 0, success: true });
+      queryClient.setQueryData(["cart"], { items: [], subtotal: 0, shippingFee: 0, totalAmount: 0, success: true });
       toast.success("Cart cleared");
     }
   });

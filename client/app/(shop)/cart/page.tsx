@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useGetCart, useUpdateCartItem, useClearCart } from "@/hooks/useCart";
+import { SHIPPING_FEE } from "@/constants/shipping.constants";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
@@ -16,6 +17,8 @@ export default function CartPage() {
 
   const items = cartData?.items || [];
   const subtotal = cartData?.subtotal || 0;
+  const shippingFee = cartData?.shippingFee ?? SHIPPING_FEE;
+  const totalAmount = cartData?.totalAmount ?? subtotal + shippingFee;
 
   // 🎯 TIKTOK: Handle checkout click
   const handleCheckoutClick = (e: React.MouseEvent) => {
@@ -186,14 +189,16 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
-              <span className="text-green-500 font-medium">Free</span>
+              <span className="font-medium text-text-main">
+                Rs. {shippingFee.toLocaleString()}
+              </span>
             </div>
           </div>
 
           <div className="border-t border-border/50 pt-4 mb-8 flex justify-between items-center">
             <span className="text-lg font-bold">Total</span>
             <span className="text-2xl font-black text-primary">
-              Rs. {subtotal.toLocaleString()}
+              Rs. {totalAmount.toLocaleString()}
             </span>
           </div>
 

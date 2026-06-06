@@ -1,4 +1,5 @@
 import models from "../models/index.js";
+import { SHIPPING_FEE } from "../constants/index.js";
 const { Cart, CartItem, Product } = models;
 
 export const addToCartService = async (userId, productId, quantity) => {
@@ -94,6 +95,8 @@ export const getCartService = async (userId) => {
     cartId: cart.id,
     items: formattedItems,
     subtotal: parseFloat(subtotal.toFixed(2)),
+    shippingFee: SHIPPING_FEE,
+    totalAmount: parseFloat((subtotal + SHIPPING_FEE).toFixed(2)),
   };
 };
 

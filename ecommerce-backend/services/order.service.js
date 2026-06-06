@@ -1,6 +1,7 @@
 import models from "../models/index.js";
 import sendEmail from "../utils/sendEmail.js";
 import { orderConfirmationTemplate, adminNewOrderTemplate } from "../utils/emailTemplate.js";
+import { SHIPPING_FEE } from "../constants/index.js";
 
 const { Cart, CartItem, Product, Order, OrderItem, User } = models;
 // ================= PLACE ORDER =================
@@ -24,6 +25,7 @@ export const placeOrderService = async (userId, orderData) => {
     } = orderData;
 
     let totalAmount = 0;
+    const shippingFee = SHIPPING_FEE;
     const orderItemRows = [];
     let cart = null;
 
@@ -94,10 +96,12 @@ export const placeOrderService = async (userId, orderData) => {
     }
 
     // ✅ ORDER CREATION (Dono scenarios mein order banega)
+    totalAmount += shippingFee;
     const order = await Order.create(
       {
         userId,
         totalAmount,
+        shippingFee,
         status: "pending",
         fullName,
         phoneNumber,
@@ -159,7 +163,7 @@ export const placeOrderService = async (userId, orderData) => {
       console.error("Email send failed:", emailErr.message);
     }
 
-    return { orderId: order.id };
+    return { orderId: order.id, shippingFee };
 
   } catch (err) {
     await t.rollback();

@@ -10,6 +10,7 @@ export const ORDER_STATUSES = [
 
 // ============== PAYMENT ==============
 export const PAYMENT_METHODS = ["COD", "Bank Transfer", "Card"];
+export const SHIPPING_FEE = 299;
 
 // ============== ROLES ==============
 export const ROLES = {

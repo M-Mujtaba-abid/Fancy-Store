@@ -6,6 +6,7 @@ const Order = sequelize.define(
   {
     userId: { type: DataTypes.INTEGER, allowNull: true },
     totalAmount: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
+    shippingFee: { type: DataTypes.FLOAT, allowNull: false, defaultValue: 299 },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: "pending" },
 
     // Personal Information
