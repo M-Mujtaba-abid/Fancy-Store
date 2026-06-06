@@ -170,16 +170,14 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
   }
 
   // ✅ Decide karein ke konsa data dikhana hai (Buy Now wala ya Cart wala)
-  const displayItems = isBuyNow && buyNowItem ? [buyNowItem] : (cartData?.items || []);
-  const displaySubtotal = isBuyNow && buyNowItem ? (buyNowItem.price * buyNowItem.quantity) : (cartData?.subtotal || 0);
-  const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
-  const displayTotal = displaySubtotal + displayShipping;
   const displayItems =
     isBuyNow && buyNowItem ? [buyNowItem] : cartData?.items || [];
   const displaySubtotal =
     isBuyNow && buyNowItem
       ? buyNowItem.price * buyNowItem.quantity
       : cartData?.subtotal || 0;
+  const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
+  const displayTotal = displaySubtotal + displayShipping;
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -371,9 +369,6 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
           <div className="border-t border-border/50 pt-4 mb-8 flex justify-between items-center">
             <span className="text-lg font-bold">Total</span>
             <span className="text-2xl font-black text-primary">Rs. {displayTotal.toLocaleString()}</span>
-            <span className="text-2xl font-black text-primary">
-              Rs. {displaySubtotal.toLocaleString()}
-            </span>
           </div>
 
           <button
