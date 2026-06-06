@@ -9,7 +9,7 @@ import { Loader, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTheme } from "next-themes";
 import GoogleAuth from "@/components/shop/share/GoogleAuth";
-
+import { identifyTikTokUser } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -25,7 +25,16 @@ export default function LoginPage() {
       toast.error("Email and password are required");
       return;
     }
-    login(formData);
+
+    login(formData, {
+      onSuccess: (response: any) => {
+        // 🎯 TIKTOK CONTENT CODE: User identified on login
+        identifyTikTokUser({
+          email: formData.email,
+          externalId: response.user?.id,
+        });
+      },
+    });
   };
 
   return (
@@ -36,7 +45,10 @@ export default function LoginPage() {
       {/* LEFT SECTION - Brand / Logo */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 relative z-10 min-h-[30vh] lg:min-h-screen">
         <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Link href="/" className="inline-block mb-4 hover:scale-105 transition-transform">
+          <Link
+            href="/"
+            className="inline-block mb-4 hover:scale-105 transition-transform"
+          >
             <Image
               src={logoSrc}
               alt="Fancy Store"
@@ -48,7 +60,7 @@ export default function LoginPage() {
           </Link>
           <h1 className="text-xl lg:text-3xl font-bold mb-2">Welcome Back!</h1>
           <p className="text-text-muted text-xs uppercase tracking-[0.3em] font-medium">
-            Please Login 
+            Please Login
           </p>
         </div>
       </div>
@@ -77,7 +89,9 @@ export default function LoginPage() {
                       required
                       placeholder="name@example.com"
                       className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -104,7 +118,9 @@ export default function LoginPage() {
                       required
                       placeholder="••••••••"
                       className="w-full pl-10 pr-11 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
                     />
                     <button
                       type="button"
@@ -123,7 +139,10 @@ export default function LoginPage() {
                     type="checkbox"
                     className="w-4 h-4 rounded border-border-custom text-primary focus:ring-primary bg-background accent-primary"
                   />
-                  <label htmlFor="remember" className="text-xs text-text-muted cursor-pointer select-none font-medium">
+                  <label
+                    htmlFor="remember"
+                    className="text-xs text-text-muted cursor-pointer select-none font-medium"
+                  >
                     Keep me logged in
                   </label>
                 </div>
@@ -132,11 +151,16 @@ export default function LoginPage() {
                   disabled={isPending}
                   className="group/btn w-full bg-primary text-white font-black py-4 rounded-xl flex justify-center items-center gap-3 transition-all hover:shadow-[0_10px_20px_rgba(var(--primary-rgb),0.3)] active:scale-95 disabled:opacity-70 relative overflow-hidden"
                 >
-                  <span className="relative z-10 tracking-widest text-xs">SIGN IN</span>
+                  <span className="relative z-10 tracking-widest text-xs">
+                    SIGN IN
+                  </span>
                   {isPending ? (
                     <Loader className="animate-spin w-5 h-5 relative z-10" />
                   ) : (
-                    <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight
+                      size={18}
+                      className="relative z-10 group-hover:translate-x-1 transition-transform"
+                    />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 </button>
@@ -148,7 +172,9 @@ export default function LoginPage() {
                   <div className="w-full border-t border-border-custom/40 opacity-50"></div>
                 </div>
                 <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-[0.2em]">
-                  <span className="bg-card px-4 text-text-muted">Or Social Entry</span>
+                  <span className="bg-card px-4 text-text-muted">
+                    Or Social Entry
+                  </span>
                 </div>
               </div>
 
@@ -160,7 +186,10 @@ export default function LoginPage() {
           {/* Footer Link */}
           <p className="text-center text-xs text-text-muted font-medium animate-in fade-in duration-1000 delay-300">
             NEW TO THE STORE?{" "}
-            <Link href="/signup" className="text-primary font-black hover:underline underline-offset-4 ml-1 transition-all">
+            <Link
+              href="/signup"
+              className="text-primary font-black hover:underline underline-offset-4 ml-1 transition-all"
+            >
               CREATE ACCOUNT
             </Link>
           </p>
@@ -168,8 +197,12 @@ export default function LoginPage() {
       </div>
 
       <style jsx>{`
-        .perspective-1000 { perspective: 1000px; }
-        .rotate-x-2:hover { transform: rotateX(4deg) rotateY(-2deg); }
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .rotate-x-2:hover {
+          transform: rotateX(4deg) rotateY(-2deg);
+        }
       `}</style>
     </div>
   );

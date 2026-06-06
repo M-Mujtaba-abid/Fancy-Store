@@ -14,7 +14,8 @@ import {
     getBikeProducts,
     getProductsByFilter,
     getProductsByCategory,
-    getRelatedProducts
+    getRelatedProducts,
+    syncProductEmbeddings
 } from "../controllers/product.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -41,5 +42,8 @@ router.get("/:id", getProductById);                        // hamesha sabse neec
 router.post("/", authMiddleware, adminMiddleware, uploadWithLimits.array("images", 5), addProduct);
 router.patch("/:id", authMiddleware, adminMiddleware, uploadWithLimits.array("images", 5), updateProduct);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteProduct);
+
+// vector embeding
+router.post("/sync-embeddings", syncProductEmbeddings);
 
 export default router;

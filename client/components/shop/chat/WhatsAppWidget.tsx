@@ -13,8 +13,8 @@ const WhatsAppWidget = () => {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (
-    // ✅ Positioned above the ChatWidget on both mobile and desktop
-    <div className="fixed bottom-28 right-4 md:right-8 z-50">
+    // ✅ Positioned safely above the ChatWidget on both mobile and desktop
+    <div className="fixed bottom-[136px] md:bottom-28 right-4 md:right-8 z-50">
       <Link
         href={whatsappUrl}
         target="_blank"

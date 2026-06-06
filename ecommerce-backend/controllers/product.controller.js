@@ -17,8 +17,11 @@ import {
   getProductsByCategoryService,
   getProductsByFilterService,
   getRelatedProductsService,
+  buildProductTextForAI,
 } from "../services/product.service.js";
 import ApiError from "../utils/apiError.js";
+import Product from "../models/product.model.js";
+import { generateEmbedding } from "../utils/ai.util.js";
 
 export const addProduct = asyncHandler(async (req, res) => {
   const product = await addProductService(req.body, req.files);
@@ -140,4 +143,39 @@ export const getProductsByFilter = asyncHandler(async (req, res) => {
 export const getRelatedProducts = asyncHandler(async (req, res) => {
   const data = await getRelatedProductsService(req.params.id);
   res.status(200).json(new ApiResponse(200, data, "Related products fetched"));
+});
+
+export const syncProductEmbeddings = asyncHandler(async (req, res) => {
+  // Un products ko dhoondein jinki embedding 'null' hai
+  const products = await Product.findAll({ 
+    where: { embedding: null } 
+  });
+
+  if (!products || products.length === 0) {
+    return res.status(200).json({ message: "All products are already vectorized!" });
+  }
+
+  let count = 0;
+  console.log(`Found ${products.length} products to vectorize. Starting...`);
+
+  for (const product of products) {
+    // 1. Apne V2 helper se product ki detail ka rich text banayein
+    const textToEmbed = buildProductTextForAI(product);
+    
+    // 2. Vector Generate karein
+    const vectorArray = await generateEmbedding(textToEmbed, "search_document");
+    
+    // 3. Database mein vector save karein
+    // product.embedding = vectorArray;
+    product.embedding = `[${vectorArray.join(',')}]`;
+    await product.save();
+    
+    count++;
+    console.log(`✅ Vectorized (${count}/${products.length}): ${product.name}`);
+  }
+
+  res.status(200).json({ 
+    success: true, 
+    message: `Successfully generated rich embeddings for ${count} products.` 
+  });
 });

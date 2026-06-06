@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -18,6 +18,7 @@ import { useAddToCart } from "@/hooks/useCart"; // ✅ Hook import kiya
 import toast from "react-hot-toast";
 import ExpandableDescription from "./ExpandableDescription";
 import ProductReviews from "../reviews/ProductReviews";
+import { trackViewContent } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 interface Props {
   product: Product;
@@ -27,6 +28,24 @@ export default function ProductDetailsClient({ product }: Props) {
   const router = useRouter();
   // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
+
+  // 🎯 TIKTOK: Track product view on mount
+  useEffect(() => {
+    // 🎯 TIKTOK CONTENT CODE: Product details page viewed
+    trackViewContent({
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      category: product.category,
+    });
+  }, [
+    product.id,
+    product.name,
+    product.price,
+    product.discountPrice,
+    product.category,
+  ]);
+
   // Main image state: Jab user thumbnail par click kare toh main image badle
   const [activeImage, setActiveImage] = useState<string>(
     product?.imageUrl ||
@@ -217,22 +236,30 @@ export default function ProductDetailsClient({ product }: Props) {
             <AddToCart
               productId={product.id}
               stock={product.stock}
+              // ✅ YEH LINE ADD KAREIN
+              product={{
+                id: String(product.id),
+                name: product.name,
+                price: product.discountPrice || product.price,
+                category: product.category,
+              }}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto
-                ${
-                  isOutOfStock
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:shadow-lg hover:-translate-y-1"
-                }
-              `}
+    ${
+      isOutOfStock
+        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+        : "bg-primary text-white hover:shadow-lg hover:-translate-y-1"
+    }
+  `}
             >
-              {/* ✅ Jo bhi text ya icon yahan likhenge, wo us button ke andar aa jayega */}
               {isOutOfStock ? (
                 <>
-                  <PackageX size={20} /> <span>Out of Stock</span>
+                  {" "}
+                  <PackageX size={20} /> <span>Out of Stock</span>{" "}
                 </>
               ) : (
                 <>
-                  <ShoppingCart size={20} /> <span>Add to Cart</span>
+                  {" "}
+                  <ShoppingCart size={20} /> <span>Add to Cart</span>{" "}
                 </>
               )}
             </AddToCart>
@@ -270,7 +297,7 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
         </div>
         {/* 2. REVIEWS SECTION (Bilkul neechay) */}
-      <ProductReviews productId={product.id} />
+        <ProductReviews productId={product.id} />
       </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
 
