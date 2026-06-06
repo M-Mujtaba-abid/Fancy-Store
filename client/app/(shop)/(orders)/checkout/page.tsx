@@ -5,10 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGetCart } from "@/hooks/useCart";
 import { usePlaceOrder } from "@/hooks/useOrders";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { SHIPPING_FEE } from "@/constants/shipping.constants";
 =======
 import { isAuthenticated } from "@/utils/auth";
 >>>>>>> c5de9b048f7cc989bfff0fc38e211a6dc9a8a99b
+=======
+import { SHIPPING_FEE } from "@/constants/shipping.constants";
+import { isAuthenticated } from "@/utils/auth";
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
 import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -174,18 +179,27 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
 
   // ✅ Decide karein ke konsa data dikhana hai (Buy Now wala ya Cart wala)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
   const displayItems = isBuyNow && buyNowItem ? [buyNowItem] : (cartData?.items || []);
   const displaySubtotal = isBuyNow && buyNowItem ? (buyNowItem.price * buyNowItem.quantity) : (cartData?.subtotal || 0);
   const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
   const displayTotal = displaySubtotal + displayShipping;
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
   const displayItems =
     isBuyNow && buyNowItem ? [buyNowItem] : cartData?.items || [];
   const displaySubtotal =
     isBuyNow && buyNowItem
       ? buyNowItem.price * buyNowItem.quantity
       : cartData?.subtotal || 0;
+<<<<<<< HEAD
 >>>>>>> 52a7cf0391fecc8dc217a2534a663fab5e3a5939
+=======
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -377,12 +391,19 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
           <div className="border-t border-border/50 pt-4 mb-8 flex justify-between items-center">
             <span className="text-lg font-bold">Total</span>
 <<<<<<< HEAD
+<<<<<<< HEAD
             <span className="text-2xl font-black text-primary">Rs. {displayTotal.toLocaleString()}</span>
 =======
             <span className="text-2xl font-black text-primary">
               Rs. {displaySubtotal.toLocaleString()}
             </span>
 >>>>>>> 52a7cf0391fecc8dc217a2534a663fab5e3a5939
+=======
+            <span className="text-2xl font-black text-primary">Rs. {displayTotal.toLocaleString()}</span>
+            <span className="text-2xl font-black text-primary">
+              Rs. {displaySubtotal.toLocaleString()}
+            </span>
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
           </div>
 
           <button

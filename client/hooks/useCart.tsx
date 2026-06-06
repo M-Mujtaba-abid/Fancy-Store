@@ -63,6 +63,7 @@ export const useAddToCart = () => {
       const itemPrice = newItem.price ?? 0;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       // 3. UI ko FORAN update karo (Fake data inject karo jab tak asli na aaye)
       if (previousCart) {
         const existingItemIndex = previousCart.items.findIndex(i => i.productId === newItem.productId);
@@ -84,6 +85,8 @@ export const useAddToCart = () => {
           shippingFee,
           totalAmount,
 =======
+=======
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
       if (existingItemIndex >= 0) {
         newItems[existingItemIndex].quantity += newItem.quantity;
         newItems[existingItemIndex].itemTotal =
@@ -98,12 +101,18 @@ export const useAddToCart = () => {
           price: itemPrice,
           itemTotal: newItem.quantity * itemPrice,
           availableStock: 999,
+<<<<<<< HEAD
 >>>>>>> c5de9b048f7cc989bfff0fc38e211a6dc9a8a99b
+=======
+>>>>>>> aca57952b2d6573c0d088a07bfbbddc0654d1af3
         });
       }
 
       const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
 
+        const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
+        const shippingFee = newItems.length ? (previousCart.shippingFee ?? SHIPPING_FEE) : 0;
+        const totalAmount = newSubtotal + shippingFee;
       queryClient.setQueryData<CartResponse>(["cart"], {
         ...previousCart,
         items: newItems,
@@ -116,6 +125,11 @@ export const useAddToCart = () => {
     onSuccess: (data) => {
       if (data?.items) {
         queryClient.setQueryData<CartResponse>(["cart"], {
+          ...previousCart,
+          items: newItems,
+          subtotal: newSubtotal,
+          shippingFee,
+          totalAmount,
           success: true,
           items: data.items,
           subtotal: data.subtotal ?? 0,
