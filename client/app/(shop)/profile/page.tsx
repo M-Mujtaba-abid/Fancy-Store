@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGetProfile, useUpdateProfile } from "@/hooks/useAuth"; 
-import { User, Mail, Shield, Camera, Edit3, X, Save, MapPin, Box, UploadCloud } from "lucide-react";
+import Link from "next/link";
+import { useGetProfile, useUpdateProfile } from "@/hooks/useAuth";
+import { isAuthenticated } from "@/utils/auth";
+import { User, Mail, Shield, Camera, Edit3, X, Save, MapPin, Box, UploadCloud, LogIn } from "lucide-react";
 import Image from "next/image";
 
 const ProfilePage = () => {
@@ -64,6 +66,24 @@ console.log("profile => ", profile)
     });
   };
 
+  if (!isAuthenticated()) {
+    return (
+      <div className="min-h-[70vh] flex flex-col justify-center items-center text-center px-4">
+        <LogIn size={48} className="text-primary mb-4 opacity-80" />
+        <h2 className="text-xl font-bold text-text-main">Login to view your profile</h2>
+        <p className="text-text-muted mt-2 mb-6">
+          Sign in to manage your account, orders, and saved details.
+        </p>
+        <Link
+          href="/login"
+          className="bg-primary text-white px-6 py-2.5 rounded-full font-medium hover:opacity-90"
+        >
+          Go to Login
+        </Link>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex justify-center items-center">
@@ -74,10 +94,13 @@ console.log("profile => ", profile)
 
   if (isError || !profile) {
     return (
-      <div className="min-h-[70vh] flex flex-col justify-center items-center text-center">
+      <div className="min-h-[70vh] flex flex-col justify-center items-center text-center px-4">
         <Shield size={48} className="text-red-400 mb-4 opacity-50" />
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Profile Not Found</h2>
-        <p className="text-gray-500 mt-2">We could not load your profile data. Please try refreshing.</p>
+        <p className="text-gray-500 mt-2 mb-6">We could not load your profile. Please login again.</p>
+        <Link href="/login" className="bg-primary text-white px-6 py-2 rounded-full">
+          Login
+        </Link>
       </div>
     );
   }

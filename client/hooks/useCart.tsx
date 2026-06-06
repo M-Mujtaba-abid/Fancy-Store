@@ -19,38 +19,93 @@ export const useAddToCart = () => {
 
   return useMutation({
     mutationFn: cartService.addToCart,
-    onMutate: async (newItem) => {
-      // 1. API hit hone se pehle purani queries roko
+    // onMutate: async (newItem) => {
+    //   // 1. API hit hone se pehle purani queries roko
+    //   await queryClient.cancelQueries({ queryKey: ["cart"] });
+
+    //   // 2. Purana cart save kar lo (agar API fail hui toh wapas yahi laana hai)
+    //   const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
+
+    //   // 3. UI ko FORAN update karo (Fake data inject karo jab tak asli na aaye)
+    //   if (previousCart) {
+    //     const existingItemIndex = previousCart.items.findIndex(i => i.productId === newItem.productId);
+    //     const newItems = [...previousCart.items];
+
+    //     if (existingItemIndex >= 0) {
+    //       newItems[existingItemIndex].quantity += newItem.quantity;
+    //       newItems[existingItemIndex].itemTotal = newItems[existingItemIndex].quantity * newItems[existingItemIndex].price;
+    //     }
+
+    //     const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
+
+    //     queryClient.setQueryData<CartResponse>(["cart"], {
+    //       ...previousCart,
+    //       items: newItems,
+    //       subtotal: newSubtotal,
+    //     });
+    //   }
+
+    //   toast.success("Added to cart!");
+    //   return { previousCart };
+    // },
+    onMutate: async (newItem: AddToCartPayload) => {
       await queryClient.cancelQueries({ queryKey: ["cart"] });
+      const previousCart = queryClient.getQueryData<CartResponse>(["cart"]) ?? {
+        success: true,
+        items: [],
+        subtotal: 0,
+      };
 
-      // 2. Purana cart save kar lo (agar API fail hui toh wapas yahi laana hai)
-      const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
+      const existingItemIndex = previousCart.items.findIndex(
+        (i) => i.productId === newItem.productId,
+      );
+      const newItems = [...previousCart.items];
+      const itemPrice = newItem.price ?? 0;
 
-      // 3. UI ko FORAN update karo (Fake data inject karo jab tak asli na aaye)
-      if (previousCart) {
-        const existingItemIndex = previousCart.items.findIndex(i => i.productId === newItem.productId);
-        const newItems = [...previousCart.items];
+      if (existingItemIndex >= 0) {
+        newItems[existingItemIndex].quantity += newItem.quantity;
+        newItems[existingItemIndex].itemTotal =
+          newItems[existingItemIndex].quantity * newItems[existingItemIndex].price;
+      } else {
+        newItems.push({
+          cartItemId: `optimistic_${Date.now()}`,
+          productId: newItem.productId,
+          name: newItem.name || "Product",
+          image: newItem.image || "",
+          quantity: newItem.quantity,
+          price: itemPrice,
+          itemTotal: newItem.quantity * itemPrice,
+          availableStock: 999,
+        });
+      }
 
-        if (existingItemIndex >= 0) {
-          newItems[existingItemIndex].quantity += newItem.quantity;
-          newItems[existingItemIndex].itemTotal = newItems[existingItemIndex].quantity * newItems[existingItemIndex].price;
-        }
+      const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
 
         const newSubtotal = newItems.reduce((total, item) => total + item.itemTotal, 0);
         const shippingFee = newItems.length ? (previousCart.shippingFee ?? SHIPPING_FEE) : 0;
         const totalAmount = newSubtotal + shippingFee;
+      queryClient.setQueryData<CartResponse>(["cart"], {
+        ...previousCart,
+        items: newItems,
+        subtotal: newSubtotal,
+      });
 
+      toast.success("Added to cart!");
+      return { previousCart };
+    },
+    onSuccess: (data) => {
+      if (data?.items) {
         queryClient.setQueryData<CartResponse>(["cart"], {
           ...previousCart,
           items: newItems,
           subtotal: newSubtotal,
           shippingFee,
           totalAmount,
+          success: true,
+          items: data.items,
+          subtotal: data.subtotal ?? 0,
         });
       }
-
-      toast.success("Added to cart!");
-      return { previousCart };
     },
     onError: (err: any, newItem, context) => {
       // Agar backend se error (e.g. Out of stock) aaya toh purana cart wapas set karo

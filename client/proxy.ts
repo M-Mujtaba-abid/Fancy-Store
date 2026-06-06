@@ -3,29 +3,18 @@ import type { NextRequest } from "next/server";
 
 function decodeJwt(token: string) {
   try {
-    if (!token || typeof token !== "string") {
-      return null;
-    }
+    if (!token || typeof token !== "string") return null;
 
     const parts = token.split(".");
-    if (parts.length !== 3) {
-      console.error("Invalid JWT format - should have 3 parts");
-      return null;
-    }
+    if (parts.length !== 3) return null;
 
-    const payloadBase64Url = parts[1];
-    let payloadBase64 = payloadBase64Url.replace(/-/g, "+").replace(/_/g, "/");
-
-    // ✅ VERCEL FIX: String ki length 4 ke multiple mein honi chahiye
+    let payloadBase64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     while (payloadBase64.length % 4 !== 0) {
       payloadBase64 += "=";
     }
 
-    const decodedJson = JSON.parse(atob(payloadBase64));
-    return decodedJson;
-  } catch (error) {
-    console.error("Middleware JWT Decode Error:", error);
-    console.error("Token value:", token?.substring(0, 20) + "...");
+    return JSON.parse(atob(payloadBase64));
+  } catch {
     return null;
   }
 }
@@ -34,18 +23,19 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // ========== RULE 1: Already logged in user redirecting from login page ==========
-  if (token && pathname === "/login") {
-    const decodedToken = decodeJwt(token);
-    const userRole = decodedToken?.role;
+  // Protect admin dashboard — must have valid admin token
+  if (pathname.startsWith("/dashboard")) {
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
 
-    if (userRole === "admin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    } else if (userRole === "user") {
-      return NextResponse.redirect(new URL("/", request.url));
+    const decoded = decodeJwt(token);
+    if (!decoded || decoded.role !== "admin") {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
+  // /login is always accessible (guest checkout users can sign in anytime)
   return NextResponse.next();
 }
 

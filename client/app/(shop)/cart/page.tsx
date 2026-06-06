@@ -8,9 +8,10 @@ import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import Loading from "@/app/loading";
+import { trackInitiateCheckout } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 export default function CartPage() {
-  const { data: cartData, isLoading, isError } = useGetCart();
+  const { data: cartData, isLoading } = useGetCart();
   const { mutate: updateItem } = useUpdateCartItem();
   const { mutate: clearCart } = useClearCart();
 
@@ -19,29 +20,28 @@ export default function CartPage() {
   const shippingFee = cartData?.shippingFee ?? SHIPPING_FEE;
   const totalAmount = cartData?.totalAmount ?? subtotal + shippingFee;
 
+  // 🎯 TIKTOK: Handle checkout click
+  const handleCheckoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // 🎯 TIKTOK CONTENT CODE: Checkout initiated from cart page
+    trackInitiateCheckout(
+      items.map((item) => ({
+        id: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    );
+
+    // Navigate to checkout
+    window.location.href = "/checkout";
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loading/>
-      </div>
-    );
-  }
-
-  // Handle Unauthorized / Not Logged In
-  if (isError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center">
-        <ShoppingBag size={60} className="text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Please Login</h2>
-        <p className="text-gray-500 mb-6">
-          You need to login to view your cart.
-        </p>
-        <Link
-          href="/login"
-          className="bg-primary text-white px-6 py-2 rounded-full"
-        >
-          Login Now
-        </Link>
+        <Loading />
       </div>
     );
   }
@@ -90,12 +90,19 @@ export default function CartPage() {
             >
               {/* Image */}
               <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-                <Image
-                  src={item.image || "/placeholder.png"}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs text-gray-400">
+                    No image
+                  </div>
+                )}
               </div>
 
               {/* Details */}
@@ -197,6 +204,7 @@ export default function CartPage() {
 
           <Link
             href="/checkout"
+            onClick={handleCheckoutClick}
             className="w-full py-4 px-7 bg-primary text-white rounded-xl font-bold hover:opacity-90 hover:scale-[1.02] transition-all shadow-md"
           >
             Proceed to Checkout

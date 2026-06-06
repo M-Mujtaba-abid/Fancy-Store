@@ -1,6 +1,6 @@
 import axios from "axios";
+import { clearAuthSession } from "@/utils/auth";
 
-// Axios instance create kar rahe hain
 const api = axios.create({
   // baseURL: "http://localhost:5000/api", // Aapka Backend URL
   baseURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`, // Aapka Backend URL
@@ -15,11 +15,15 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Global error handling
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      const url = error.config?.url || "";
+      if (!url.includes("/user/login") && !url.includes("/user/register")) {
+        clearAuthSession();
+      }
+    }
+
     const message = error.response?.data?.message || "Something went wrong";
     console.error("API Error:", message);
-    
-    // Aap yahan toast notifications bhi trigger kar sakte hain
     return Promise.reject(error);
   }
 );

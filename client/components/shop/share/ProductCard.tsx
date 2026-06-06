@@ -1,4 +1,4 @@
-  "use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -14,38 +14,122 @@ const formatText = (text?: string) => {
   return text.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const hasActiveSale = (price: number, discountPrice?: number, isOnSale?: boolean) =>
+  Boolean(
+    discountPrice &&
+      discountPrice > 0 &&
+      discountPrice < price &&
+      (isOnSale || discountPrice < price),
+  );
+
+const ProductPrice = ({
+  price,
+  discountPrice,
+  isOnSale,
+  size = "md",
+}: {
+  price: number;
+  discountPrice?: number;
+  isOnSale?: boolean;
+  size?: "sm" | "md" | "lg";
+}) => {
+  const onSale = hasActiveSale(price, discountPrice, isOnSale);
+  const saleSize =
+    size === "lg"
+      ? "text-lg font-bold"
+      : size === "sm"
+        ? "text-sm font-bold"
+        : "text-sm md:text-lg font-bold";
+  const originalSize =
+    size === "lg"
+      ? "text-sm line-through"
+      : size === "sm"
+        ? "text-xs line-through"
+        : "text-[9px] sm:text-xs line-through";
+
+  if (onSale && discountPrice) {
+    return (
+      <div className="flex flex-col leading-tight">
+        <span className={`${saleSize} text-primary whitespace-nowrap`}>
+          Rs. {discountPrice.toLocaleString()}
+        </span>
+        <span
+          className={`${originalSize} text-gray-400 dark:text-gray-500 whitespace-nowrap`}
+        >
+          Rs. {price.toLocaleString()}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <span className={`${saleSize} text-primary whitespace-nowrap`}>
+      Rs. {price.toLocaleString()}
+    </span>
+  );
+};
+
 interface ProductCardProps extends Product {
   variant?: "default" | "overlay" | "minimal";
-  averageRating?: number; 
-  totalReviews?: number;  
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 const ProductCard: React.FC<ProductCardProps> = (props) => {
   const {
-    id, name, price, discountPrice, imageUrl, images, isOnSale,
-    isNewArrival, category, carModel, vehicleType, stock,
-    averageRating = 0, 
-    totalReviews = 0,  
+    id,
+    name,
+    price,
+    discountPrice,
+    imageUrl,
+    images,
+    isOnSale,
+    isNewArrival,
+    category,
+    carModel,
+    vehicleType,
+    stock,
+    averageRating = 0,
+    totalReviews = 0,
     variant = "default",
   } = props;
 
-  const displayImage = imageUrl || (images?.length ? images[0] : "/placeholder.png");
+  const displayImage =
+    imageUrl || (images?.length ? images[0] : "/placeholder.png");
   const isOutOfStock = stock <= 0;
-  const metaData = [formatText(vehicleType), formatText(carModel), formatText(category)].filter(Boolean).join(" • ");
+  const { variant: _variant, averageRating: _avg, totalReviews: _reviews, ...productForWishlist } = props;
+  const wishlistProduct = {
+    ...productForWishlist,
+    id: String(props.id),
+    imageUrl: displayImage,
+  };
+  const onSale = hasActiveSale(price, discountPrice, isOnSale);
+  const metaData = [
+    formatText(vehicleType),
+    formatText(carModel),
+    formatText(category),
+  ]
+    .filter(Boolean)
+    .join(" • ");
 
   // ------------------------------------------------------------------
   // VARIANT 1: OVERLAY DESIGN
   // ------------------------------------------------------------------
   if (variant === "overlay") {
-  return (
+    return (
       // ✅ Semantic <article> Tag added
       // ✅ 1. Mobile pe 'aspect-square' aur desktop pe 'h-[320px]' kar diya
       <article className="group relative w-full aspect-square md:aspect-auto md:h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-card">
-        
         {/* ✅ Image Link separate to keep HTML valid */}
-        <Link href={`/products/${id}`} className="absolute inset-0 z-0 block" aria-label={`View details of ${name}`}>
+        <Link
+          href={`/products/${id}`}
+          className="absolute inset-0 z-0 block"
+          aria-label={`View details of ${name}`}
+        >
           <Image
-            src={displayImage} alt={name} fill
+            src={displayImage}
+            alt={name}
+            fill
             // ✅ 2. 'object-contain' aur thori padding (p-2) taake image poori visible ho aur kategi nahi
             className="object-contain p-2 md:object-cover md:p-0 group-hover:scale-110 transition-transform duration-700 ease-in-out"
             sizes="(max-width: 768px) 100vw, 25vw"
@@ -54,46 +138,67 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         </Link>
 
         {/* Buttons are now separate siblings, positioned with z-index */}
-        <WishlistButton 
-          productId={id as string} 
+        <WishlistButton
+          productId={id as string}
+          product={wishlistProduct}
           className="absolute top-3 right-3 md:top-4 md:right-4 z-10 bg-white/20 backdrop-blur-md p-2 rounded-full hover:bg-white/40 transition-colors"
           iconClassName="text-white fill-transparent"
         />
 
         {/* Content Box */}
         <div className="absolute bottom-0 left-0 w-full p-3 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
-          
           <div className="flex gap-1.5 mb-1">
-            {isOnSale && <span className="bg-red-500 hidden sm:block text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">Sale</span>}
-            {isNewArrival && <span className="bg-green-500 hidden sm:block  text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">New</span>}
+            {onSale && (
+              <span className="bg-red-500 hidden sm:block text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">
+                Sale
+              </span>
+            )}
+            {isNewArrival && (
+              <span className="bg-green-500 hidden sm:block  text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">
+                New
+              </span>
+            )}
           </div>
-          
-          {/* ✅ Mobile par Category hide kardi taake safai aye */}
-          <p className="text-[10px] text-gray-300 mb-0.5 line-clamp-1 hidden sm:block">{metaData}</p>
-          
-          <Link href={`/products/${id}`} className="inline-block pointer-events-auto w-full">
-            <h3 className="text-xs sm:text-sm md:text-lg font-bold line-clamp-1  hover:underline leading-tight">{name}</h3>
-          </Link>
-          
-          <div className="flex items-center justify-between  pointer-events-auto">
-            <div>
-              {isOnSale && discountPrice ? (
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">Rs. {discountPrice.toLocaleString()}</span>
-                  <span className="text-[9px] sm:text-xs line-through text-gray-300 whitespace-nowrap">Rs. {price.toLocaleString()}</span>
-                </div>
-              ) : (
-                <span className="text-sm md:text-lg font-bold text-primary whitespace-nowrap">Rs. {price.toLocaleString()}</span>
-              )}
-            </div>
 
-            <AddToCart 
-              productId={id as string} 
+          {/* ✅ Mobile par Category hide kardi taake safai aye */}
+          <p className="text-[10px] text-gray-300 mb-0.5 line-clamp-1 hidden sm:block">
+            {metaData}
+          </p>
+
+          <Link
+            href={`/products/${id}`}
+            className="inline-block pointer-events-auto w-full"
+          >
+            <h3 className="text-xs sm:text-sm md:text-lg font-bold line-clamp-1  hover:underline leading-tight">
+              {name}
+            </h3>
+          </Link>
+
+          <div className="flex items-center justify-between pointer-events-auto">
+            <ProductPrice
+              price={price}
+              discountPrice={discountPrice}
+              isOnSale={isOnSale}
+            />
+
+            <AddToCart
+              productId={id as string}
               stock={stock}
-              // ✅ Button ki padding aur size chota kar diya
+              // ✅ YEH LINE ADD KAREIN
+              product={{
+                id: String(id),
+                name,
+                price: discountPrice || price,
+                image: displayImage,
+                category,
+              }}
               className={`p-1.5 rounded-full backdrop-blur-md z-10 ${isOutOfStock ? "bg-gray-500/50" : "bg-primary hover:bg-primary/90"}`}
             >
-              {isOutOfStock ? <PackageX size={14} className="text-white" /> : <ShoppingCart size={14} className="text-white" />}
+              {isOutOfStock ? (
+                <PackageX size={14} className="text-white" />
+              ) : (
+                <ShoppingCart size={14} className="text-white" />
+              )}
             </AddToCart>
           </div>
         </div>
@@ -109,43 +214,75 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       // ✅ Semantic <article> Tag added
       <article className="group relative flex flex-col h-full bg-transparent">
         <div className="relative w-full aspect-[4/5] mb-3">
-          <Link href={`/products/${id}`} className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden" aria-label={`View ${name}`}>
+          <Link
+            href={`/products/${id}`}
+            className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden"
+            aria-label={`View ${name}`}
+          >
             <Image
-              src={displayImage} alt={name} fill
+              src={displayImage}
+              alt={name}
+              fill
               className="object-cover group-hover:scale-105 transition-transform duration-500"
               sizes="(max-width: 768px) 100vw, 25vw"
             />
           </Link>
-          {isOnSale && <span className="absolute top-3 left-3 pointer-events-none bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">Sale</span>}
+          {onSale && (
+            <span className="absolute top-3 left-3 pointer-events-none bg-black text-white text-[10px] uppercase font-bold px-2 py-1 tracking-widest">
+              Sale
+            </span>
+          )}
 
-          <WishlistButton 
-            productId={id as string} 
+          <WishlistButton
+            productId={id as string}
+            product={wishlistProduct}
             className="absolute top-3 right-3 bg-white/70 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
           />
 
-          <AddToCart 
-            productId={id as string} 
+          <AddToCart
+            productId={id as string}
             stock={stock}
+            // ✅ YEH LINE ADD KAREIN
+            product={{
+              id: String(id),
+              name,
+              price: discountPrice || price,
+              image: displayImage,
+              category,
+            }}
             className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm text-gray-700 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
           >
             {isOutOfStock ? <PackageX size={18} /> : <ShoppingCart size={18} />}
           </AddToCart>
         </div>
 
-        <Link href={`/products/${id}`} className="flex flex-col flex-grow text-center">
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{category?.replace(/_/g, " ")}</p>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1 group-hover:text-primary transition-colors">{name}</h3>
-          
+        <Link
+          href={`/products/${id}`}
+          className="flex flex-col flex-grow text-center"
+        >
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+            {category?.replace(/_/g, " ")}
+          </p>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1 group-hover:text-primary transition-colors">
+            {name}
+          </h3>
+
           <div className="flex justify-center mb-2">
-            <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} size={12} />
+            <ReviewStars
+              productId={id}
+              rating={averageRating}
+              totalReviews={totalReviews}
+              size={12}
+            />
           </div>
 
-          <div className="flex justify-center items-center gap-2">
-            {isOnSale && discountPrice ? (
-              <><span className="text-sm font-bold text-red-600">Rs. {discountPrice.toLocaleString()}</span><span className="text-xs line-through text-gray-400">Rs. {price.toLocaleString()}</span></>
-            ) : (
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Rs. {price.toLocaleString()}</span>
-            )}
+          <div className="flex justify-center">
+            <ProductPrice
+              price={price}
+              discountPrice={discountPrice}
+              isOnSale={isOnSale}
+              size="sm"
+            />
           </div>
         </Link>
       </article>
@@ -159,41 +296,77 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     // ✅ Semantic <article> Tag added
     <article className="group relative bg-card rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full border border-border/50">
       <div className="relative w-full aspect-square bg-gray-50">
-        <Link href={`/products/${id}`} className="block w-full h-full overflow-hidden" aria-label={`View ${name}`}>
+        {onSale && (
+          <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
+            Sale
+          </span>
+        )}
+        <Link
+          href={`/products/${id}`}
+          className="block w-full h-full overflow-hidden"
+          aria-label={`View ${name}`}
+        >
           <Image
-            src={displayImage} alt={name} fill
+            src={displayImage}
+            alt={name}
+            fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         </Link>
 
-        <WishlistButton 
-          productId={id as string} 
+        <WishlistButton
+          productId={id as string}
+          product={wishlistProduct}
           className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
         />
       </div>
 
       <div className="p-4 flex flex-col grow">
         <Link href={`/products/${id}`}>
-          <h3 className="text-sm font-semibold line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">{name}</h3>
+          <h3 className="text-sm font-semibold line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
+            {name}
+          </h3>
         </Link>
-        
-        <ReviewStars productId={id} rating={averageRating} totalReviews={totalReviews} className="mb-3" />
 
-        <span className="text-lg font-bold text-primary mb-4">Rs. {price?.toLocaleString()}</span>
-        
-        <AddToCart 
-          productId={id as string} 
+        <ReviewStars
+          productId={id}
+          rating={averageRating}
+          totalReviews={totalReviews}
+          className="mb-3"
+        />
+
+        <div className="mb-4">
+          <ProductPrice
+            price={price}
+            discountPrice={discountPrice}
+            isOnSale={isOnSale}
+            size="lg"
+          />
+        </div>
+
+        <AddToCart
+          productId={id as string}
           stock={stock}
+          // ✅ YEH LINE ADD KAREIN
+          product={{
+            id: String(id),
+            name,
+            price: discountPrice || price,
+            image: displayImage,
+            category,
+          }}
           className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mt-auto flex justify-center items-center gap-2"
         >
           {isOutOfStock ? (
             <>
-              <PackageX size={16} /> Out of Stock
+              {" "}
+              <PackageX size={16} /> Out of Stock{" "}
             </>
           ) : (
             <>
-              <ShoppingCart size={16} /> Add to Cart
+              {" "}
+              <ShoppingCart size={16} /> Add to Cart{" "}
             </>
           )}
         </AddToCart>

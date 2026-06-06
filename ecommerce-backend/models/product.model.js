@@ -78,6 +78,11 @@ totalReviews: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
 },
+// ✅ AI RAG K LIYE
+    embedding: {
+      type: 'VECTOR(384)', // String use kar rahe hein kyunke pgvector custom type hai
+      allowNull: true,
+    },
   },
   {
     sequelize,
