@@ -3,18 +3,23 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Store, Tag, Heart, Package, User } from "lucide-react";
+import { Store, Tag, Heart, Package, User, LogIn } from "lucide-react";
+import { isAuthenticated } from "@/utils/auth";
 
 const MobileBottomNav = () => {
   const pathname = usePathname();
+  const loggedIn = isAuthenticated();
 
-  // Aapke 5 required links aur unke icons
   const navItems = [
     { name: "Products", href: "/products", icon: Store },
     { name: "Sale", href: "/viewMore?filter=on-sale", icon: Tag },
     { name: "Wishlist", href: "/wishlist", icon: Heart },
-    { name: "Orders", href: "/order", icon: Package },
-    { name: "Profile", href: "/profile", icon: User },
+    { name: "Orders", href: loggedIn ? "/order" : "/login", icon: Package },
+    {
+      name: loggedIn ? "Profile" : "Login",
+      href: loggedIn ? "/profile" : "/login",
+      icon: loggedIn ? User : LogIn,
+    },
   ];
 
   return (

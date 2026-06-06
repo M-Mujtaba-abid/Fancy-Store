@@ -22,4 +22,7 @@ export interface CartResponse {
 export interface AddToCartPayload {
   productId: string;
   quantity: number;
+  price?: number;
+  name?: string;
+  image?: string;
 }

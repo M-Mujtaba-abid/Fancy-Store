@@ -1,20 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/service/orderService/order.service";
+import { clearGuestCart } from "@/service/cartService/cart.service";
+import { isAuthenticated } from "@/utils/auth";
 import { PlaceOrderPayload } from "@/types/order.type";
 import toast from "react-hot-toast";
 
-// ================= USER HOOKS =================
-
-// 1. Place a new order
 export const usePlaceOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: PlaceOrderPayload) => orderService.placeOrder(data),
-    onSuccess: () => {
-      // ✅ Order place hone par Cart ko clear/refresh karna lazmi hai
+    onSuccess: async () => {
+      if (!isAuthenticated()) {
+        clearGuestCart();
+      }
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      // ✅ My Orders list ko bhi update kar dein
       queryClient.invalidateQueries({ queryKey: ["myOrders"] });
       toast.success("Order placed successfully! 🎉");
     },

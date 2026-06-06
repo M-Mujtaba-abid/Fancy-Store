@@ -19,8 +19,9 @@ export const placeOrderService = async (userId, orderData) => {
       postalCode,
       country,
       paymentMethod,
-      buyNowProductId, // ✅ NAYA: Buy Now Product ID
-      buyNowQuantity   // ✅ NAYA: Buy Now Quantity
+      buyNowProductId,
+      buyNowQuantity,
+      guestCartItems,
     } = orderData;
 
     let totalAmount = 0;
@@ -28,60 +29,70 @@ export const placeOrderService = async (userId, orderData) => {
     const orderItemRows = [];
     let cart = null;
 
-    // =======================================================
-    // SCENARIO 1: DIRECT "BUY NOW" FLOW (Trolley ko hath nahi lagana)
-    // =======================================================
-    if (buyNowProductId && buyNowQuantity) {
-      const product = await Product.findByPk(buyNowProductId, { transaction: t });
+    const addProductToOrder = async (productId, quantity) => {
+      const product = await Product.findByPk(productId, { transaction: t });
       if (!product) throw { status: 404, message: "Product not found." };
-      
-      if (product.stock < buyNowQuantity) {
+
+      if (product.stock < quantity) {
         throw { status: 400, message: `Stock finished for ${product.name}` };
       }
 
-      const activePrice = product.discountPrice && product.discountPrice > 0 ? product.discountPrice : product.price;
-      totalAmount = activePrice * buyNowQuantity;
+      const activePrice =
+        product.discountPrice && product.discountPrice > 0
+          ? product.discountPrice
+          : product.price;
 
-      product.stock -= buyNowQuantity;
+      totalAmount += activePrice * quantity;
+      product.stock -= quantity;
       await product.save({ transaction: t });
 
       orderItemRows.push({
         productId: product.id,
-        quantity: buyNowQuantity,
+        quantity,
         price: activePrice,
       });
-    } 
+    };
+
     // =======================================================
-    // SCENARIO 2: NORMAL "CART" FLOW (Trolley ka saman aur Trolley khali)
+    // SCENARIO 1: DIRECT "BUY NOW" FLOW
     // =======================================================
-    else {
+    if (buyNowProductId && buyNowQuantity) {
+      totalAmount = 0;
+      await addProductToOrder(buyNowProductId, buyNowQuantity);
+    }
+    // =======================================================
+    // SCENARIO 2: LOGGED-IN "CART" FLOW
+    // =======================================================
+    else if (userId) {
       cart = await Cart.findOne({ where: { userId } });
       if (!cart) throw { status: 404, message: "Cart not found." };
 
       const cartItems = await CartItem.findAll({ where: { cartId: cart.id } });
-      if (!cartItems || cartItems.length === 0)
+      if (!cartItems || cartItems.length === 0) {
         throw { status: 400, message: "Cart is empty." };
-
-      for (let item of cartItems) {
-        const product = await Product.findByPk(item.productId, { transaction: t });
-        if (!product) continue;
-
-        if (product.stock < item.quantity) {
-          throw { status: 400, message: `Stock finished for ${product.name}` };
-        }
-
-        const activePrice = product.discountPrice && product.discountPrice > 0 ? product.discountPrice : product.price;
-        totalAmount += activePrice * item.quantity;
-
-        product.stock -= item.quantity;
-        await product.save({ transaction: t });
-
-        orderItemRows.push({
-          productId: product.id,
-          quantity: item.quantity,
-          price: activePrice,
-        });
       }
+
+      for (const item of cartItems) {
+        await addProductToOrder(item.productId, item.quantity);
+      }
+    }
+    // =======================================================
+    // SCENARIO 3: GUEST "CART" FLOW (items sent from client)
+    // =======================================================
+    else if (guestCartItems?.length) {
+      totalAmount = 0;
+      for (const item of guestCartItems) {
+        if (!item.productId || !item.quantity || item.quantity <= 0) {
+          throw { status: 400, message: "Invalid guest cart item." };
+        }
+        await addProductToOrder(item.productId, item.quantity);
+      }
+    } else {
+      throw { status: 400, message: "Cart is empty." };
+    }
+
+    if (orderItemRows.length === 0) {
+      throw { status: 400, message: "No valid items to order." };
     }
 
     // ✅ ORDER CREATION (Dono scenarios mein order banega)
@@ -123,28 +134,26 @@ export const placeOrderService = async (userId, orderData) => {
 
     // ✅ Phir email — alag try/catch mein (Aapki Exact Same Logic)
     try {
-      const user = await User.findByPk(userId);
+      const user = userId ? await User.findByPk(userId) : null;
       const emailPromises = [];
+      const customerName = user?.name || fullName || "Customer";
 
-      // 1. Customer ko bhejien (agar email exist karti hai)
       if (orderData.email) {
         emailPromises.push(
           sendEmail(
-            // user.email,
             orderData.email,
             "Order Confirmed — Fancy Store 🎉",
-           orderConfirmationTemplate(user ? user.name : "Customer", order)
+            orderConfirmationTemplate(customerName, order)
           )
         );
       }
 
-      // 2. Admin ko bhejien (agar env set hai)
       if (process.env.ADMIN_EMAIL) {
         emailPromises.push(
           sendEmail(
             process.env.ADMIN_EMAIL,
             "📦 New Order Received!",
-           adminNewOrderTemplate(user ? user.name : "Customer", orderData.email || 'N/A', order)
+            adminNewOrderTemplate(customerName, orderData.email || "N/A", order)
           )
         );
       }

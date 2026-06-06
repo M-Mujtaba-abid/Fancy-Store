@@ -43,4 +43,7 @@ export interface PlaceOrderPayload {
   postalCode: string;
   country: string;
   paymentMethod: string;
+  buyNowProductId?: string | number;
+  buyNowQuantity?: number;
+  guestCartItems?: { productId: string; quantity: number }[];
 }
