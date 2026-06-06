@@ -19,7 +19,7 @@ const NavbarModal: React.FC<NavbarModalProps> = ({ navLinks, closeMenu }) => {
         {/* ========================================== */}
         {/* 📱 MOBILE NAVIGATION (Sirf Mobile Pe Dikhega) */}
         {/* ========================================== */}
-        <div className="md:hidden pb-2 mb-2 ">
+        <div className="md:hidden pb-2 mb-2 border-b border-border/50">
           <p className="px-4 py-1 text-[10px] font-bold text-text-muted uppercase tracking-widest">
             Navigation
           </p>
@@ -42,7 +42,7 @@ const NavbarModal: React.FC<NavbarModalProps> = ({ navLinks, closeMenu }) => {
         {/* ========================================== */}
         {/* 💻 ACCOUNT & SETTINGS (Sirf Desktop Pe Dikhega) */}
         {/* ========================================== */}
-        <div className="hidden md:block pb-2 mb-2 border-b border-border/50">
+        <div className="pb-2 mb-2 border-b border-border/50">
           <p className="px-4 py-1 text-[10px] font-bold text-text-muted uppercase tracking-widest">
             Account & Settings
           </p>

@@ -5,10 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { isAuthenticated } from "@/utils/auth";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
+  const loggedIn = isAuthenticated();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
@@ -36,12 +38,18 @@ function SuccessContent() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center  gap-4 justify-center">
-          <Link href="/order" className="px-6 p-6  bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
-            View Order
-          </Link>
+        <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
+          {loggedIn ? (
+            <Link href="/order" className="px-6 p-6 bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
+              View Orders
+            </Link>
+          ) : (
+            <Link href="/track-order" className="px-6 p-6 bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
+              Track Order
+            </Link>
+          )}
           <Link href="/products" className="px-6 p-6 bg-background border border-border font-bold rounded-xl hover:bg-card transition-all flex-1 text-primary flex items-center justify-center gap-2">
-            <ShoppingBag size={18} /> Continue 
+            <ShoppingBag size={18} /> Continue Shopping
           </Link>
         </div>
       </motion.div>

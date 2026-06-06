@@ -10,7 +10,7 @@ import Loading from "@/app/loading";
 import { trackInitiateCheckout } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 
 export default function CartPage() {
-  const { data: cartData, isLoading, isError } = useGetCart();
+  const { data: cartData, isLoading } = useGetCart();
   const { mutate: updateItem } = useUpdateCartItem();
   const { mutate: clearCart } = useClearCart();
 
@@ -39,25 +39,6 @@ export default function CartPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loading />
-      </div>
-    );
-  }
-
-  // Handle Unauthorized / Not Logged In
-  if (isError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center">
-        <ShoppingBag size={60} className="text-gray-300 mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Please Login</h2>
-        <p className="text-gray-500 mb-6">
-          You need to login to view your cart.
-        </p>
-        <Link
-          href="/login"
-          className="bg-primary text-white px-6 py-2 rounded-full"
-        >
-          Login Now
-        </Link>
       </div>
     );
   }
@@ -106,12 +87,19 @@ export default function CartPage() {
             >
               {/* Image */}
               <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0">
-                <Image
-                  src={item.image || "/placeholder.png"}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs text-gray-400">
+                    No image
+                  </div>
+                )}
               </div>
 
               {/* Details */}

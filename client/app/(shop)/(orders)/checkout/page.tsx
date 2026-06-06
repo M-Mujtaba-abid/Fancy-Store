@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetCart } from "@/hooks/useCart";
 import { usePlaceOrder } from "@/hooks/useOrders";
+import { isAuthenticated } from "@/utils/auth";
 import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -177,7 +178,18 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold mb-8 text-text-main">Checkout</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-3xl font-bold text-text-main">Checkout</h1>
+        {!isAuthenticated() && (
+          <p className="text-sm text-text-muted">
+            Checking out as guest.{" "}
+            <Link href="/login" className="text-primary font-medium hover:underline">
+              Sign in
+            </Link>{" "}
+            to save your order history.
+          </p>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* LEFT: Delivery Details Form */}

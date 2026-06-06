@@ -3,15 +3,14 @@
 import React from "react";
 import { Heart } from "lucide-react";
 import { useGetWishlist, useToggleWishlist } from "@/hooks/useWishlist";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { trackAddToWishlist } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackAddToWishlist } from "@/utils/tiktokTracking";
+import { Product } from "@/types/product.type";
 
 interface WishlistButtonProps {
   productId: string;
-  className?: string; // Button ki custom styling ke liye
-  iconClassName?: string; // Heart icon ki custom styling ke liye (jaise default white ya gray)
-  product?: { id: string; name: string; price: number; category?: string }; // Product data for tracking
+  className?: string;
+  iconClassName?: string;
+  product?: Product;
 }
 
 const WishlistButton: React.FC<WishlistButtonProps> = ({
@@ -20,39 +19,33 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
   iconClassName = "text-gray-400 fill-transparent hover:text-red-500",
   product,
 }) => {
-  const router = useRouter();
   const { data: wishlistItems } = useGetWishlist();
   const { mutate: toggleWishlist, isPending } = useToggleWishlist();
 
   const isWishlisted =
-    wishlistItems?.some((item) => item.productId === productId) || false;
+    wishlistItems?.some(
+      (item) => String(item.productId) === String(productId),
+    ) || false;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Parent link par click hone se rokay
+    e.stopPropagation();
 
-    const isLoggedIn =
-      typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
-
-    if (!isLoggedIn) {
-      toast.error("Please login to add items to your wishlist! 🔒");
-      router.push("/login");
-      return;
-    }
-
-    toggleWishlist(productId, {
-      onSuccess: () => {
-        // 🎯 TIKTOK CONTENT CODE: Product added to wishlist
-        if (product && !isWishlisted) {
-          trackAddToWishlist({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            category: product.category,
-          });
-        }
+    toggleWishlist(
+      { productId, product },
+      {
+        onSuccess: (res) => {
+          if (product && res.added) {
+            trackAddToWishlist({
+              id: product.id,
+              name: product.name,
+              price: product.discountPrice || product.price,
+              category: product.category,
+            });
+          }
+        },
       },
-    });
+    );
   };
 
   return (
@@ -60,15 +53,16 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
       onClick={handleWishlistClick}
       disabled={isPending}
       className={`z-10 disabled:cursor-not-allowed ${className}`}
+      aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
     >
       <Heart
         size={18}
         className={`transition-all duration-300 ${
           isPending
-            ? "text-red-500 loading-heart" // ✅ Yahan apki custom class use ho rahi hai
+            ? "text-red-500 loading-heart"
             : isWishlisted
-              ? "fill-red-500 text-red-500" // Liked state
-              : iconClassName // Unliked state (Parent se aayegi)
+              ? "fill-red-500 text-red-500"
+              : iconClassName
         }`}
       />
     </button>
