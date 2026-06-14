@@ -1,187 +1,304 @@
 import jsPDF from "jspdf";
+import QRCode from "qrcode";
 
-export const generateShippingLabel = (order: any): void => {
-  const doc = new jsPDF("p", "mm", "a4");
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margins = 10;
-  let yPos = 0;
+// Proper TypeScript Interfaces for strict typing
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productName?: string;
+  Product?: {
+    name: string;
+  };
+  price: number;
+  quantity: number;
+}
 
-  // 1. DARK HEADER BAR
-  doc.setFillColor(0, 0, 0);
-  doc.rect(0, yPos, pageWidth, 15, "F");
+export interface OrderData {
+  id: number | string;
+  createdAt: string | Date;
+  paymentMethod: string;
+  status: string;
+  fullName?: string;
+  User?: {
+    name: string;
+  };
+  phoneNumber: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  totalAmount: number;
+  OrderItems?: OrderItem[];
+}
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("Fancy Store", margins, yPos + 10);
-
-  doc.setFontSize(12);
-  const orderNum = `#${order.id.toString().padStart(5, "0")}`;
-  doc.text(orderNum, pageWidth - margins - 15, yPos + 10);
-
-  yPos += 18;
-
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
-
-  // 2. META ROW (3 columns with borders)
-  const metaRowHeight = 12;
-  const colWidth = (pageWidth - 2 * margins) / 3;
-  const metaStartX = margins;
-  const metaStartY = yPos;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-
-  // Vertical dividers
-  doc.line(metaStartX + colWidth, metaStartY, metaStartX + colWidth, metaStartY + metaRowHeight);
-  doc.line(metaStartX + 2 * colWidth, metaStartY, metaStartX + 2 * colWidth, metaStartY + metaRowHeight);
-
-  // Bottom border
-  doc.line(metaStartX, metaStartY + metaRowHeight, metaStartX + 3 * colWidth, metaStartY + metaRowHeight);
-
-  // Column content
-  const orderDate = new Date(order.createdAt).toLocaleDateString("en-US");
-  doc.text(`Date: ${orderDate}`, metaStartX + 2, metaStartY + 5);
-  doc.text(`Payment: ${order.paymentMethod}`, metaStartX + colWidth + 2, metaStartY + 5);
-  doc.text(`Status: ${order.status.replace(/_/g, " ")}`, metaStartX + 2 * colWidth + 2, metaStartY + 5);
-
-  yPos += metaRowHeight + 4;
-
-  // 3. SHIP TO SECTION
-  const shipToX = margins;
-  const shipToY = yPos;
-  const shipToWidth = pageWidth - 2 * margins;
-  const shipToHeight = 30;
-
-  doc.setFillColor(200, 220, 255);
-  doc.rect(shipToX, shipToY, shipToWidth, shipToHeight, "F");
-
-  doc.setDrawColor(100, 150, 200);
-  doc.setLineWidth(1);
-  doc.rect(shipToX, shipToY, shipToWidth, shipToHeight);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.text("SHIP TO", shipToX + 4, shipToY + 5);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(order.fullName || order.User?.name, shipToX + 4, shipToY + 12);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Phone: ${order.phoneNumber}`, shipToX + 4, shipToY + 18);
-
-  doc.setFontSize(10);
-  const addressText = `${order.address}, ${order.city}, ${order.postalCode}, ${order.country}`;
-  const addressLines = doc.splitTextToSize(addressText, shipToWidth - 8);
-  doc.text(addressLines, shipToX + 4, shipToY + 24);
-
-  yPos += shipToHeight + 4;
-
-  // 4. BARCODE ROW
-  const barcodeStartX = margins;
-  const barcodeWidth = 70;
-  const barWidth = barcodeWidth / 20;
-
-  doc.setFillColor(0, 0, 0);
-  for (let i = 0; i < 20; i++) {
-    const barHeight = i % 2 === 0 ? 10 : 6;
-    const barX = barcodeStartX + i * barWidth;
-    doc.rect(barX, yPos, barWidth - 0.3, barHeight, "F");
-  }
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  const trackingNum = `FS-2026-${order.id}-PK`;
-  doc.text(trackingNum, barcodeStartX, yPos + 13);
-
-  yPos += 18;
-
-  // 5. ITEMS TABLE
-  const tableMarginLeft = margins;
-  const tableMarginRight = pageWidth - margins;
-  const tableColWidth = (tableMarginRight - tableMarginLeft) / 3;
-
-  // Header
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(0, 0, 0);
-  doc.setDrawColor(0, 0, 0);
-
-  doc.text("Item", tableMarginLeft + 2, yPos + 5);
-  doc.text("Qty", tableMarginLeft + tableColWidth + 2, yPos + 5);
-  doc.text("Subtotal", tableMarginLeft + 2 * tableColWidth + 2, yPos + 5);
-
-  // Header divider
-  doc.setLineWidth(0.5);
-  doc.line(tableMarginLeft, yPos + 7, tableMarginRight, yPos + 7);
-
-  yPos += 10;
-
-  // Rows
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-
-  order.OrderItems?.forEach((item: any) => {
-    const itemName = item.productName || `Product #${item.productId}`;
-    const subtotal = item.price * item.quantity;
-
-    doc.text(itemName, tableMarginLeft + 2, yPos);
-    doc.text(item.quantity.toString(), tableMarginLeft + tableColWidth + 2, yPos);
-    doc.text(`Rs. ${subtotal.toLocaleString()}`, tableMarginLeft + 2 * tableColWidth + 2, yPos);
-
-    yPos += 6;
-
-    // Divider between rows
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(tableMarginLeft, yPos, tableMarginRight, yPos);
-    yPos += 2;
+export const generateShippingLabel = async (order: OrderData): Promise<void> => {
+  // A6 size standard dimensions (105mm x 148mm) - Perfect 1/4 of A4
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a6",
   });
 
-  yPos += 4;
+  const width = 105;
+  const height = 148;
+  const margin = 4; // Compact borders for Daraz look
 
-  // 6. TOTALS BLOCK (right aligned)
-  const totalsX = tableMarginRight - 60;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  // Helper variables for layout
+  doc.setDrawColor(0, 0, 0);
   doc.setTextColor(0, 0, 0);
 
-  const subtotal = order.totalAmount - 299;
-  doc.text(`Subtotal: Rs. ${subtotal.toLocaleString()}`, totalsX, yPos);
-  yPos += 6;
+  // Outer Border
+  doc.setLineWidth(0.4);
+  doc.rect(margin, margin, width - margin * 2, height - margin * 2);
 
-  doc.text("Shipping Fee: Rs. 299", totalsX, yPos);
-  yPos += 6;
+  // ==========================================
+  // TOP BAR: Centered Store Name (No Logo)
+  // ==========================================
+  let currentY = margin;
+  const topBarHeight = 10; // Thoda text space barhaya hai balance ke liye
+  
+  // Bottom line of Top Bar
+  doc.line(
+    margin,
+    currentY + topBarHeight,
+    width - margin,
+    currentY + topBarHeight,
+  );
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text(`TOTAL: Rs. ${order.totalAmount.toLocaleString()}`, totalsX, yPos);
+  doc.setFontSize(14); // Font size badha diya taake center me achha lage
+  
+  // Text ko center align karne ke liye exact calculations
+  doc.text("fancystore.store", width / 2, currentY + 6.5, { align: "center" });
 
-  yPos += 12;
+  currentY += topBarHeight;
 
-  // 7. FOOTER ROW
-  // Left: Payment method badge (green)
-  doc.setFillColor(34, 197, 94);
-  doc.rect(tableMarginLeft, yPos, 22, 8, "F");
+  // ==========================================
+  // SECTION 2: QR Code & Standard Details (Grid)
+  // ==========================================
+  const gridHeight = 35;
+  doc.line(
+    margin,
+    currentY + gridHeight,
+    width - margin,
+    currentY + gridHeight,
+  );
+  // Vertical line separating QR and Daraz Details
+  const gridSplitX = 42;
+  doc.line(gridSplitX, currentY, gridSplitX, currentY + gridHeight);
 
+  // 1. Generate and Add QR Code (Left side)
+  try {
+    const storeUrl = "https://fancystore.store";
+    const qrCodeDataUrl = await QRCode.toDataURL(storeUrl, {
+      margin: 1,
+      width: 120,
+    });
+    // Centered inside the left grid box
+    doc.addImage(qrCodeDataUrl, "PNG", margin + 2, currentY + 2, 32, 32);
+  } catch (error) {
+    console.error("QR Code Generation Error:", error);
+  }
+
+  // 2. Right side info grid (Daraz standard blocks)
+  const rightContentX = gridSplitX + 3;
+  const rowH = gridHeight / 5; // 5 rows inside right grid
+
+  doc.setFontSize(8);
+  // Row 1: STANDARD
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text(order.paymentMethod, tableMarginLeft + 3, yPos + 6);
+  doc.text("STANDARD", width - margin - 2, currentY + 5, { align: "right" });
+  doc.line(gridSplitX, currentY + rowH, width - margin, currentY + rowH);
 
-  // Right: Email
-  doc.setTextColor(0, 0, 0);
+  // Row 2: Weight
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("support@fancystore.com", tableMarginRight - 50, yPos + 6);
+  doc.text("0.9 KG", width - margin - 2, currentY + rowH + 5, {
+    align: "right",
+  });
+  doc.line(
+    gridSplitX,
+    currentY + rowH * 2,
+    width - margin,
+    currentY + rowH * 2,
+  );
 
-  // Download
-  doc.save(`Order_#${order.id.toString().padStart(5, "0")}_ShippingLabel.pdf`);
+  // Row 3: Delivery Type
+  doc.text("HOME", width - margin - 2, currentY + rowH * 2 + 5, {
+    align: "right",
+  });
+  doc.line(
+    gridSplitX,
+    currentY + rowH * 3,
+    width - margin,
+    currentY + rowH * 3,
+  );
+
+  // Row 4: COD status
+  doc.setFont("helvetica", "bold");
+  const isCOD =
+    order.paymentMethod.toLowerCase() === "cod" ||
+    order.paymentMethod.toLowerCase() === "cash_on_delivery";
+  doc.text(
+    isCOD ? "COD" : "PAID",
+    width - margin - 2,
+    currentY + rowH * 3 + 5,
+    { align: "right" },
+  );
+  doc.line(
+    gridSplitX,
+    currentY + rowH * 4,
+    width - margin,
+    currentY + rowH * 4,
+  );
+
+  // Row 5: Price
+  doc.text("PKR", rightContentX, currentY + rowH * 4 + 5);
+  doc.text(
+    `${order.totalAmount.toLocaleString()}.00`,
+    width - margin - 2,
+    currentY + rowH * 4 + 5,
+    { align: "right" },
+  );
+
+  // Add the route text inside QR zone
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("PK-DEX", margin + 12, currentY + gridHeight - 2);
+
+  currentY += gridHeight;
+
+  // ==========================================
+  // SECTION 3: Order Number & Tracking Bar
+  // ==========================================
+  const orderBarHeight = 12;
+  doc.line(
+    margin,
+    currentY + orderBarHeight,
+    width - margin,
+    currentY + orderBarHeight,
+  );
+
+  doc.setFontSize(9);
+  const cleanOrderId = order.id.toString().padStart(5, "0");
+  doc.text(`Tracking Number: FS-DEX-${cleanOrderId}`, margin + 4, currentY + 5);
+  doc.text(`Order Number: 00${order.id}`, margin + 4, currentY + 10);
+
+  currentY += orderBarHeight;
+
+  // ==========================================
+  // SECTION 4: Creation Dates
+  // ==========================================
+  const dateBarHeight = 6;
+  doc.line(
+    margin,
+    currentY + dateBarHeight,
+    width - margin,
+    currentY + dateBarHeight,
+  );
+  doc.line(width / 2, currentY, width / 2, currentY + dateBarHeight);
+
+  const createdDateStr = new Date(order.createdAt).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const printDateStr = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.text(`Order Date: ${createdDateStr}`, margin + 2, currentY + 4);
+  doc.text(`Print Date: ${printDateStr}`, width / 2 + 2, currentY + 4);
+
+  currentY += dateBarHeight;
+
+  // ==========================================
+  // SECTION 5: Recipient & Sender Address Boxes
+  // ==========================================
+  const addressAreaHeight = 42;
+  doc.line(width / 2, currentY, width / 2, currentY + addressAreaHeight); // Middle splitter
+  doc.line(
+    margin,
+    currentY + addressAreaHeight,
+    width - margin,
+    currentY + addressAreaHeight,
+  ); // Bottom line
+
+  doc.setFontSize(7);
+
+  // --- Left Side: Recipient (Customer) ---
+  let recY = currentY + 4;
+  doc.setFont("helvetica", "bold");
+  doc.text("Recipient:", margin + 2, recY);
+
+  doc.setFont("helvetica", "normal");
+  const recipientName = order.fullName || order.User?.name || "Customer";
+  doc.text(recipientName, margin + 14, recY);
+
+  recY += 4;
+  const rawAddress = `${order.address}, ${order.city}`;
+  const choppedAddress = doc.splitTextToSize(
+    rawAddress,
+    width / 2 - margin - 4,
+  );
+  doc.text(choppedAddress, margin + 2, recY);
+
+  // Shift Y down dynamically based on address wrapping length
+  const phoneY = currentY + addressAreaHeight - 3;
+  doc.setFont("helvetica", "bold");
+  doc.text(`Phone: ${order.phoneNumber}`, margin + 2, phoneY);
+
+  // --- Right Side: Sender (Fancy Store Static Details) ---
+  let sendY = currentY + 4;
+  doc.setFont("helvetica", "bold");
+  doc.text("Sender:", width / 2 + 2, sendY);
+  doc.setFont("helvetica", "normal");
+  doc.text("Fancy.Store.", width / 2 + 12, sendY);
+
+  sendY += 4;
+  const senderAddress =
+    "72 B block new chauburji sham nager park lahore, Punjab, Lahore - Chaburji, Shamnagar";
+  const choppedSender = doc.splitTextToSize(
+    senderAddress,
+    width / 2 - margin - 4,
+  );
+  doc.text(choppedSender, width / 2 + 2, sendY);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Phone: 03174961945", width / 2 + 2, phoneY);
+
+  currentY += addressAreaHeight;
+
+  // ==========================================
+  // SECTION 6: Simple Items List Footer (All items included)
+  // ==========================================
+  let itemY = currentY + 5;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text("Item Description", margin + 2, itemY);
+  doc.text("Qty", width - margin - 15, itemY);
+
+  doc.line(margin, itemY + 2, width - margin, itemY + 2);
+  itemY += 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5); // 6+ products ko safely adapt karne ke liye size optimum rakha hai
+
+  const itemsToPrint = order.OrderItems || [];
+  itemsToPrint.forEach((item) => {
+    const name =
+      item.productName || item.Product?.name || `Product #${item.productId}`;
+    const truncatedName =
+      name.length > 50 ? name.substring(0, 48) + "..." : name;
+
+    doc.text(truncatedName, margin + 2, itemY);
+    doc.text(item.quantity.toString(), width - margin - 13, itemY);
+    itemY += 4;
+  });
+
+  // Save the customized generated PDF
+  doc.save(`fancystore_label_${cleanOrderId}.pdf`);
 };
