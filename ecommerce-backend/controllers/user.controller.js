@@ -21,8 +21,12 @@ const getAuthCookieOptions = () => {
     path: "/",
   };
 
-  if (isProduction && process.env.BACKEND_DOMAIN) {
-    cookieOptions.domain = process.env.BACKEND_DOMAIN;
+  // ✅ FIX: Set domain to parent domain for cross-subdomain sharing
+  if (isProduction) {
+    const domain = process.env.COOKIE_DOMAIN;
+    if (domain) {
+      cookieOptions.domain = domain.startsWith(".") ? domain : `.${domain}`;
+    }
   }
 
   return cookieOptions;
