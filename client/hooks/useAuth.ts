@@ -52,8 +52,9 @@ export const useLogin = () => {
       if (userRole === "admin") {
         // 🔧 FIX: Add small delay to ensure cookie is set before redirect
         // This helps with production where cookies might take a moment to be accessible
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        router.push("/dashboard");
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        // router.push("/dashboard");
+        window.location.href = "/dashboard";
         return;
       }
 
