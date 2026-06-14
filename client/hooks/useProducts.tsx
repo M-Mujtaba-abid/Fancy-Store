@@ -1,7 +1,7 @@
 // import { productService } from "@/service/product.service";
 import { productService } from "@/service/productservice/product.service";
 import { ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 // import { productService } from "../services/product.service";
 
@@ -200,5 +200,19 @@ export const useRelatedProducts = (id: string) => {
     queryKey: ["products", "related", id],
     queryFn: () => productService.getRelatedProducts(id),
     enabled: !!id, // Jab tak ID na ho tab tak hit nahi karna
+  });
+};
+
+export const useAllProductsInfinite = (limit: number = 10) => {
+  return useInfiniteQuery({
+    queryKey: ["products", "infinite", limit],
+    queryFn: ({ pageParam = 1 }: any) => productService.getAllProducts(pageParam, limit),
+    getNextPageParam: (lastPage: any) => {
+      if (lastPage?.currentPage < lastPage?.totalPages) {
+        return lastPage.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 };
