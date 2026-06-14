@@ -1,12 +1,11 @@
-// middleware.ts
+// proxy.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// 🔑 JWT Decode Function (Server-side Edge safe)
+// 🔑 JWT Decode Function (Server-side safe for Edge/Proxy)
 function decodeJwt(token: string) {
   try {
     if (!token || typeof token !== "string") return null;
-
     const parts = token.split(".");
     if (parts.length !== 3) return null;
 
@@ -14,41 +13,51 @@ function decodeJwt(token: string) {
     while (payloadBase64.length % 4 !== 0) {
       payloadBase64 += "=";
     }
-
     return JSON.parse(atob(payloadBase64));
-  } catch {
+  } catch (err) {
+    console.error("❌ JWT DECODE ERROR:", err); // Server-side console log
     return null;
   }
 }
 
-// 🛡️ Next.js Standard Middleware Function Name
-export function middleware(request: NextRequest) {
+// 🛡️ Next.js v16+ Proxy Convention
+export function proxy(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // 1. 🛡️ Protect Admin Dashboard
+  // 📝 PRODUCTION DEBUG LOGS (Vercel ke logs tab mein nazar ayenge)
+  console.log("--- PROXY TRIGGERED ---");
+  console.log("Current Path:", pathname);
+  console.log("Is Token Found In Cookies?:", !!token);
+  if (token) {
+    const decoded = decodeJwt(token);
+    console.log("Decoded Role:", decoded?.role || "No Role Found");
+  }
+  console.log("----------------------------");
+
+  // 1. Dashboard Protection
   if (pathname.startsWith("/dashboard")) {
     if (!token) {
+      console.log("⛔ Redirecting to /login: No token found in cookies");
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
     const decoded = decodeJwt(token);
-    // Agar token kharab hai ya user admin nahi hai -> kick to login
     if (!decoded || decoded.role !== "admin") {
+      console.log(`⛔ Redirecting to /login: Role is ${decoded?.role || 'invalid'}`);
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
-  // 2. 🚫 Block Logged-In Admins from accessing /login again
+  // 2. Already Logged-In Admin Restriction
   if (pathname.startsWith("/login") && token) {
     const decoded = decodeJwt(token);
-    // Agar admin pehle se logged in hai, to usey login page se dashboard par bhej do
     if (decoded && decoded.role === "admin") {
+      console.log("🔄 Redirecting to /dashboard: Admin already logged in");
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 
-  // Request ko agay jaane dein agar sab theek hai
   return NextResponse.next();
 }
 
