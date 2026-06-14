@@ -5,22 +5,45 @@ import { useGetProfile } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import SidebarNav from "./_components/SidebarNav";
 import { Menu } from "lucide-react";
+import { isAuthenticated, getUserRole } from "@/utils/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { data: profile, isLoading, error } = useGetProfile();
-  const isAdmin = profile?.data?.role === "admin";
+  const { data: profile, isLoading } = useGetProfile();
+
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = React.useCallback(() => setSidebarOpen(false), []);
 
-  // Auth Guard Logic
+  // 🔐 Auth guard: check localStorage FIRST (synchronous, no API call)
+  // This is reliable even when cross-origin profile requests fail on production
   React.useEffect(() => {
-    if (!isLoading && (error || !profile)) router.replace("/login");
-    if (!isLoading && profile && !isAdmin) router.replace("/");
-  }, [profile, isLoading, error, isAdmin, router]);
+    const loggedIn = isAuthenticated();
+    const role = getUserRole();
 
-  if (isLoading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-  if (!isAdmin) return null;
+    if (!loggedIn) {
+      router.replace("/login");
+      return;
+    }
+
+    if (role !== "admin") {
+      router.replace("/");
+      return;
+    }
+
+    // Optional: If profile loaded and shows non-admin, redirect
+    if (profile && profile.data?.role !== "admin") {
+      router.replace("/");
+    }
+  }, [profile, router]);
+
+  // Show loading only while checking localStorage (instant)
+  if (!isAuthenticated() || getUserRole() !== "admin") {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="absolute top-0 flex w-full h-screen bg-background text-text-main overflow-hidden">
