@@ -18,10 +18,11 @@ export const orderService = {
     return res.data;
   },
 
-  getMyOrders: async (): Promise<Order[]> => {
-    const res = await api.get("/orders");
-    return res.data.orders;
-  },
+  // Apni Type/Interface file ke mutabiq imports check kar lein
+getMyOrders: async (params?: { phone?: string; orderId?: string }): Promise<Order[]> => {
+  const res = await api.get("/orders", { params });
+  return res.data.orders;
+},
 
   getAllOrders: async (): Promise<Order[]> => {
     const res = await api.get("/orders/all");

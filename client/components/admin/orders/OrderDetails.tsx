@@ -5,7 +5,7 @@ import { X, MapPin, Phone, Mail, CreditCard, Package, Calendar, Printer } from "
 import { generateShippingLabel } from "@/utils/generateShippingLabel";
 
 interface OrderDetailsProps {
-  order: any;
+  order: any; // Aap isko proper type bhi de sakte hain agar bani hui hai
   onClose: () => void;
 }
 
@@ -112,7 +112,7 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
                   {order.OrderItems?.map((item: any) => (
                     <tr key={item.id} className="hover:bg-card/50 transition-colors">
                       <td className="p-4">
-                        <p className="font-semibold text-text-main">{item.Product?.name || item.productName || `Product #${item.productId}`}</p>
+                        <p className="font-semibold text-text-main">Product ID: {item.productId}</p>
                       </td>
                       <td className="p-4 text-center text-text-muted">Rs. {item.price.toLocaleString()}</td>
                       <td className="p-4 text-center text-text-main font-bold">x{item.quantity}</td>

@@ -172,9 +172,29 @@ export const placeOrderService = async (userId, orderData) => {
 };
 
 // ================= GET USER'S ORDERS =================
-export const getOrdersService = async (userId) => {
+
+
+export const getOrdersService = async (userId, guestData = null) => {
+  let whereClause = {};
+
+  if (userId) {
+    // Registered user ke liye sirf uski userId match karo
+    whereClause.userId = userId;
+  } else if (guestData) {
+    // Guest user ke liye phone number ya specific orderId se track karo
+    if (guestData.orderId) {
+      whereClause.id = guestData.orderId;
+    }
+    if (guestData.phone) {
+      whereClause.phoneNumber = guestData.phone;
+    }
+    
+    // Safety check: Taake guest flow mein registered users ke orders leak na hon
+    whereClause.userId = null; 
+  }
+
   return await Order.findAll({
-    where: { userId },
+    where: whereClause,
     include: [{ model: OrderItem, include: [Product] }],
     order: [["createdAt", "DESC"]],
   });

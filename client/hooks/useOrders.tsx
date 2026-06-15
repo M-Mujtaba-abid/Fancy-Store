@@ -25,10 +25,13 @@ export const usePlaceOrder = () => {
 };
 
 // 2. Get current user's orders
-export const useMyOrders = () => {
+export const useMyOrders = (params?: { phone?: string; orderId?: string }) => {
   return useQuery({
-    queryKey: ["myOrders"],
-    queryFn: orderService.getMyOrders,
+    // Query key me params shamil kiye hain taake track search fresh fetch trigger kare
+    queryKey: ["myOrders", params], 
+    queryFn: () => orderService.getMyOrders(params),
+    // Agar user logged-in nahi hai aur params bhi khali hain, toh auto-fetch disabled rakhein
+    enabled: isAuthenticated() || !!params?.phone || !!params?.orderId,
   });
 };
 
