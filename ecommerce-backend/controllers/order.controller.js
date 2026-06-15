@@ -153,10 +153,30 @@ export const placeOrder = async (req, res) => {
 };
 
 // ================= GET USER'S ORDERS =================
+// ================= GET USER'S ORDERS (GUEST + LOGGED IN) =================
 export const getOrders = async (req, res) => {
   try {
-    const orders = await getOrdersService(req.user.id);
+    const userId = req.user?.id ?? null;
+
+    // SCENARIO 1: USER IS LOGGED IN
+    if (userId) {
+      const orders = await getOrdersService(userId, null); // service ko userId bhej di
+      return res.status(200).json({ orders });
+    }
+
+    // SCENARIO 2: GUEST USER FLOW (Tracking via phone or orderId)
+    const { phone, orderId } = req.query;
+
+    if (!phone && !orderId) {
+      return res.status(400).json({ 
+        message: "Please login if you have an account or provide an Order ID or Phone Number to track your order." 
+      });
+    }
+
+    // Service ko guest credentials pass karein
+    const orders = await getOrdersService(null, { phone, orderId });
     return res.status(200).json({ orders });
+
   } catch (err) {
     console.error(err);
     return res.status(err.status || 500).json({ message: err.message || "Server error" });
