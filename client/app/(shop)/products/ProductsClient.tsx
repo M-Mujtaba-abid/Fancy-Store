@@ -7,6 +7,7 @@ import { productService } from "@/service/productservice/product.service";
 import ProductCard from "@/components/shop/share/ProductCard"; 
 import Loading from "@/app/loading"; 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import SmallLoader from "@/components/shop/share/SmallLoader";
 
 function ProductsContent() {
   const limit = 12;
@@ -87,11 +88,7 @@ function ProductsContent() {
       <div ref={sentinelRef} />
 
       {/* Fetching next page spinner */}
-      {isFetchingNextPage && (
-        <div className="flex justify-center mt-6">
-          <Loading />
-        </div>
-      )}
+       {isFetchingNextPage && <SmallLoader />}
     </div>
   );
 }
