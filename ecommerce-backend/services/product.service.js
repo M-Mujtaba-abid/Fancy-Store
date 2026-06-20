@@ -310,7 +310,7 @@ export const addProductService = async (body, files) => {
 
   const textToEmbed = buildProductTextForAI(newProductData);
   const vectorArray = await generateEmbedding(textToEmbed, "search_document");
-  
+
   // ❌ PURANI LINE: newProductData.embedding = vectorArray;
   // ✅ NAYI LINE:
   newProductData.embedding = `[${vectorArray.join(',')}]`;
@@ -430,34 +430,81 @@ export const updateProductService = async (id, body, files) => {
   if (!product) throw new ApiError(404, "Product not found");
 
   const updateData = { ...body };
-  
+
   // Apki exact Number conversions
   if (updateData.price !== undefined) updateData.price = Number(updateData.price);
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
   if (updateData.discountPrice !== undefined) updateData.discountPrice = Number(updateData.discountPrice);
-  
+
   // Apki exact Boolean conversions
   if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === "true" || updateData.isFeatured === true;
   if (updateData.isNewArrival !== undefined) updateData.isNewArrival = updateData.isNewArrival === "true" || updateData.isNewArrival === true;
   if (updateData.isOnSale !== undefined) updateData.isOnSale = updateData.isOnSale === "true" || updateData.isOnSale === true;
-  
+
   if (updateData.subCategory === "") updateData.subCategory = null;
 
-  // Image handling
-  if (files && files.length > 0) {
-    const uploadedImages = await uploadImagesToCloudinary(files);
-    const existingImages = product.images || []; 
-    updateData.images = [...existingImages, ...uploadedImages];
-    updateData.imageUrl = uploadedImages[0];
+  // 1. Parse existingImages from body (sent as comma-separated string or array)
+  let parsedExistingImages = [];
+  if (body.existingImages !== undefined) {
+    if (Array.isArray(body.existingImages)) {
+      parsedExistingImages = body.existingImages;
+    } else if (typeof body.existingImages === "string") {
+      parsedExistingImages = body.existingImages
+        .split(",")
+        .map((url) => url.trim())
+        .filter((url) => url.length > 0);
+    }
+  } else {
+    // Fallback to database images if existingImages was not provided
+    parsedExistingImages = product.images || [];
   }
+
+  // 2. Find and destroy deleted images on Cloudinary
+  const imagesToDelete = (product.images || []).filter(
+    (url) => !parsedExistingImages.includes(url)
+  );
+  if (imagesToDelete.length > 0) {
+    try {
+      await destroyManyByUrls({ urls: imagesToDelete, folder: "products" });
+    } catch (cloudErr) {
+      console.error("⚠️ Cloudinary image deletion failed (non-fatal):", cloudErr.message);
+      // Continue with the update — images are removed from DB even if Cloudinary cleanup fails
+    }
+  }
+
+  // 3. Upload new files if any are selected
+  let uploadedImages = [];
+  if (files && files.length > 0) {
+    uploadedImages = await uploadImagesToCloudinary(files);
+  }
+
+  // 4. Combine remaining images with the new ones
+  updateData.images = [...parsedExistingImages, ...uploadedImages];
+
+  // 5. Update primary imageUrl to the first image in the array
+  if (updateData.images.length > 0) {
+    updateData.imageUrl = updateData.images[0];
+  } else {
+    updateData.imageUrl = null;
+  }
+
+  // 6. Clean up the existingImages field so it doesn't cause Sequelize warnings
+  delete updateData.existingImages;
+
 
   // STEP 1: Purane product ka data naye update data ke sath merge karein
   const mergedProductState = { ...product.toJSON(), ...updateData };
-  
+
   // STEP 2: Updated data ka AI Text banayein aur Embedding banayein
-  const textToEmbed = buildProductTextForAI(mergedProductState);
-  const vectorArray = await generateEmbedding(textToEmbed, "search_document");
-  updateData.embedding = `[${vectorArray.join(',')}]`;
+  try {
+    const textToEmbed = buildProductTextForAI(mergedProductState);
+    const vectorArray = await generateEmbedding(textToEmbed, "search_document");
+    updateData.embedding = `[${vectorArray.join(',')}]`;
+  } catch (embeddingErr) {
+    console.error("⚠️ Embedding generation failed (non-fatal):", embeddingErr.message);
+    // Continue with the update — product data is saved even if embedding fails
+    // Embedding can be regenerated later via /sync-embeddings
+  }
 
   // STEP 3: DB update karein
   await product.update(updateData);
