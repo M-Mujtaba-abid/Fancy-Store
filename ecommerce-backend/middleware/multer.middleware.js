@@ -18,3 +18,11 @@ export const uploadWithLimits = multer({
     files: 5,
   },
 });
+export const uploadProductAndVariants = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 8 * 1024 * 1024,
+    files: 12,
+  },
+});
