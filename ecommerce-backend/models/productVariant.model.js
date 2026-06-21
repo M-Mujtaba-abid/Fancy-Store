@@ -27,6 +27,10 @@ ProductVariant.init(
         stock: {
             type: DataTypes.INTEGER,
             defaultValue: 50,
+        },
+        imageUrl: {
+            type: DataTypes.STRING,
+            allowNull: true,
         }
     },
     {
