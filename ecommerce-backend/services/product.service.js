@@ -82,8 +82,9 @@ export const buildProductTextForAI = (product) => {
 
 // 1. Add Product
 export const addProductService = async (body, files) => {
-  if (!files || files.length === 0)
-    throw new ApiError(400, "At least one image file is required");
+  const productFiles = (files || []).filter((f) => f.fieldname === "images");
+  if (productFiles.length === 0)
+    throw new ApiError(400, "At least one product image file is required");
 
   const {
     name, description, price, stock, category, subCategory,
@@ -92,7 +93,7 @@ export const addProductService = async (body, files) => {
     variants // ✅ FIX 1: 'variant: [variants]' hata kar simple 'variants' likha
   } = body;
 
-  const uploadedImages = await uploadImagesToCloudinary(files);
+  const uploadedImages = await uploadImagesToCloudinary(productFiles);
 
   const normalizedPrice = Number(price);
   const normalizedStock = Number(stock);
@@ -126,6 +127,16 @@ export const addProductService = async (body, files) => {
     // Frontend se FormData mein Array string ban kar aata hai, isliye parse karna parta hai
     parsedVariants = typeof variants === "string" ? JSON.parse(variants) : variants;
 
+    // Upload variant-specific images
+    for (let i = 0; i < parsedVariants.length; i++) {
+      const v = parsedVariants[i];
+      const variantFile = (files || []).find((f) => f.fieldname === `variantImage_${i}`);
+      if (variantFile) {
+        const variantImageUrl = await uploadBuffer({ buffer: variantFile.buffer, folder: "products" });
+        v.imageUrl = variantImageUrl;
+      }
+    }
+
     // AI ko batayein ke isme konsi qualities available hain
     const variantNames = parsedVariants.map(v => v.materialName).join(", ");
     textToEmbed += ` Available Qualities/Materials: ${variantNames}.`;
@@ -144,6 +155,7 @@ export const addProductService = async (body, files) => {
       materialName: v.materialName,
       price: Number(v.price),
       stock: Number(v.stock || 50),
+      imageUrl: v.imageUrl || null,
     }));
     // bulkCreate ek hi dafa mein saare variants insert kar dega
     await ProductVariant.bulkCreate(variantData);
@@ -314,10 +326,11 @@ export const updateProductService = async (id, body, files) => {
     }
   }
 
-  // 3. Upload new files if any are selected
+  // 3. Upload new product gallery files if any are selected
+  const productFiles = (files || []).filter((f) => f.fieldname === "images");
   let uploadedImages = [];
-  if (files && files.length > 0) {
-    uploadedImages = await uploadImagesToCloudinary(files);
+  if (productFiles.length > 0) {
+    uploadedImages = await uploadImagesToCloudinary(productFiles);
   }
 
   // 4. Combine remaining images with the new ones
@@ -377,23 +390,65 @@ export const updateProductService = async (id, body, files) => {
     // Logic A: Jo purane variants is nayi list mein NAHI hain, unhe DELETE karein
     for (const ev of existingVariants) {
       if (!newMaterialNames.includes(ev.materialName)) {
+        // Destroy its image on Cloudinary
+        if (ev.imageUrl) {
+          try {
+            await destroyByUrl({ url: ev.imageUrl, folder: "products" });
+          } catch (err) {
+            console.error("⚠️ Failed to delete old variant image:", err.message);
+          }
+        }
         await ev.destroy();
       }
     }
 
     // Logic B: Jo NAYE hain unhe Create karein, jo PURANE hain unko Update karein
-    for (const v of parsedVariants) {
+    for (let i = 0; i < parsedVariants.length; i++) {
+      const v = parsedVariants[i];
       const ev = existingVariants.find(e => e.materialName === v.materialName);
+
+      // Check if we uploaded a new image for this variant
+      const variantFile = (files || []).find((f) => f.fieldname === `variantImage_${i}`);
+      let variantImageUrl = v.imageUrl || null;
+
+      if (variantFile) {
+        // If there was an old variant image, destroy it
+        if (ev && ev.imageUrl) {
+          try {
+            await destroyByUrl({ url: ev.imageUrl, folder: "products" });
+          } catch (err) {
+            console.error("⚠️ Failed to delete old variant image:", err.message);
+          }
+        }
+        // Upload new image
+        variantImageUrl = await uploadBuffer({ buffer: variantFile.buffer, folder: "products" });
+      } else if (v.imageUrl === "" || v.imageUrl === null) {
+        // Explicitly removed by admin
+        if (ev && ev.imageUrl) {
+          try {
+            await destroyByUrl({ url: ev.imageUrl, folder: "products" });
+          } catch (err) {
+            console.error("⚠️ Failed to delete old variant image:", err.message);
+          }
+        }
+        variantImageUrl = null;
+      }
+
       if (ev) {
         // Update existing variant (Saves ID from changing)
-        await ev.update({ price: Number(v.price), stock: Number(v.stock || 50) });
+        await ev.update({
+          price: Number(v.price),
+          stock: Number(v.stock || 50),
+          imageUrl: variantImageUrl,
+        });
       } else {
         // Create new variant
         await ProductVariant.create({
           productId: product.id,
           materialName: v.materialName,
           price: Number(v.price),
-          stock: Number(v.stock || 50)
+          stock: Number(v.stock || 50),
+          imageUrl: variantImageUrl,
         });
       }
     }
@@ -414,6 +469,14 @@ export const deleteProductService = async (id) => {
   if (product.imageUrl && !imageList.includes(product.imageUrl)) {
     imageList.push(product.imageUrl);
   }
+
+  // Include all variant images for deletion on Cloudinary
+  const variants = await ProductVariant.findAll({ where: { productId: id } });
+  variants.forEach((v) => {
+    if (v.imageUrl && !imageList.includes(v.imageUrl)) {
+      imageList.push(v.imageUrl);
+    }
+  });
 
   await destroyManyByUrls({ urls: imageList, folder: "products" });
 
