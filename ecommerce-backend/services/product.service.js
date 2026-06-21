@@ -268,6 +268,10 @@ export const updateProductService = async (id, body, files) => {
 
   const updateData = { ...body };
 
+  // ✅ Extract variants and remove from updateData to prevent Sequelize errors
+  const { variants } = updateData;
+  delete updateData.variants;
+
   // Apki exact Number conversions
   if (updateData.price !== undefined) updateData.price = Number(updateData.price);
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
@@ -280,7 +284,7 @@ export const updateProductService = async (id, body, files) => {
 
   if (updateData.subCategory === "") updateData.subCategory = null;
 
-  // 1. Parse existingImages from body (sent as comma-separated string or array)
+  // 1. Parse existingImages from body
   let parsedExistingImages = [];
   if (body.existingImages !== undefined) {
     if (Array.isArray(body.existingImages)) {
@@ -292,7 +296,6 @@ export const updateProductService = async (id, body, files) => {
         .filter((url) => url.length > 0);
     }
   } else {
-    // Fallback to database images if existingImages was not provided
     parsedExistingImages = product.images || [];
   }
 
@@ -305,7 +308,6 @@ export const updateProductService = async (id, body, files) => {
       await destroyManyByUrls({ urls: imagesToDelete, folder: "products" });
     } catch (cloudErr) {
       console.error("⚠️ Cloudinary image deletion failed (non-fatal):", cloudErr.message);
-      // Continue with the update — images are removed from DB even if Cloudinary cleanup fails
     }
   }
 
@@ -318,34 +320,86 @@ export const updateProductService = async (id, body, files) => {
   // 4. Combine remaining images with the new ones
   updateData.images = [...parsedExistingImages, ...uploadedImages];
 
-  // 5. Update primary imageUrl to the first image in the array
+  // 5. Update primary imageUrl
   if (updateData.images.length > 0) {
     updateData.imageUrl = updateData.images[0];
   } else {
     updateData.imageUrl = null;
   }
 
-  // 6. Clean up the existingImages field so it doesn't cause Sequelize warnings
+  // 6. Clean up the existingImages field
   delete updateData.existingImages;
 
+  // --- VARIANTS PARSING ---
+  let parsedVariants = null;
+  if (variants !== undefined) {
+    parsedVariants = typeof variants === "string" ? JSON.parse(variants) : variants;
+  }
 
   // STEP 1: Purane product ka data naye update data ke sath merge karein
   const mergedProductState = { ...product.toJSON(), ...updateData };
 
   // STEP 2: Updated data ka AI Text banayein aur Embedding banayein
   try {
-    const textToEmbed = buildProductTextForAI(mergedProductState);
+    let textToEmbed = buildProductTextForAI(mergedProductState);
+
+    // ✅ AI ko Variants ka naya text dein
+    let finalVariantNames = "";
+    if (parsedVariants) {
+      finalVariantNames = parsedVariants.map(v => v.materialName).join(", ");
+    } else {
+      // Agar admin ne variants change nahi kiye, toh database wale use karein
+      const existingVars = await ProductVariant.findAll({ where: { productId: product.id } });
+      finalVariantNames = existingVars.map(v => v.materialName).join(", ");
+    }
+
+    if (finalVariantNames) {
+      textToEmbed += ` Available Qualities/Materials: ${finalVariantNames}.`;
+    }
+
     const vectorArray = await generateEmbedding(textToEmbed, "search_document");
     updateData.embedding = `[${vectorArray.join(',')}]`;
   } catch (embeddingErr) {
     console.error("⚠️ Embedding generation failed (non-fatal):", embeddingErr.message);
-    // Continue with the update — product data is saved even if embedding fails
-    // Embedding can be regenerated later via /sync-embeddings
   }
 
-  // STEP 3: DB update karein
+  // STEP 3: DB update karein (Main Product)
   await product.update(updateData);
-  return product;
+
+  // 🌟 STEP 4: VARIANTS SYNC LOGIC (The Magic)
+  if (parsedVariants !== null) {
+    const existingVariants = await ProductVariant.findAll({ where: { productId: product.id } });
+    const newMaterialNames = parsedVariants.map(v => v.materialName);
+
+    // Logic A: Jo purane variants is nayi list mein NAHI hain, unhe DELETE karein
+    for (const ev of existingVariants) {
+      if (!newMaterialNames.includes(ev.materialName)) {
+        await ev.destroy();
+      }
+    }
+
+    // Logic B: Jo NAYE hain unhe Create karein, jo PURANE hain unko Update karein
+    for (const v of parsedVariants) {
+      const ev = existingVariants.find(e => e.materialName === v.materialName);
+      if (ev) {
+        // Update existing variant (Saves ID from changing)
+        await ev.update({ price: Number(v.price), stock: Number(v.stock || 50) });
+      } else {
+        // Create new variant
+        await ProductVariant.create({
+          productId: product.id,
+          materialName: v.materialName,
+          price: Number(v.price),
+          stock: Number(v.stock || 50)
+        });
+      }
+    }
+  }
+
+  // ✅ Return updated product along with its variants
+  return await Product.findByPk(product.id, {
+    include: [{ model: ProductVariant, as: 'variants' }]
+  });
 };
 
 // 9. Delete Product
