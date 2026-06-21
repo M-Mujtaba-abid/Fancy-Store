@@ -257,8 +257,9 @@ export const getProductsService = async (queryPage, queryLimit) => {
 
 // 7. Get Single Product
 export const getProductByIdService = async (id) => {
-  const product = await Product.findByPk(id);
-  include: [{ model: ProductVariant, as: 'variants' }]
+  const product = await Product.findByPk(id, {
+    include: [{ model: ProductVariant, as: 'variants' }]
+  });
   if (!product) throw new ApiError(404, "Product not found");
   return product;
 };
