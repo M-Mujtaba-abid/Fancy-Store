@@ -36,6 +36,7 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
+    
   { name: "Shop All", href: "/products" },
   { name: "New Arrivals", href: "/viewMore?filter=new-arrivals" },
   { name: "Best Sellers", href: "/viewMore?filter=featured" },   // "Featured" ki jagah
