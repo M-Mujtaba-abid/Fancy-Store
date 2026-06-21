@@ -22,6 +22,15 @@ const hasActiveSale = (price: number, discountPrice?: number, isOnSale?: boolean
       (isOnSale || discountPrice < price),
   );
 
+const formatSoldCount = (sold?: number) => {
+  if (!sold) return "0";
+  if (sold >= 1000) {
+    const kValue = sold / 1000;
+    return kValue % 1 === 0 ? `${kValue}k` : `${kValue.toFixed(1)}k`;
+  }
+  return sold.toString();
+};
+
 const ProductPrice = ({
   price,
   discountPrice,
@@ -91,6 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     stock,
     averageRating = 0,
     totalReviews = 0,
+    sold = 0,
     variant = "default",
   } = props;
 
@@ -175,11 +185,18 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           </Link>
 
           <div className="flex items-center justify-between pointer-events-auto">
-            <ProductPrice
-              price={price}
-              discountPrice={discountPrice}
-              isOnSale={isOnSale}
-            />
+            <div className="flex items-center gap-1.5">
+              <ProductPrice
+                price={price}
+                discountPrice={discountPrice}
+                isOnSale={isOnSale}
+              />
+              {sold > 0 && (
+                <span className="text-[9px] text-white/90 bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm whitespace-nowrap">
+                  {formatSoldCount(sold)} sold
+                </span>
+              )}
+            </div>
 
             <AddToCart
               productId={id as string}
@@ -267,13 +284,21 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
             {name}
           </h3>
 
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center items-center gap-1.5 mb-2">
             <ReviewStars
               productId={id}
               rating={averageRating}
               totalReviews={totalReviews}
               size={12}
             />
+            {sold > 0 && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600 text-xs">•</span>
+                <span className="text-[10px] text-gray-500 font-medium">
+                  {formatSoldCount(sold)} sold
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex justify-center">
@@ -329,12 +354,21 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           </h3>
         </Link>
 
-        <ReviewStars
-          productId={id}
-          rating={averageRating}
-          totalReviews={totalReviews}
-          className="mb-3"
-        />
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <ReviewStars
+            productId={id}
+            rating={averageRating}
+            totalReviews={totalReviews}
+          />
+          {sold > 0 && (
+            <>
+              <span className="text-text-muted text-xs">•</span>
+              <span className="text-[11px] sm:text-xs text-text-muted font-medium bg-primary/5 text-primary px-2 py-0.5 rounded-full">
+                {formatSoldCount(sold)} Sold
+              </span>
+            </>
+          )}
+        </div>
 
         <div className="mb-4">
           <ProductPrice

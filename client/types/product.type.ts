@@ -45,6 +45,7 @@ export interface Product {
   isNewArrival: boolean;
   isOnSale: boolean;
   discountPrice: number;
+  sold?: number;
   createdAt: string;
   updatedAt: string;
   variants?: ProductVariant[];

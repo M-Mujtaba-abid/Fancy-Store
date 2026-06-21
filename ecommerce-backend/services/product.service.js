@@ -69,6 +69,9 @@ export const buildProductTextForAI = (product) => {
   // Badges & Ratings
   if (product.isFeatured) parts.push(`Special: Featured Product`);
   if (product.isNewArrival) parts.push(`Special: New Arrival`);
+  if (product.sold && product.sold > 0) {
+    parts.push(`Popularity: ${product.sold} items sold`);
+  }
   if (product.averageRating > 0) {
     parts.push(`Rating: ${product.averageRating} out of 5 (${product.totalReviews} reviews)`);
   }
