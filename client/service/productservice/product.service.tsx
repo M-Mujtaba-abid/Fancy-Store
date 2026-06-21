@@ -12,7 +12,7 @@ const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
   const formData = new FormData();
 
   Object.entries(data).forEach(([key, value]) => {
-    if (value === undefined || value === null || key === "images") return;
+    if (value === undefined || value === null || key === "images" || key === "variants") return;
 
     if (typeof value === "boolean") {
       formData.append(key, value ? "true" : "false");
@@ -23,6 +23,11 @@ const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
 
   if ("images" in data && data.images?.length) {
     data.images.forEach((file) => formData.append("images", file));
+  }
+
+  // ✅ Variants ko JSON stringify karke FormData mein bhejo
+  if ("variants" in data && data.variants?.length) {
+    formData.append("variants", JSON.stringify(data.variants));
   }
 
   return formData;

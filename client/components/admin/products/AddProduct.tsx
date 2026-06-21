@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Product, ProductMutationInput } from "@/types/product.type";
+import { Product, ProductMutationInput, VariantInput, MATERIAL_OPTIONS } from "@/types/product.type";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import styles from "./AddProduct.module.css";
@@ -30,6 +30,7 @@ const defaultFormState: ProductMutationInput = {
   discountPrice: 0,
   images: [],
   subCategory: "",
+  variants: [],
 };
 
 const MAX_IMAGE_COUNT = 5;
@@ -105,6 +106,9 @@ const AddProduct = ({
   const [imageError, setImageError] = useState("");
   const [isPreparingImages, setIsPreparingImages] = useState(false);
 
+  // --- Variants State ---
+  const [variants, setVariants] = useState<VariantInput[]>([]);
+
   useEffect(() => {
     if (mode === "edit" && initialData) {
       setForm({
@@ -125,9 +129,24 @@ const AddProduct = ({
         images: [],
       });
       setExistingImages(initialData.images || []);
+
+      // ✅ Hydrate variants from backend (edit mode)
+      if (initialData.variants && initialData.variants.length > 0) {
+        setVariants(
+          initialData.variants.map((v) => ({
+            id: v.id,
+            materialName: v.materialName,
+            price: Number(v.price),
+            stock: Number(v.stock),
+          }))
+        );
+      } else {
+        setVariants([]);
+      }
     } else {
       setForm(defaultFormState);
       setExistingImages([]);
+      setVariants([]);
     }
     setNewImagePreviews([]);
   }, [mode, initialData]);
@@ -204,6 +223,36 @@ const AddProduct = ({
     }));
   };
 
+  // --- Variant Handlers ---
+  const addVariant = () => {
+    setVariants((prev) => [
+      ...prev,
+      { materialName: MATERIAL_OPTIONS[0], price: 0, stock: 50 },
+    ]);
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateVariant = (
+    index: number,
+    field: keyof VariantInput,
+    value: string | number
+  ) => {
+    setVariants((prev) =>
+      prev.map((v, i) =>
+        i === index
+          ? {
+              ...v,
+              [field]:
+                field === "price" || field === "stock" ? Number(value) : value,
+            }
+          : v
+      )
+    );
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isPreparingImages) return;
@@ -221,6 +270,7 @@ const AddProduct = ({
     const payload = {
       ...form,
       existingImages: existingImages,
+      variants: variants,
     };
 
     onSubmit(payload);
@@ -404,10 +454,169 @@ const AddProduct = ({
           </div>
         </div>
 
-        {/* --- SECTION 4: Status & Media --- */}
+        {/* --- SECTION 4: Product Variants (Qualities) --- */}
         <div className="border-t border-border/50 pt-6">
           <h3 className="text-lg font-semibold text-text-main mb-4">
-            4. Status & Media
+            4. Product Variants
+          </h3>
+
+          <div className={styles.variantsSection}>
+            {/* Header */}
+            <div className={styles.variantsHeader}>
+              <div className={styles.variantsHeaderLeft}>
+                <div className={styles.variantsIcon}>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                  </svg>
+                </div>
+                <div>
+                  <div className={styles.variantsTitle}>
+                    Material Qualities
+                  </div>
+                  <div className={styles.variantsSubtitle}>
+                    Add different material qualities with individual pricing
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={addVariant}
+                className={styles.addVariantBtn}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Quality
+              </button>
+            </div>
+
+            {/* Variant Cards or Empty State */}
+            {variants.length === 0 ? (
+              <div className={styles.variantsEmpty}>
+                <div className={styles.variantsEmptyIcon}>🧵</div>
+                <div className={styles.variantsEmptyText}>
+                  No variants added yet
+                </div>
+                <div className={styles.variantsEmptyHint}>
+                  Click &quot;Add Quality&quot; to define material options like
+                  Silver Coated, PVC + Cotton, etc.
+                </div>
+              </div>
+            ) : (
+              <div className={styles.variantsGrid}>
+                {variants.map((variant, index) => (
+                  <div key={index} className={styles.variantCard}>
+                    {/* Card Header */}
+                    <div className={styles.variantCardHeader}>
+                      <span className={styles.variantBadge}>
+                        ✦ Quality #{index + 1}
+                        {variant.id ? " (Saved)" : " (New)"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(index)}
+                        className={styles.removeVariantBtn}
+                        title="Remove this variant"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Card Fields */}
+                    <div className={styles.variantFields}>
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          Material
+                        </label>
+                        <select
+                          className={styles.variantSelect}
+                          value={variant.materialName}
+                          onChange={(e) =>
+                            updateVariant(index, "materialName", e.target.value)
+                          }
+                        >
+                          {MATERIAL_OPTIONS.map((mat) => (
+                            <option key={mat} value={mat}>
+                              {mat}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          Price (Rs)
+                        </label>
+                        <input
+                          type="number"
+                          className={styles.variantInput}
+                          placeholder="e.g. 4497"
+                          value={variant.price || ""}
+                          onChange={(e) =>
+                            updateVariant(index, "price", e.target.value)
+                          }
+                          min={0}
+                        />
+                      </div>
+
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          Stock
+                        </label>
+                        <input
+                          type="number"
+                          className={styles.variantInput}
+                          placeholder="e.g. 50"
+                          value={variant.stock || ""}
+                          onChange={(e) =>
+                            updateVariant(index, "stock", e.target.value)
+                          }
+                          min={0}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* --- SECTION 5: Status & Media --- */}
+        <div className="border-t border-border/50 pt-6">
+          <h3 className="text-lg font-semibold text-text-main mb-4">
+            5. Status & Media
           </h3>
 
           <div className="flex flex-wrap gap-6 mb-6 bg-background p-4 rounded-xl border border-border">
