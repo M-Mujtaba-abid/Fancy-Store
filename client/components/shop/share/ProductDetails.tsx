@@ -95,12 +95,16 @@ export default function ProductDetailsClient({ product }: Props) {
       );
     } else {
       setSelectedVariant(variant);
-      // Map variant to a gallery image by index (if available)
-      const variantIndex = product.variants!.findIndex((v) => v.id === variant.id);
-      if (variantIndex !== -1 && variantIndex < galleryImages.length) {
-        setActiveImage(galleryImages[variantIndex] as string);
+      if (variant.imageUrl) {
+        setActiveImage(variant.imageUrl);
       } else {
-        setActiveImage(galleryImages[0] || "/placeholder.png");
+        // Map variant to a gallery image by index (if available)
+        const variantIndex = product.variants!.findIndex((v) => v.id === variant.id);
+        if (variantIndex !== -1 && variantIndex < galleryImages.length) {
+          setActiveImage(galleryImages[variantIndex] as string);
+        } else {
+          setActiveImage(galleryImages[0] || "/placeholder.png");
+        }
       }
     }
   };
@@ -265,7 +269,7 @@ export default function ProductDetailsClient({ product }: Props) {
                 {product.variants!.map((variant, idx) => {
                   const isSelected = selectedVariant?.id === variant.id;
                   const variantOutOfStock = variant.stock <= 0;
-                  const variantImage = galleryImages[idx] || galleryImages[0] || "/placeholder.png";
+                  const variantImage = variant.imageUrl || galleryImages[idx] || galleryImages[0] || "/placeholder.png";
 
                   return (
                     <button

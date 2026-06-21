@@ -27,7 +27,14 @@ const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
 
   // ✅ Variants ko JSON stringify karke FormData mein bhejo
   if ("variants" in data && data.variants?.length) {
-    formData.append("variants", JSON.stringify(data.variants));
+    const variantsCopy = data.variants.map((v, index) => {
+      const { imageFile, ...rest } = v;
+      if (imageFile) {
+        formData.append(`variantImage_${index}`, imageFile);
+      }
+      return rest;
+    });
+    formData.append("variants", JSON.stringify(variantsCopy));
   }
 
   return formData;

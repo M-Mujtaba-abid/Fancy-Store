@@ -5,6 +5,7 @@ export interface ProductVariant {
   materialName: string;
   price: number;
   stock: number;
+  imageUrl?: string | null;
 }
 
 export interface VariantInput {
@@ -12,6 +13,8 @@ export interface VariantInput {
   materialName: string;
   price: number;
   stock: number;
+  imageUrl?: string | null;
+  imageFile?: File | null;
 }
 
 export const MATERIAL_OPTIONS = [

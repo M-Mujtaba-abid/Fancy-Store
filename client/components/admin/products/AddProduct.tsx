@@ -138,6 +138,7 @@ const AddProduct = ({
             materialName: v.materialName,
             price: Number(v.price),
             stock: Number(v.stock),
+            imageUrl: v.imageUrl || null,
           }))
         );
       } else {
@@ -238,7 +239,7 @@ const AddProduct = ({
   const updateVariant = (
     index: number,
     field: keyof VariantInput,
-    value: string | number
+    value: any
   ) => {
     setVariants((prev) =>
       prev.map((v, i) =>
@@ -555,6 +556,85 @@ const AddProduct = ({
 
                     {/* Card Fields */}
                     <div className={styles.variantFields}>
+                      {/* Image Upload field */}
+                      <div className="flex flex-col gap-1 items-center justify-center">
+                        <label className={styles.variantFieldLabel}>Image</label>
+                        <label className={styles.variantImageUpload}>
+                          {variant.imageFile || variant.imageUrl ? (
+                            <>
+                              <img
+                                src={
+                                  variant.imageFile
+                                    ? URL.createObjectURL(variant.imageFile)
+                                    : variant.imageUrl || ""
+                                }
+                                alt="variant preview"
+                                className={styles.variantImagePreview}
+                              />
+                              <div
+                                className={styles.variantImageOverlay}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  updateVariant(index, "imageFile", null);
+                                  updateVariant(index, "imageUrl", null);
+                                }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className={styles.variantImagePlaceholder}>
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    compressImageFile(file)
+                                      .then((compressed) => {
+                                        updateVariant(index, "imageFile", compressed);
+                                      })
+                                      .catch(() => {
+                                        updateVariant(index, "imageFile", file);
+                                      });
+                                  }
+                                }}
+                              />
+                            </>
+                          )}
+                        </label>
+                      </div>
+
                       <div className={styles.variantFieldGroup}>
                         <label className={styles.variantFieldLabel}>
                           Material
