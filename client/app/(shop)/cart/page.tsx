@@ -114,7 +114,6 @@ export default function CartPage() {
                   >
                     {item.name}
                   </Link>
-                  <br />
                   <span className="font-bold text-lg">
                     Rs. {item.itemTotal.toLocaleString()}
                   </span>
