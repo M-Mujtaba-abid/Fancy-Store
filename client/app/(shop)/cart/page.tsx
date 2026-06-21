@@ -127,6 +127,7 @@ export default function CartPage() {
                         updateItem({
                           productId: item.productId,
                           quantity: item.quantity - 1,
+                          variantId: item.variantId,
                         })
                       }
                       className="text-gray-500 hover:text-primary transition"
@@ -149,6 +150,7 @@ export default function CartPage() {
                           updateItem({
                             productId: item.productId,
                             quantity: item.quantity + 1,
+                            variantId: item.variantId,
                           });
                         }
                       }}
@@ -158,11 +160,11 @@ export default function CartPage() {
                       <Plus size={16} />
                     </button>
                   </div>
-
+ 
                   {/* Remove Button (Quantity 0 bhejte hi API item remove kar degi) */}
                   <button
                     onClick={() =>
-                      updateItem({ productId: item.productId, quantity: 0 })
+                      updateItem({ productId: item.productId, quantity: 0, variantId: item.variantId })
                     }
                     className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition"
                   >

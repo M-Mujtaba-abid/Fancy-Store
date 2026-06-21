@@ -5,6 +5,8 @@ import { Op } from "sequelize";
 import {
   uploadManyBuffers,
   destroyManyByUrls,
+  uploadBuffer,
+  destroyByUrl,
 } from "../utils/cloudinaryMedia.js";
 import {
   CATEGORIES,

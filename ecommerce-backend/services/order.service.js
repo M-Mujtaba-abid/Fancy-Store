@@ -21,6 +21,7 @@ export const placeOrderService = async (userId, orderData) => {
       paymentMethod,
       buyNowProductId,
       buyNowQuantity,
+      buyNowVariantId,
       guestCartItems,
     } = orderData;
 
@@ -29,27 +30,43 @@ export const placeOrderService = async (userId, orderData) => {
     const orderItemRows = [];
     let cart = null;
 
-    const addProductToOrder = async (productId, quantity) => {
+    const addProductToOrder = async (productId, quantity, variantId = null) => {
       const product = await Product.findByPk(productId, { transaction: t });
       if (!product) throw { status: 404, message: "Product not found." };
 
-      if (product.stock < quantity) {
-        throw { status: 400, message: `Stock finished for ${product.name}` };
+      let activePrice;
+
+      if (variantId) {
+        const variant = await models.ProductVariant.findOne({
+          where: { id: variantId, productId },
+          transaction: t
+        });
+        if (!variant) throw { status: 404, message: "Product variant not found." };
+        if (variant.stock < quantity) {
+          throw { status: 400, message: `Insufficient stock for variant (${variant.materialName}) of product ${product.name}.` };
+        }
+        activePrice = variant.price;
+        variant.stock -= quantity;
+        await variant.save({ transaction: t });
+      } else {
+        if (product.stock < quantity) {
+          throw { status: 400, message: `Stock finished for ${product.name}` };
+        }
+        activePrice =
+          product.discountPrice && product.discountPrice > 0
+            ? product.discountPrice
+            : product.price;
+        product.stock -= quantity;
+        await product.save({ transaction: t });
       }
 
-      const activePrice =
-        product.discountPrice && product.discountPrice > 0
-          ? product.discountPrice
-          : product.price;
-
       totalAmount += activePrice * quantity;
-      product.stock -= quantity;
-      await product.save({ transaction: t });
 
       orderItemRows.push({
         productId: product.id,
         quantity,
         price: activePrice,
+        variantId: variantId ? Number(variantId) : null,
       });
     };
 
@@ -58,7 +75,7 @@ export const placeOrderService = async (userId, orderData) => {
     // =======================================================
     if (buyNowProductId && buyNowQuantity) {
       totalAmount = 0;
-      await addProductToOrder(buyNowProductId, buyNowQuantity);
+      await addProductToOrder(buyNowProductId, buyNowQuantity, buyNowVariantId);
     }
     // =======================================================
     // SCENARIO 2: LOGGED-IN "CART" FLOW
@@ -73,7 +90,7 @@ export const placeOrderService = async (userId, orderData) => {
       }
 
       for (const item of cartItems) {
-        await addProductToOrder(item.productId, item.quantity);
+        await addProductToOrder(item.productId, item.quantity, item.variantId);
       }
     }
     // =======================================================
@@ -85,7 +102,7 @@ export const placeOrderService = async (userId, orderData) => {
         if (!item.productId || !item.quantity || item.quantity <= 0) {
           throw { status: 400, message: "Invalid guest cart item." };
         }
-        await addProductToOrder(item.productId, item.quantity);
+        await addProductToOrder(item.productId, item.quantity, item.variantId);
       }
     } else {
       throw { status: 400, message: "Cart is empty." };
@@ -195,7 +212,15 @@ export const getOrdersService = async (userId, guestData = null) => {
 
   return await Order.findAll({
     where: whereClause,
-    include: [{ model: OrderItem, include: [Product] }],
+    include: [
+      { 
+        model: OrderItem, 
+        include: [
+          Product,
+          { model: models.ProductVariant, as: "variant" }
+        ] 
+      }
+    ],
     order: [["createdAt", "DESC"]],
   });
 };
@@ -205,7 +230,13 @@ export const getAllOrdersService = async () => {
   return await Order.findAll({
     include: [
       { model: User, attributes: ["id", "name", "email", "role"] },
-      { model: OrderItem, include: [Product] },
+      { 
+        model: OrderItem, 
+        include: [
+          Product,
+          { model: models.ProductVariant, as: "variant" }
+        ] 
+      },
     ],
     order: [["createdAt", "DESC"]],
   });

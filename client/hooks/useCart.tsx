@@ -27,7 +27,7 @@ export const useAddToCart = () => {
       };
 
       const existingItemIndex = previousCart.items.findIndex(
-        (i) => i.productId === newItem.productId,
+        (i) => i.productId === newItem.productId && i.variantId === (newItem.variantId || null)
       );
       const newItems = [...previousCart.items];
       const itemPrice = newItem.price ?? 0;
@@ -40,6 +40,7 @@ export const useAddToCart = () => {
         newItems.push({
           cartItemId: `optimistic_${Date.now()}`,
           productId: newItem.productId,
+          variantId: newItem.variantId || null,
           name: newItem.name || "Product",
           image: newItem.image || "",
           quantity: newItem.quantity,
@@ -91,15 +92,15 @@ export const useUpdateCartItem = () => {
 
   return useMutation({
     mutationFn: cartService.updateCartItem,
-    onMutate: async (updatedItem) => {
+    onMutate: async (updatedItem: AddToCartPayload) => {
       await queryClient.cancelQueries({ queryKey: ["cart"] });
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
 
       if (previousCart) {
         const newItems = updatedItem.quantity <= 0
-          ? previousCart.items.filter(i => i.productId !== updatedItem.productId)
+          ? previousCart.items.filter(i => !(i.productId === updatedItem.productId && i.variantId === (updatedItem.variantId || null)))
           : previousCart.items.map(item => {
-              if (item.productId === updatedItem.productId) {
+              if (item.productId === updatedItem.productId && item.variantId === (updatedItem.variantId || null)) {
                 return {
                   ...item,
                   quantity: updatedItem.quantity,

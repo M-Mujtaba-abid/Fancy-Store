@@ -2,41 +2,79 @@ import models from "../models/index.js";
 import { SHIPPING_FEE } from "../constants/index.js";
 const { Cart, CartItem, Product } = models;
 
-export const addToCartService = async (userId, productId, quantity) => {
+export const addToCartService = async (userId, productId, quantity, variantId = null) => {
+  const normalizedVariantId = variantId ? Number(variantId) : null;
+
   // 1. Check if product exists and has stock
   const product = await Product.findByPk(productId);
   if (!product) throw { status: 404, message: "Product not found" };
-  if (product.stock < quantity) {
-    throw { status: 400, message: `Insufficient stock. Only ${product.stock} left.` };
+
+  if (normalizedVariantId) {
+    const variant = await models.ProductVariant.findOne({ where: { id: normalizedVariantId, productId } });
+    if (!variant) throw { status: 404, message: "Variant not found" };
+    if (variant.stock < quantity) {
+      throw { status: 400, message: `Insufficient stock. Only ${variant.stock} left for variant (${variant.materialName}).` };
+    }
+  } else {
+    if (product.stock < quantity) {
+      throw { status: 400, message: `Insufficient stock. Only ${product.stock} left.` };
+    }
   }
 
   // 2. Find or Create Cart
   let [cart] = await Cart.findOrCreate({ where: { userId } });
 
-  // 3. Check if item already in cart
-  let cartItem = await CartItem.findOne({ where: { cartId: cart.id, productId } });
+  // 3. Check if item already in cart (matching both productId and variantId)
+  let cartItem = await CartItem.findOne({
+    where: {
+      cartId: cart.id,
+      productId,
+      variantId: normalizedVariantId
+    }
+  });
 
   if (cartItem) {
     const newQuantity = cartItem.quantity + quantity;
-    if (product.stock < newQuantity) {
-      throw { status: 400, message: "Total quantity exceeds available stock" };
+    if (normalizedVariantId) {
+      const variant = await models.ProductVariant.findByPk(normalizedVariantId);
+      if (variant.stock < newQuantity) {
+        throw { status: 400, message: "Total quantity exceeds available stock" };
+      }
+    } else {
+      if (product.stock < newQuantity) {
+        throw { status: 400, message: "Total quantity exceeds available stock" };
+      }
     }
     cartItem.quantity = newQuantity;
     await cartItem.save();
   } else {
-    cartItem = await CartItem.create({ cartId: cart.id, productId, quantity });
+    cartItem = await CartItem.create({
+      cartId: cart.id,
+      productId,
+      quantity,
+      variantId: normalizedVariantId
+    });
   }
 
   return cartItem;
 };
 
-export const updateCartItemService = async (userId, productId, quantity) => {
+export const updateCartItemService = async (userId, productId, quantity, variantId = null) => {
+  const normalizedVariantId = variantId ? Number(variantId) : null;
+
   const cart = await Cart.findOne({ where: { userId } });
   if (!cart) throw { status: 404, message: "Cart not found" };
 
   const cartItem = await CartItem.findOne({ 
-    where: { cartId: cart.id, productId },
-    include: [Product] 
+    where: { 
+      cartId: cart.id, 
+      productId,
+      variantId: normalizedVariantId
+    },
+    include: [
+      { model: Product },
+      { model: models.ProductVariant, as: "variant" }
+    ] 
   });
   
   if (!cartItem) throw { status: 404, message: "Cart item not found" };
@@ -47,8 +85,14 @@ export const updateCartItemService = async (userId, productId, quantity) => {
   }
 
   // Stock validation during update
-  if (cartItem.Product.stock < quantity) {
-    throw { status: 400, message: "Insufficient stock for this update" };
+  if (normalizedVariantId && cartItem.variant) {
+    if (cartItem.variant.stock < quantity) {
+      throw { status: 400, message: "Insufficient stock for this update" };
+    }
+  } else {
+    if (cartItem.Product.stock < quantity) {
+      throw { status: 400, message: "Insufficient stock for this update" };
+    }
   }
 
   cartItem.quantity = quantity;
@@ -62,7 +106,10 @@ export const getCartService = async (userId) => {
     include: [
       {
         model: CartItem,
-        include: [{ model: Product }],
+        include: [
+          { model: Product },
+          { model: models.ProductVariant, as: "variant" }
+        ],
       },
     ],
     
@@ -75,19 +122,35 @@ export const getCartService = async (userId) => {
 
   let subtotal = 0;
   const formattedItems = cart.CartItems.map((item) => {
-    const activePrice = item.Product.discountPrice > 0 ? item.Product.discountPrice : item.Product.price;
+    let activePrice;
+    let name = item.Product.name;
+    let image = item.Product.imageUrl;
+    let availableStock = item.Product.stock;
+
+    if (item.variant) {
+      activePrice = item.variant.price;
+      name = `${item.Product.name} (${item.variant.materialName})`;
+      if (item.variant.imageUrl) {
+        image = item.variant.imageUrl;
+      }
+      availableStock = item.variant.stock;
+    } else {
+      activePrice = item.Product.discountPrice > 0 ? item.Product.discountPrice : item.Product.price;
+    }
+
     const itemTotal = activePrice * item.quantity;
     subtotal += itemTotal;
 
     return {
       cartItemId: item.id,
       productId: item.Product.id,
-      name: item.Product.name,
-      image: item.Product.imageUrl,
+      variantId: item.variantId,
+      name,
+      image,
       quantity: item.quantity,
       price: activePrice,
       itemTotal: parseFloat(itemTotal.toFixed(2)),
-      availableStock: item.Product.stock,
+      availableStock,
     };
   });
 

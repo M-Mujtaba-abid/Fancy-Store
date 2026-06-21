@@ -9,7 +9,8 @@ export interface OrderItem {
   quantity: number;
   price: number;
   Product?: Product;
-  // 👇 YEH 2 LINES ADD KAREIN:
+  variantId?: number | null;
+  variant?: any;
   isReviewed?: boolean; 
   Review?: ReviewUser;
 }
@@ -45,5 +46,6 @@ export interface PlaceOrderPayload {
   paymentMethod: string;
   buyNowProductId?: string | number;
   buyNowQuantity?: number;
-  guestCartItems?: { productId: string; quantity: number }[];
+  buyNowVariantId?: number | null;
+  guestCartItems?: { productId: string; quantity: number; variantId?: number | null }[];
 }

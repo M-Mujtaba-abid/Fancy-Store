@@ -387,6 +387,12 @@ export default function ProductDetailsClient({ product }: Props) {
             <AddToCart
               productId={product.id}
               stock={activeStock}
+              onClick={(e) => {
+                if (hasVariants && !selectedVariant) {
+                  toast.error("Please select a material quality first!");
+                  return false;
+                }
+              }}
               // ✅ Price and name reflect selected variant
               product={{
                 id: String(product.id),
@@ -396,6 +402,7 @@ export default function ProductDetailsClient({ product }: Props) {
                 price: activePrice,
                 image: activeImage,
                 category: product.category,
+                variantId: selectedVariant ? selectedVariant.id : undefined,
               }}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto
     ${

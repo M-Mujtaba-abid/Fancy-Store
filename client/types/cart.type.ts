@@ -1,6 +1,7 @@
 export interface CartItemType {
   cartItemId: string;
   productId: string;
+  variantId?: number | null;
   name: string;
   image: string;
   quantity: number;
@@ -22,6 +23,7 @@ export interface CartResponse {
 export interface AddToCartPayload {
   productId: string;
   quantity: number;
+  variantId?: number | null;
   price?: number;
   name?: string;
   image?: string;
