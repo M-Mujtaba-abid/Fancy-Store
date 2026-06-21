@@ -9,11 +9,13 @@ import OrderItem from "./orderItem.model.js";
 import Review from "./review.model.js";
 import Wishlist from "./wishlist.model.js";
 import ChatMessage from "./chatMessage.model.js";
+import ProductVariant from "./productVariant.model.js";
 
 const models = {
   User,
   UserIdentity,  // ✅ add
   Product,
+  ProductVariant,
   Cart,
   CartItem,
   Order,
@@ -27,7 +29,7 @@ const models = {
 User.hasMany(UserIdentity, { foreignKey: "userId", onDelete: "CASCADE" });
 UserIdentity.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(ChatMessage, { foreignKey: "userId", onDelete: "SET NULL" });
-
+ProductVariant.belongsTo(Product, { foreignKey: "productId" });
 // Baaki associations
 Object.values(models).forEach((model) => {
   if (model.associate) {
@@ -35,5 +37,5 @@ Object.values(models).forEach((model) => {
   }
 });
 
-export { sequelize, User, UserIdentity, Order ,OrderItem};
+export { sequelize, User, UserIdentity, Order, OrderItem, ProductVariant };
 export default models;

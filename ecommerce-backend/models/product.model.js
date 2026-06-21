@@ -65,20 +65,20 @@ Product.init(
       allowNull: true, // car ya bike
     },
     // product.model.js mein yeh add karo
-subCategory: {
-  type: DataTypes.STRING,
-  allowNull: true,
-  // "floor_mat" | "trunk_tray" | "dashboard_mat" etc.
-},
-averageRating: {
-    type: DataTypes.DECIMAL(3, 1), 
-    defaultValue: 0.0,
-},
-totalReviews: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-},
-// ✅ AI RAG K LIYE
+    subCategory: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      // "floor_mat" | "trunk_tray" | "dashboard_mat" etc.
+    },
+    averageRating: {
+      type: DataTypes.DECIMAL(3, 1),
+      defaultValue: 0.0,
+    },
+    totalReviews: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    // ✅ AI RAG K LIYE
     embedding: {
       type: 'VECTOR(384)', // String use kar rahe hein kyunke pgvector custom type hai
       allowNull: true,
@@ -91,9 +91,14 @@ totalReviews: {
 );
 
 
-// Product.associate function ke andar ye line add karein:
 Product.associate = (models) => {
-    Product.hasMany(models.Review, { foreignKey: "productId", onDelete: "CASCADE" });
+  Product.hasMany(models.Review, { foreignKey: "productId", onDelete: "CASCADE" });
+  // ✅ Yeh line bhi add karein
+  Product.hasMany(models.ProductVariant, {
+    foreignKey: "productId",
+    as: "variants",
+    onDelete: "CASCADE"
+  });
 };
 
 export default Product;
