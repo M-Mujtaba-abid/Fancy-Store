@@ -110,10 +110,11 @@ export default function CartPage() {
                 <div className="flex justify-between items-start">
                   <Link
                     href={`/products/${item.productId}`}
-                    className="font-bold text-lg hover:text-primary line-clamp-1"
+                    className="font-bold text-lg hover:text-primary "
                   >
                     {item.name}
                   </Link>
+                  <br />
                   <span className="font-bold text-lg">
                     Rs. {item.itemTotal.toLocaleString()}
                   </span>
@@ -160,7 +161,7 @@ export default function CartPage() {
                       <Plus size={16} />
                     </button>
                   </div>
- 
+
                   {/* Remove Button (Quantity 0 bhejte hi API item remove kar degi) */}
                   <button
                     onClick={() =>
