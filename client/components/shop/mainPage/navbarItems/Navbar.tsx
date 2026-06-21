@@ -36,12 +36,12 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Shop All", href: "/products" },
-    { name: "New Arrivals", href: "/viewMore?filter=new-arrivals" },
-    { name: "Sales", href: "/viewMore?filter=on-sale" },
-    { name: "Featured", href: "/viewMore?filter=featured" },
-    { name: "Contact Us", href: "/contactus" },
-  ];
+  { name: "All Covers", href: "/products" },
+  { name: "New Arrivals", href: "/viewMore?filter=new-arrivals" },
+  { name: "Best Sellers", href: "/viewMore?filter=featured" },   // "Featured" ki jagah
+  { name: "Deals", href: "/viewMore?filter=on-sale" },           // "Sales" ki jagah
+  { name: "Contact Us", href: "/contactus" },
+];
 
   return (
     <nav className="fixed top-0 z-50 w-full bg-background transition-colors duration-300 shadow-md">
