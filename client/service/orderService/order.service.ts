@@ -11,6 +11,7 @@ export const orderService = {
       payload.guestCartItems = getGuestCartItems().map((item) => ({
         productId: String(item.productId),
         quantity: item.quantity,
+        variantId: item.variantId || null,
       }));
     }
 

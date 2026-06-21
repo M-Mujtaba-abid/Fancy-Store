@@ -8,6 +8,7 @@ const CartItem = sequelize.define(
     cartId: { type: DataTypes.INTEGER, allowNull: false },
     productId: { type: DataTypes.INTEGER, allowNull: false },
     quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+    variantId: { type: DataTypes.INTEGER, allowNull: true },
   },
   {}
 );
@@ -16,6 +17,7 @@ const CartItem = sequelize.define(
 CartItem.associate = (models) => {
   CartItem.belongsTo(models.Cart, { foreignKey: "cartId" });
   CartItem.belongsTo(models.Product, { foreignKey: "productId" });
+  CartItem.belongsTo(models.ProductVariant, { foreignKey: "variantId", as: "variant" });
 };
 
 export default CartItem;

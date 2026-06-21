@@ -1,3 +1,32 @@
+// --- Product Variant Types ---
+export interface ProductVariant {
+  id: number;
+  productId: number;
+  materialName: string;
+  price: number;
+  stock: number;
+  imageUrl?: string | null;
+}
+
+export interface VariantInput {
+  id?: number; // present when editing existing variant
+  materialName: string;
+  price: number;
+  stock: number;
+  imageUrl?: string | null;
+  imageFile?: File | null;
+}
+
+export const MATERIAL_OPTIONS = [
+  "Silver Coated",
+  "Black Coated",
+  "PVC + Cotton",
+  "Micro Fiber",
+] as const;
+
+export type MaterialName = (typeof MATERIAL_OPTIONS)[number];
+
+// --- Product Types ---
 export interface Product {
   id: string;
   name: string;
@@ -18,6 +47,7 @@ export interface Product {
   discountPrice: number;
   createdAt: string;
   updatedAt: string;
+  variants?: ProductVariant[];
 }
 
 export interface ProductMutationInput {
@@ -36,6 +66,7 @@ export interface ProductMutationInput {
   isOnSale: boolean;
   discountPrice: number;
   images?: File[];
+  variants?: VariantInput[];
 }
 
 export type ProductUpdateInput = Partial<ProductMutationInput>;

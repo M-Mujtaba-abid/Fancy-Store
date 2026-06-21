@@ -9,9 +9,10 @@ import {
   Truck,
   RotateCcw,
   PackageX,
+  Layers,
 } from "lucide-react";
 import Image from "next/image";
-import { Product } from "@/types/product.type";
+import { Product, ProductVariant } from "@/types/product.type";
 import RelatedProducts from "../mainPage/categories/RelatedProducts";
 import AddToCart from "./AddToCart";
 import { useAddToCart } from "@/hooks/useCart"; // ✅ Hook import kiya
@@ -28,6 +29,11 @@ export default function ProductDetailsClient({ product }: Props) {
   const router = useRouter();
   // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
+
+  // 🌟 VARIANT STATE: Track the selected variant
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+  const hasVariants = product.variants && product.variants.length > 0;
 
   // 🎯 TIKTOK: Track product view on mount
   useEffect(() => {
@@ -54,8 +60,18 @@ export default function ProductDetailsClient({ product }: Props) {
         : "/placeholder.png"),
   );
 
+  // 🌟 COMPUTED: Active price based on selected variant
+  const activePrice = selectedVariant
+    ? selectedVariant.price
+    : product.isOnSale && product.discountPrice
+      ? product.discountPrice
+      : product.price;
+
+  // 🌟 COMPUTED: Active stock based on selected variant
+  const activeStock = selectedVariant ? selectedVariant.stock : product.stock;
+
   // Stock Check
-  const isOutOfStock = product.stock <= 0;
+  const isOutOfStock = activeStock <= 0;
 
   // All Images Array
   const galleryImages = product.images
@@ -64,6 +80,34 @@ export default function ProductDetailsClient({ product }: Props) {
         ...product.images.filter((img: string) => img !== product.imageUrl),
       ]
     : [product.imageUrl];
+
+  // 🌟 VARIANT SELECTION HANDLER
+  const handleVariantSelect = (variant: ProductVariant) => {
+    if (selectedVariant?.id === variant.id) {
+      // Deselect if clicking the same variant
+      setSelectedVariant(null);
+      // Reset to first image
+      setActiveImage(
+        product?.imageUrl ||
+          (product?.images && product.images.length > 0
+            ? product.images[0]
+            : "/placeholder.png"),
+      );
+    } else {
+      setSelectedVariant(variant);
+      if (variant.imageUrl) {
+        setActiveImage(variant.imageUrl);
+      } else {
+        // Map variant to a gallery image by index (if available)
+        const variantIndex = product.variants!.findIndex((v) => v.id === variant.id);
+        if (variantIndex !== -1 && variantIndex < galleryImages.length) {
+          setActiveImage(galleryImages[variantIndex] as string);
+        } else {
+          setActiveImage(galleryImages[0] || "/placeholder.png");
+        }
+      }
+    }
+  };
 
   // ✅ Buy Now Function (AddToCart Hook nikal dein isme se)
   const handleBuyNow = (e: React.MouseEvent) => {
@@ -74,16 +118,25 @@ export default function ProductDetailsClient({ product }: Props) {
       return;
     }
 
+    // If variants exist but none selected, prompt user
+    if (hasVariants && !selectedVariant) {
+      toast.error("Please select a material quality first!");
+      return;
+    }
+
     setIsBuyNowPending(true);
 
     sessionStorage.setItem(
       "buyNowItem",
       JSON.stringify({
         productId: product.id,
-        name: product.name,
-        image: product.imageUrl || product.images?.[0],
-        price: product.discountPrice || product.price,
+        name: selectedVariant
+          ? `${product.name} (${selectedVariant.materialName})`
+          : product.name,
+        image: activeImage || product.imageUrl || product.images?.[0],
+        price: activePrice,
         quantity: 1,
+        ...(selectedVariant && { variantId: selectedVariant.id, materialName: selectedVariant.materialName }),
       }),
     );
 
@@ -166,9 +219,19 @@ export default function ProductDetailsClient({ product }: Props) {
             </p>
           )}
 
-          {/* Pricing Logic */}
-          <div className="flex items-center space-x-4 mb-8 border-b border-border/50 pb-6">
-            {product.isOnSale && product.discountPrice ? (
+          {/* Pricing Logic — now variant-aware */}
+          <div className="flex items-center space-x-4 mb-6 border-b border-border/50 pb-6">
+            {selectedVariant ? (
+              /* When a variant is selected, show variant price */
+              <>
+                <span className="text-3xl font-bold text-primary">
+                  Rs. {selectedVariant.price.toLocaleString()}
+                </span>
+                <span className="text-sm text-text-muted font-medium bg-primary/10 px-2 py-1 rounded">
+                  {selectedVariant.materialName}
+                </span>
+              </>
+            ) : product.isOnSale && product.discountPrice ? (
               <>
                 <span className="text-3xl font-bold text-primary">
                   Rs. {product.discountPrice.toLocaleString()}
@@ -187,9 +250,104 @@ export default function ProductDetailsClient({ product }: Props) {
             <span
               className={`ml-auto text-sm font-medium px-3 py-1 rounded-full ${isOutOfStock ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
             >
-              {isOutOfStock ? "Out of Stock" : `${product.stock} in Stock`}
+              {isOutOfStock ? "Out of Stock" : `${activeStock} in Stock`}
             </span>
           </div>
+
+          {/* ===================================================== */}
+          {/* 🌟 PRODUCT VARIANTS SELECTOR (Material Quality Cards) */}
+          {/* ===================================================== */}
+          {hasVariants && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers size={18} className="text-primary" />
+                <span className="text-sm font-semibold text-text-main uppercase tracking-wider">
+                  Available Qualities
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {product.variants!.map((variant, idx) => {
+                  const isSelected = selectedVariant?.id === variant.id;
+                  const variantOutOfStock = variant.stock <= 0;
+                  const variantImage = variant.imageUrl || galleryImages[idx] || galleryImages[0] || "/placeholder.png";
+
+                  return (
+                    <button
+                      key={variant.id}
+                      onClick={() => !variantOutOfStock && handleVariantSelect(variant)}
+                      disabled={variantOutOfStock}
+                      className={`
+                        group relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200 text-left
+                        ${variantOutOfStock
+                          ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800/30"
+                          : isSelected
+                            ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/30 scale-[1.02] dark:bg-primary/10"
+                            : "border-border/50 bg-card hover:border-primary/50 hover:shadow-sm hover:scale-[1.01] dark:hover:border-primary/40"
+                        }
+                      `}
+                    >
+                      {/* Variant Thumbnail */}
+                      <div className={`
+                        relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border transition-all duration-200
+                        ${isSelected ? "border-primary" : "border-border/30"}
+                      `}>
+                        <Image
+                          src={variantImage}
+                          alt={variant.materialName}
+                          fill
+                          className="object-cover"
+                          sizes="56px"
+                        />
+                      </div>
+
+                      {/* Variant Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className={`
+                          text-sm font-semibold truncate transition-colors duration-200
+                          ${isSelected ? "text-primary" : "text-text-main"}
+                        `}>
+                          {variant.materialName}
+                        </p>
+                        <p className={`
+                          text-lg font-bold mt-0.5 transition-colors duration-200
+                          ${isSelected ? "text-primary" : "text-text-main"}
+                        `}>
+                          Rs. {variant.price.toLocaleString()}
+                        </p>
+                      </div>
+
+                      {/* Stock / Selected indicator */}
+                      <div className="flex-shrink-0">
+                        {variantOutOfStock ? (
+                          <span className="text-[10px] font-bold uppercase bg-red-100 text-red-600 px-2 py-1 rounded-full">
+                            Sold Out
+                          </span>
+                        ) : isSelected ? (
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-text-muted bg-green-50 text-green-600 px-2 py-1 rounded-full dark:bg-green-900/20">
+                            {variant.stock} left
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Hint text when no variant selected */}
+              {!selectedVariant && (
+                <p className="text-xs text-text-muted mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  Select a quality to see its price
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           {/* ✅ Naya Clean Component Call */}
@@ -224,19 +382,27 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
 
           {/* Actions */}
-          {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 mb-10 mt-auto">
-            {/* ✅ Outer <button> ko hata kar seedha <AddToCart> use kiya */}
+            {/* ✅ AddToCart — now variant-aware */}
             <AddToCart
               productId={product.id}
-              stock={product.stock}
-              // ✅ YEH LINE ADD KAREIN
+              stock={activeStock}
+              onClick={(e) => {
+                if (hasVariants && !selectedVariant) {
+                  toast.error("Please select a material quality first!");
+                  return false;
+                }
+              }}
+              // ✅ Price and name reflect selected variant
               product={{
                 id: String(product.id),
-                name: product.name,
-                price: product.discountPrice || product.price,
+                name: selectedVariant
+                  ? `${product.name} (${selectedVariant.materialName})`
+                  : product.name,
+                price: activePrice,
                 image: activeImage,
                 category: product.category,
+                variantId: selectedVariant ? selectedVariant.id : undefined,
               }}
               className={`flex-1 h-14 rounded-full font-bold flex items-center justify-center space-x-2 transition-all duration-200 w-full sm:w-auto
     ${
@@ -308,3 +474,4 @@ export default function ProductDetailsClient({ product }: Props) {
     </div>
   );
 }
+

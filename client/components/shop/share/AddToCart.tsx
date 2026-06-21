@@ -18,7 +18,9 @@ interface AddToCartProps {
     price: number;
     image?: string;
     category?: string;
+    variantId?: number;
   };
+  onClick?: (e: React.MouseEvent) => boolean | void;
 }
 
 const AddToCart: React.FC<AddToCartProps> = ({
@@ -26,59 +28,19 @@ const AddToCart: React.FC<AddToCartProps> = ({
   stock,
   className,
   product,
+  children,
+  onClick,
 }) => {
   const { mutate: addToCart } = useAddToCart();
-
-  // const handleAddToCart = (e: React.MouseEvent) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-
-  //   // 🎯 DEBUG: Button click ka-check
-  //   console.log("🎯 [AddToCart] 1. Button clicked successfully!");
-  //   console.log("🎯 [AddToCart] Product data:", product);
-  //   console.log(
-  //     "🎯 [AddToCart] 2. Is TTQ available?:",
-  //     typeof window !== "undefined" && window.ttq ? "✅ YES" : "❌ NO",
-  //   );
-
-  //   const isLoggedIn =
-  //     typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
-  //   if (!isLoggedIn) {
-  //     toast.error("Please login to add items to cart!");
-  //     return;
-  //   }
-
-  //   if (stock <= 0) {
-  //     toast.error("Product is out of stock!");
-  //     return;
-  //   }
-
-  //   // ✅ Animation chalao
-  //   flyToCart(e);
-
-  //   addToCart({ productId, quantity: 1 });
-
-  //   // 🎯 TIKTOK CONTENT CODE: Product added to cart
-  //   if (product) {
-  //     console.log("🎯 [AddToCart] 3. Calling trackAddToCart with:", product);
-  //     trackAddToCart(
-  //       {
-  //         id: product.id,
-  //         name: product.name,
-  //         price: product.price,
-  //         category: product.category,
-  //       },
-  //       1,
-  //     );
-  //     console.log("🎯 [AddToCart] 4. trackAddToCart call completed!");
-  //   } else {
-  //     console.warn("❌ [AddToCart] Product data missing! Tracking skipped.");
-  //   }
-  // };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (onClick) {
+      const shouldProceed = onClick(e);
+      if (shouldProceed === false) return;
+    }
 
     if (stock <= 0) {
       toast.error("Product is out of stock!");
@@ -95,6 +57,7 @@ const AddToCart: React.FC<AddToCartProps> = ({
       price: product?.price || 0,
       name: product?.name || "Product",
       image: product?.image,
+      variantId: product?.variantId,
     });
 
     // 🎯 TIKTOK CONTENT CODE
@@ -113,7 +76,7 @@ const AddToCart: React.FC<AddToCartProps> = ({
       disabled={stock <= 0}
       className={`bg-primary text-white p-2 rounded-full hover:scale-105 transition-transform disabled:bg-gray-400 disabled:cursor-not-allowed ${className}`}
     >
-      <ShoppingCart size={18} />
+      {children || <ShoppingCart size={18} />}
     </button>
   );
 };

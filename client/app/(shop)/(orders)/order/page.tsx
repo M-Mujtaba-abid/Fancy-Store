@@ -356,12 +356,14 @@ export default function MyOrdersPage() {
                           {/* Product Image & Details Container */}
                           <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-grow">
                             <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-background rounded-lg overflow-hidden shrink-0 border border-border/60">
-                              <Image src={item.Product?.imageUrl || "/placeholder.png"} alt={item.Product?.name || "Product"} fill className="object-cover" />
+                              <Image src={item.variant?.imageUrl || item.Product?.imageUrl || "/placeholder.png"} alt={item.Product?.name || "Product"} fill className="object-cover" />
                             </div>
                             
                             <div className="flex flex-col justify-between h-full py-1">
                               <Link href={`/products/${item.productId}`} className="font-semibold text-text-main hover:text-primary line-clamp-2 text-sm sm:text-base leading-tight">
-                                {item.Product?.name || "Product Name"}
+                                {item.variant 
+                                  ? `${item.Product?.name} (${item.variant.materialName})` 
+                                  : (item.Product?.name || "Product Name")}
                               </Link>
                               <div className="mt-1 sm:mt-2">
                                 <span className="text-xs sm:text-sm text-text-muted">Qty: {item.quantity}</span>

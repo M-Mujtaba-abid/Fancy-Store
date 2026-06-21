@@ -20,12 +20,17 @@ const OrderItem = sequelize.define("OrderItem", {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  variantId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {});
 
 // Associations
 OrderItem.associate = (models) => {
   OrderItem.belongsTo(models.Order, { foreignKey: "orderId" });
   OrderItem.belongsTo(models.Product, { foreignKey: "productId" });
+  OrderItem.belongsTo(models.ProductVariant, { foreignKey: "variantId", as: "variant" });
 };
 
 export default OrderItem;

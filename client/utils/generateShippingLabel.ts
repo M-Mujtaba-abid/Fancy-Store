@@ -9,6 +9,9 @@ export interface OrderItem {
   Product?: {
     name: string;
   };
+  variant?: {
+    materialName: string;
+  };
   price: number;
   quantity: number;
 }
@@ -289,8 +292,11 @@ export const generateShippingLabel = async (order: OrderData): Promise<void> => 
 
   const itemsToPrint = order.OrderItems || [];
   itemsToPrint.forEach((item) => {
-    const name =
+    let name =
       item.productName || item.Product?.name || `Product #${item.productId}`;
+    if (item.variant?.materialName) {
+      name = `${name} (${item.variant.materialName})`;
+    }
     const truncatedName =
       name.length > 50 ? name.substring(0, 48) + "..." : name;
 

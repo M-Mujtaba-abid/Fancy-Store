@@ -3,6 +3,7 @@
 import React from "react";
 import { X, MapPin, Phone, Mail, CreditCard, Package, Calendar, Printer } from "lucide-react";
 import { generateShippingLabel } from "@/utils/generateShippingLabel";
+import Image from "next/image";
 
 interface OrderDetailsProps {
   order: any; // Aap isko proper type bhi de sakte hain agar bani hui hai
@@ -109,16 +110,28 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {order.OrderItems?.map((item: any) => (
-                    <tr key={item.id} className="hover:bg-card/50 transition-colors">
-                      <td className="p-4">
-                        <p className="font-semibold text-text-main">Product ID: {item.productId}</p>
-                      </td>
-                      <td className="p-4 text-center text-text-muted">Rs. {item.price.toLocaleString()}</td>
-                      <td className="p-4 text-center text-text-main font-bold">x{item.quantity}</td>
-                      <td className="p-4 text-right text-primary font-bold">Rs. {(item.price * item.quantity).toLocaleString()}</td>
-                    </tr>
-                  ))}
+                  {order.OrderItems?.map((item: any) => {
+                    const itemImage = item.variant?.imageUrl || item.Product?.imageUrl || "/placeholder.png";
+                    const itemName = item.variant 
+                      ? `${item.Product?.name || "Product"} (${item.variant.materialName})` 
+                      : (item.Product?.name || `Product ID: ${item.productId}`);
+                    return (
+                      <tr key={item.id} className="hover:bg-card/50 transition-colors">
+                        <td className="p-4 flex items-center gap-3">
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-border/60 shrink-0 bg-background">
+                            <Image src={itemImage} alt={itemName} fill className="object-cover" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-text-main leading-tight">{itemName}</p>
+                            <p className="text-xs text-text-muted mt-0.5">Product ID: {item.productId}</p>
+                          </div>
+                        </td>
+                        <td className="p-4 text-center text-text-muted">Rs. {item.price.toLocaleString()}</td>
+                        <td className="p-4 text-center text-text-main font-bold">x{item.quantity}</td>
+                        <td className="p-4 text-right text-primary font-bold">Rs. {(item.price * item.quantity).toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

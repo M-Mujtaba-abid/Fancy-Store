@@ -22,7 +22,335 @@
   font-style: normal;
 }
 
-/* --- Product Description (Optimized for Readability) --- */
+/* ========== PRODUCT VARIANTS SECTION ========== */
+
+.variantsSection {
+  position: relative;
+  border-radius: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.03) 0%, 
+    rgba(251, 191, 36, 0.06) 50%, 
+    rgba(212, 175, 55, 0.03) 100%
+  );
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  overflow: hidden;
+}
+
+.variantsSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--primary-color), 
+    transparent
+  );
+  opacity: 0.6;
+}
+
+.variantsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.variantsHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.variantsIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-color), #f59e0b);
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.variantsTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.variantsSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.addVariantBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--primary-color);
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.addVariantBtn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-style: solid;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.addVariantBtn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.addVariantBtn:hover svg {
+  transform: rotate(90deg);
+}
+
+/* Variant Card Grid */
+.variantsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .variantsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Individual Variant Card */
+.variantCard {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: variantSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.variantCard:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+@keyframes variantSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.variantCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.variantBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(251, 191, 36, 0.18));
+  color: var(--primary-color);
+  letter-spacing: 0.02em;
+}
+
+.removeVariantBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeVariantBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  transform: scale(1.1);
+}
+
+.variantFields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (min-width: 480px) {
+  .variantFields {
+    grid-template-columns: 70px 2fr 1fr 1fr;
+  }
+}
+
+/* Variant image upload styles */
+.variantImageUpload {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--border);
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.variantImageUpload:hover {
+  border-color: var(--primary-color);
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.variantImagePreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.variantImageOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: white;
+}
+
+.variantImageUpload:hover .variantImageOverlay {
+  opacity: 1;
+}
+
+.variantImagePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+}
+
+.variantFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variantFieldLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.variantInput {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.variantInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.variantSelect {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.variantSelect:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Empty state */
+.variantsEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  text-align: center;
+  gap: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.variantsEmpty:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.variantsEmptyIcon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.variantsEmptyText {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.variantsEmptyHint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
 
 
 .product-description * {

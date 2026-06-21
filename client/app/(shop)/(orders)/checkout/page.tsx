@@ -121,6 +121,7 @@ console.log("✅ [Checkout] PlaceAnOrder Done!");
             ...formData,
             buyNowProductId: buyNowItem.productId,
             buyNowQuantity: buyNowItem.quantity,
+            buyNowVariantId: buyNowItem.variantId || null,
           }
         : formData;
 

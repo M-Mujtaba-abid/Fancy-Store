@@ -61,13 +61,19 @@ export const cartService = {
 
   addToCart: async (data: AddToCartPayload) => {
     if (isAuthenticated()) {
-      const res = await api.post("/cart/add", { productId: data.productId, quantity: data.quantity });
+      const res = await api.post("/cart/add", { 
+        productId: data.productId, 
+        quantity: data.quantity, 
+        variantId: data.variantId || null 
+      });
       return res.data;
     }
     
     // 🛒 Guest Logic
     const cart = guestCartHandler.get();
-    const existingIndex = cart.items.findIndex((i) => i.productId === data.productId);
+    const existingIndex = cart.items.findIndex(
+      (i) => i.productId === data.productId && i.variantId === (data.variantId || null)
+    );
     const itemPrice = data.price || 0;
 
     if (existingIndex >= 0) {
@@ -77,6 +83,7 @@ export const cartService = {
       cart.items.push({
         cartItemId: `guest_${Date.now()}`,
         productId: data.productId,
+        variantId: data.variantId || null,
         name: data.name || "Product",
         image: data.image || "",
         quantity: data.quantity,
@@ -93,16 +100,24 @@ export const cartService = {
 
   updateCartItem: async (data: AddToCartPayload) => {
     if (isAuthenticated()) {
-      const res = await api.patch("/cart/update", { productId: data.productId, quantity: data.quantity });
+      const res = await api.patch("/cart/update", { 
+        productId: data.productId, 
+        quantity: data.quantity, 
+        variantId: data.variantId || null 
+      });
       return res.data;
     }
 
     // 🛒 Guest Logic
     const cart = guestCartHandler.get();
     if (data.quantity <= 0) {
-      cart.items = cart.items.filter((i) => i.productId !== data.productId);
+      cart.items = cart.items.filter(
+        (i) => !(i.productId === data.productId && i.variantId === (data.variantId || null))
+      );
     } else {
-      const item = cart.items.find((i) => i.productId === data.productId);
+      const item = cart.items.find(
+        (i) => i.productId === data.productId && i.variantId === (data.variantId || null)
+      );
       if (item) {
         item.quantity = data.quantity;
         item.itemTotal = item.quantity * (item.price || data.price || 0);

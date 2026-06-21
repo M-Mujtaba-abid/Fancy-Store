@@ -8,13 +8,13 @@ import {
 export const addToCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { productId, quantity } = req.body;
+    const { productId, quantity, variantId } = req.body;
 
     if (!productId || quantity <= 0) {
       return res.status(400).json({ message: "Valid Product ID and quantity are required" });
     }
 
-    const cartItem = await addToCartService(userId, productId, quantity);
+    const cartItem = await addToCartService(userId, productId, quantity, variantId);
     return res.status(200).json({ success: true, message: "Product added to cart", cartItem });
   } catch (err) {
     console.error(err);
@@ -25,9 +25,9 @@ export const addToCart = async (req, res) => {
 export const updateCartItem = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { productId, quantity } = req.body;
+    const { productId, quantity, variantId } = req.body;
 
-    const cartItem = await updateCartItemService(userId, productId, quantity);
+    const cartItem = await updateCartItemService(userId, productId, quantity, variantId);
 
     const message = cartItem ? "Cart updated" : "Item removed from cart";
     return res.status(200).json({ success: true, message, cartItem });
