@@ -249,6 +249,7 @@ export const getProductsService = async (queryPage, queryLimit) => {
     limit,
     offset,
     order: [["createdAt", "DESC"]],
+    include: [{ model: ProductVariant, as: 'variants' }]
   });
 
   return formatPagingResponse(data, page, limit);
