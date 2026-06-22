@@ -246,12 +246,19 @@ export default function ProductDetailsClient({ product }: Props) {
               </span>
             )}
 
-            {/* Stock Badge */}
-            <span
-              className={`ml-auto text-sm font-medium px-3 py-1 rounded-full ${isOutOfStock ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
-            >
-              {isOutOfStock ? "Out of Stock" : `${activeStock} in Stock`}
-            </span>
+            {/* Stock & Sold Badges */}
+            <div className="ml-auto flex items-center gap-2">
+              {product.sold !== undefined && product.sold > 0 && (
+                <span className="text-sm font-semibold text-primary bg-primary/5 px-3 py-1 rounded-full border border-primary/20">
+                  {product.sold >= 1000 ? `${(product.sold / 1000).toFixed(1).replace(/\.0$/, '')}k+` : product.sold} Sold
+                </span>
+              )}
+              <span
+                className={`text-sm font-medium px-3 py-1 rounded-full ${isOutOfStock ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}
+              >
+                {isOutOfStock ? "Out of Stock" : `${activeStock} in Stock`}
+              </span>
+            </div>
           </div>
 
           {/* ===================================================== */}
@@ -457,10 +464,11 @@ export default function ProductDetailsClient({ product }: Props) {
             </div>
           </div>
         </div>
-        {/* 2. REVIEWS SECTION (Bilkul neechay) */}
-        <ProductReviews productId={product.id} />
       </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
+
+      {/* 2. REVIEWS SECTION (Ab grid ke baahar aur poori screen par aaye ga) */}
+      <ProductReviews productId={product.id} />
 
       {/* --- LOWER SECTION: FULL WIDTH --- */}
       {/* ✅ Related Products ab grid ke baahar aur poori screen par aaye ga */}

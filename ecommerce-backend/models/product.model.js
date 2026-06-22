@@ -20,6 +20,10 @@ Product.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    sold: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     category: {
       type: DataTypes.STRING,
       allowNull: false,
