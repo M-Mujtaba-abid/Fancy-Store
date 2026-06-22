@@ -82,9 +82,14 @@ const ProductModal = ({ product, onClose }: ProductModalProps) => {
               ) : (
                 <span className="text-3xl font-black text-primary">Rs. {product.price.toLocaleString()}</span>
               )}
-              <span className={`ml-auto px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                {product.stock} in Stock
-              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="px-4 py-1.5 rounded-full text-sm font-bold shadow-sm bg-primary/10 text-primary border border-primary/20">
+                  {product.sold || 0} Sold
+                </span>
+                <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  {product.stock} in Stock
+                </span>
+              </div>
             </div>
 
             {/* Specs Grid */}

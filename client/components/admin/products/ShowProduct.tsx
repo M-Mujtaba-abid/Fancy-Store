@@ -83,10 +83,13 @@ const ShowProduct = ({ onEdit }: ShowProductProps) => {
                 )}
               </div>
 
-              {/* Stock Badge */}
-              <div className="absolute top-3 right-3 z-10">
+              {/* Stock & Sold Badges */}
+              <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm ${product.stock <= 5 ? "bg-red-100 text-red-700" : "bg-background text-text-main"}`}>
                   Stock: {product.stock}
+                </span>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm bg-primary/10 text-primary">
+                  Sold: {product.sold || 0}
                 </span>
               </div>
             </div>

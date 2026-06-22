@@ -48,6 +48,10 @@ export const placeOrderService = async (userId, orderData) => {
         activePrice = variant.price;
         variant.stock -= quantity;
         await variant.save({ transaction: t });
+
+        // Increment product sold count when variant is purchased
+        product.sold = (product.sold || 0) + quantity;
+        await product.save({ transaction: t });
       } else {
         if (product.stock < quantity) {
           throw { status: 400, message: `Stock finished for ${product.name}` };
@@ -57,6 +61,7 @@ export const placeOrderService = async (userId, orderData) => {
             ? product.discountPrice
             : product.price;
         product.stock -= quantity;
+        product.sold = (product.sold || 0) + quantity;
         await product.save({ transaction: t });
       }
 
