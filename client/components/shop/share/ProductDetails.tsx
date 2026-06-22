@@ -464,10 +464,11 @@ export default function ProductDetailsClient({ product }: Props) {
             </div>
           </div>
         </div>
-        {/* 2. REVIEWS SECTION (Bilkul neechay) */}
-        <ProductReviews productId={product.id} />
       </div>
       {/* 🛑 GRID YAHAN KHATAM HOTA HAI */}
+
+      {/* 2. REVIEWS SECTION (Ab grid ke baahar aur poori screen par aaye ga) */}
+      <ProductReviews productId={product.id} />
 
       {/* --- LOWER SECTION: FULL WIDTH --- */}
       {/* ✅ Related Products ab grid ke baahar aur poori screen par aaye ga */}
