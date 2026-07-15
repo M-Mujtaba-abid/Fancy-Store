@@ -164,12 +164,12 @@ export const getOrders = async (req, res) => {
       return res.status(200).json({ orders });
     }
 
-    // SCENARIO 2: GUEST USER FLOW (Tracking via phone or orderId)
+    // SCENARIO 2: GUEST USER FLOW (Tracking via phone AND orderId)
     const { phone, orderId } = req.query;
 
-    if (!phone && !orderId) {
+    if (!phone || !orderId) {
       return res.status(400).json({ 
-        message: "Please login if you have an account or provide an Order ID or Phone Number to track your order." 
+        message: "Please provide both Order ID and Phone Number to track your order." 
       });
     }
 

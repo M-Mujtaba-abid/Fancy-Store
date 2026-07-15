@@ -30,8 +30,8 @@ export const useMyOrders = (params?: { phone?: string; orderId?: string }) => {
     // Query key me params shamil kiye hain taake track search fresh fetch trigger kare
     queryKey: ["myOrders", params], 
     queryFn: () => orderService.getMyOrders(params),
-    // Agar user logged-in nahi hai aur params bhi khali hain, toh auto-fetch disabled rakhein
-    enabled: isAuthenticated() || !!params?.phone || !!params?.orderId,
+    // Guest flow: query only enabled when BOTH params are present
+    enabled: isAuthenticated() || (!!params?.phone && !!params?.orderId),
   });
 };
 

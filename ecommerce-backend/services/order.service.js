@@ -203,19 +203,19 @@ export const getOrdersService = async (userId, guestData = null) => {
     // Registered user ke liye sirf uski userId match karo
     whereClause.userId = userId;
   } else if (guestData) {
-    // Guest user ke liye phone number ya specific orderId se track karo
-    if (guestData.orderId) {
-      whereClause.id = guestData.orderId;
+    // Guest user ke liye dono matching requirements lagao
+    const { orderId, phone } = guestData;
+    if (!orderId || !phone) {
+      throw { status: 400, message: "Both Order ID and Phone Number are required for guest tracking." };
     }
-    if (guestData.phone) {
-      whereClause.phoneNumber = guestData.phone;
-    }
+    whereClause.id = orderId;
+    whereClause.phoneNumber = phone;
     
     // Safety check: Taake guest flow mein registered users ke orders leak na hon
     whereClause.userId = null; 
   }
 
-  return await Order.findAll({
+  const orders = await Order.findAll({
     where: whereClause,
     include: [
       { 
@@ -228,6 +228,12 @@ export const getOrdersService = async (userId, guestData = null) => {
     ],
     order: [["createdAt", "DESC"]],
   });
+
+  if (guestData && orders.length === 0) {
+    throw { status: 404, message: "No order found matching the provided Order ID and Phone Number." };
+  }
+
+  return orders;
 };
 
 // ================= ADMIN: GET ALL ORDERS =================

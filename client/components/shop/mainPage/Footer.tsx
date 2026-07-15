@@ -130,7 +130,7 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-6 uppercase tracking-widest text-text-main">Support</h4>
             <ul className="space-y-4">
               {[
-                { label: 'Track Order', href: '/track-order' },
+                { label: 'Track Order', href: '/order' },
                 { label: 'Shipping Policy', href: '/shipping-policy' },
                 { label: 'Return & Exchange', href: '/return-policy' },
                 { label: 'FAQs', href: '/faqs' },
