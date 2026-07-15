@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-/* ───────── MOBILE ACCORDION FIXED ───────── */
+/* ───────── MOBILE ACCORDION COMPONENT ───────── */
 const FooterSection = ({
   title,
   children,
@@ -32,8 +32,7 @@ const FooterSection = ({
 
   return (
     <div className="border-b border-border-custom md:border-none">
-
-      {/* Header */}
+      {/* Header (Mobile) */}
       <button
         className="md:hidden w-full flex justify-between items-center py-4"
         onClick={() => setOpen(!open)}
@@ -41,17 +40,15 @@ const FooterSection = ({
         <span className="font-bold text-sm uppercase tracking-widest text-text-main">
           {title}
         </span>
-
         <ChevronDown
           size={16}
-          className={`text-text-muted transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`text-text-muted transition-transform duration-300 ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
 
-      {/* Desktop title */}
-      <h4 className="hidden md:block font-bold text-lg mb-6 uppercase tracking-widest text-text-main">
+      {/* Desktop Title */}
+      <h4 className="hidden md:block font-bold text-sm mb-6 uppercase tracking-widest text-text-main">
         {title}
       </h4>
 
@@ -67,7 +64,7 @@ const FooterSection = ({
   );
 };
 
-/* ───────── FOOTER ───────── */
+/* ───────── MAIN FOOTER ───────── */
 const Footer = () => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -108,10 +105,10 @@ const Footer = () => {
     <footer className="bg-background border-t border-border-custom text-text-main">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 md:gap-12 pt-10 md:pt-16">
+        {/* GRID LAYOUT */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 md:gap-12 pt-10 md:pt-16 pb-10 md:pb-16">
 
-          {/* BRAND */}
+          {/* COLUMN 1: BRAND */}
           <div className="space-y-5 py-8 md:py-0 border-b md:border-none border-border-custom">
             <Link href="/">
               <Image
@@ -121,19 +118,17 @@ const Footer = () => {
                 height={40}
               />
             </Link>
-
             <p className="text-sm text-text-muted max-w-xs">
               Premium vehicle covers for cars and bikes. Protect your passion
               with all-weather durable shields.
             </p>
-
             <div className="flex gap-3">
               {socialLinks.map((s) => (
                 <Link
                   key={s.name}
                   href={s.href}
                   target="_blank"
-                  className="p-2 bg-border-custom/30 rounded-full hover:bg-primary hover:text-white transition"
+                  className="p-2 bg-border-custom/30 rounded-full hover:bg-primary hover:text-white transition text-sm"
                 >
                   {s.name}
                 </Link>
@@ -141,7 +136,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* QUICK LINKS */}
+          {/* COLUMN 2: QUICK LINKS */}
           <FooterSection title="Quick Links">
             <ul className="space-y-3">
               {quickLinks.map((item) => (
@@ -158,15 +153,16 @@ const Footer = () => {
             </ul>
           </FooterSection>
 
-          {/* SUPPORT */}
+          {/* COLUMN 3: SUPPORT */}
           <FooterSection title="Support">
             <ul className="space-y-3">
               {supportLinks.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    className="text-text-muted hover:text-primary text-sm"
+                    className="text-text-muted hover:text-primary flex items-center gap-2 text-sm"
                   >
+                    <ArrowUpRight size={12} />
                     {item.label}
                   </Link>
                 </li>
@@ -174,31 +170,27 @@ const Footer = () => {
             </ul>
           </FooterSection>
 
-          {/* CONTACT */}
+          {/* COLUMN 4: GET IN TOUCH */}
           <FooterSection title="Get In Touch">
             <div className="space-y-4 text-sm text-text-muted">
-
-              <div className="flex gap-2">
-                <MapPin size={16} className="text-primary" />
-                Lahore, Pakistan
+              <div className="flex gap-2 items-center">
+                <MapPin size={16} className="text-primary shrink-0" />
+                <span>Lahore, Pakistan</span>
               </div>
-
-              <div className="flex gap-2">
-                <Phone size={16} className="text-primary" />
-                +92 333 4140461
+              <div className="flex gap-2 items-center">
+                <Phone size={16} className="text-primary shrink-0" />
+                <span>+92 333 4140461</span>
               </div>
-
-              <div className="flex gap-2">
-                <Mail size={16} className="text-primary" />
-                fancystore0078@gmail.com
+              <div className="flex gap-2 items-center">
+                <Mail size={16} className="text-primary shrink-0" />
+                <span>fancystore0078@gmail.com</span>
               </div>
-
             </div>
           </FooterSection>
 
         </div>
 
-        {/* BOTTOM */}
+        {/* BOTTOM COPYRIGHT BAR */}
         <div className="border-t border-border-custom py-6 text-center">
           <p className="text-xs text-text-muted">
             © {new Date().getFullYear()} Fancy Store. All rights reserved.
