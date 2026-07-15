@@ -301,7 +301,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   name="country"
                   value={formData.country}
                   readOnly
-                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-300 border border-border outline-none cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 border border-border outline-none cursor-not-allowed"
                 />
               </div>
             </div>
