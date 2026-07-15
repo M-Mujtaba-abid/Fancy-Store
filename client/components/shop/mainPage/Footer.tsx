@@ -97,7 +97,7 @@ const Footer = () => {
   ];
 
   const supportLinks = [
-    { label: "Track Order", href: "/track-order" },
+    { label: "Track Order", href: "/order" },
     { label: "Shipping Policy", href: "/shipping-policy" },
     { label: "Return & Exchange", href: "/return-policy" },
     { label: "FAQs", href: "/faqs" },

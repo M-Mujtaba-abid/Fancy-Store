@@ -44,7 +44,7 @@ function SuccessContent() {
               View Orders
             </Link>
           ) : (
-            <Link href="/track-order" className="px-6 p-6 bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
+            <Link href="/order" className="px-6 p-6 bg-primary text-center text-white font-bold rounded-xl hover:opacity-90 transition-all flex-1">
               Track Order
             </Link>
           )}
