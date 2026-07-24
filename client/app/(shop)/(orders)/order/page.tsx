@@ -239,7 +239,7 @@ export default function MyOrdersPage() {
                             <div className="flex flex-col justify-between h-full py-1">
                               <Link href={`/products/${item.productId}`} className="font-semibold text-text-main hover:text-primary line-clamp-2 text-sm sm:text-base leading-tight">
                                 {item.variant
-                                  ? `${item.Product?.name} (${item.variant.materialName})`
+                                  ? `${item.Product?.name} (${item.variant.variantValue || item.variant.materialName})`
                                   : (item.Product?.name || "Product Name")}
                               </Link>
                               <div className="mt-1 sm:mt-2">

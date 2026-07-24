@@ -43,9 +43,13 @@ export const placeOrderService = async (userId, orderData) => {
         });
         if (!variant) throw { status: 404, message: "Product variant not found." };
         if (variant.stock < quantity) {
-          throw { status: 400, message: `Insufficient stock for variant (${variant.materialName}) of product ${product.name}.` };
+          const vLabel = variant.variantValue || variant.materialName;
+          throw { status: 400, message: `Insufficient stock for variant (${vLabel}) of product ${product.name}.` };
         }
-        activePrice = variant.price;
+        activePrice = (variant.salePrice && Number(variant.salePrice) > 0 && Number(variant.salePrice) < Number(variant.price))
+          ? Number(variant.salePrice)
+          : Number(variant.price);
+
         variant.stock -= quantity;
         await variant.save({ transaction: t });
 
@@ -262,8 +266,35 @@ export const updateOrderStatusService = async (id, status) => {
     throw { status: 404, message: "Order not found" };
   }
 
+  const previousStatus = order.status;
   order.status = status;
   await order.save();
+
+  // Restore inventory if status changed to cancelled
+  if (status.toLowerCase() === "cancelled" && previousStatus.toLowerCase() !== "cancelled") {
+    try {
+      const orderItems = await OrderItem.findAll({ where: { orderId: order.id } });
+      for (const item of orderItems) {
+        if (item.variantId) {
+          const variant = await models.ProductVariant.findByPk(item.variantId);
+          if (variant) {
+            variant.stock += item.quantity;
+            await variant.save();
+          }
+        }
+        const product = await Product.findByPk(item.productId);
+        if (product) {
+          if (!item.variantId) {
+            product.stock += item.quantity;
+          }
+          product.sold = Math.max(0, (product.sold || 0) - item.quantity);
+          await product.save();
+        }
+      }
+    } catch (stockErr) {
+      console.error("Failed to restore stock on cancellation:", stockErr);
+    }
+  }
 
   // Send status update email to the customer asynchronously
   try {

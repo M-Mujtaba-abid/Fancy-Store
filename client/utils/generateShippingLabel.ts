@@ -294,8 +294,9 @@ export const generateShippingLabel = async (order: OrderData): Promise<void> => 
   itemsToPrint.forEach((item) => {
     let name =
       item.productName || item.Product?.name || `Product #${item.productId}`;
-    if (item.variant?.materialName) {
-      name = `${name} (${item.variant.materialName})`;
+    const vLabel = (item.variant as any)?.variantValue || item.variant?.materialName;
+    if (vLabel) {
+      name = `${name} (${vLabel})`;
     }
     const truncatedName =
       name.length > 50 ? name.substring(0, 48) + "..." : name;

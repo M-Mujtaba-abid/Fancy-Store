@@ -15,14 +15,17 @@ import {
     getProductsByFilter,
     getProductsByCategory,
     getRelatedProducts,
-    syncProductEmbeddings
+    syncProductEmbeddings,
+    addVariant,
+    updateVariant,
+    deleteVariant
 } from "../controllers/product.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
 import adminMiddleware from "../middleware/admin.middleware.js";
 import { uploadWithLimits, uploadProductAndVariants } from "../middleware/multer.middleware.js";
 
-const   router = express.Router();
+const router = express.Router();
 
 // --- Public Routes ---
 router.get("/search", searchProducts);
@@ -43,7 +46,12 @@ router.post("/", authMiddleware, adminMiddleware, uploadProductAndVariants.any()
 router.patch("/:id", authMiddleware, adminMiddleware, uploadProductAndVariants.any(), updateProduct);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteProduct);
 
-// vector embeding
+// --- Standalone Variant Routes (Admin) ---
+router.post("/:productId/variants", authMiddleware, adminMiddleware, uploadProductAndVariants.any(), addVariant);
+router.patch("/variants/:id", authMiddleware, adminMiddleware, uploadProductAndVariants.any(), updateVariant);
+router.delete("/variants/:id", authMiddleware, adminMiddleware, deleteVariant);
+
+// vector embedding
 router.post("/sync-embeddings", syncProductEmbeddings);
 
 export default router;
