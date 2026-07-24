@@ -35,7 +35,7 @@ export const VEHICLE_TYPES = {
   CAR: "car",
   BIKE: "bike",
 };
-//  Product Categories
+// Product Categories
 export const CATEGORIES = {
   FLOOR_MAT: "floor_mat",
   TRUNK_TRAY: "trunk_tray",
@@ -44,6 +44,8 @@ export const CATEGORIES = {
   STEERING_COVER: "steering_cover",
   CAR_TOP_COVER: "car_topCover",
   BIKE_TOP_COVER: "bike_topCover",
-
-  // Future mein bas yahan add karo
+  RAIN_COAT: "rain_coat",
+  HELMET: "helmet",
+  BIKE_ACCESSORIES: "bike_accessories",
+  CAR_ACCESSORIES: "car_accessories",
 };

@@ -119,12 +119,19 @@ export const getBikeProducts = asyncHandler(async (req, res) => {
 export const getProductsByCategory = asyncHandler(async (req, res) => {
   const { category } = req.params;
   const { vehicleType, subCategory, page, limit } = req.query; // Query nikal li
-  // Valid category check karo
-  if (!Object.values(CATEGORIES).includes(category)) {
+
+  const normalizedCategory = (category || "").trim().replace(/-/g, "_");
+
+  // Valid category check karo (case-insensitive & hyphen-friendly)
+  const validCategories = Object.values(CATEGORIES).map((c) => c.toLowerCase());
+  if (
+    !validCategories.includes(normalizedCategory.toLowerCase()) &&
+    !validCategories.includes(category.toLowerCase())
+  ) {
     throw new ApiError(400, "Invalid category");
   }
 
-  const filters = { category, vehicleType, subCategory };
+  const filters = { category: normalizedCategory, vehicleType, subCategory };
 
   const data = await getProductsByFilterService(filters, page, limit);
   res
