@@ -112,8 +112,9 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
                 <tbody className="divide-y divide-border/50">
                   {order.OrderItems?.map((item: any) => {
                     const itemImage = item.variant?.imageUrl || item.Product?.imageUrl || "/placeholder.png";
+                    const vLabel = item.variant?.variantValue || item.variant?.materialName;
                     const itemName = item.variant 
-                      ? `${item.Product?.name || "Product"} (${item.variant.materialName})` 
+                      ? `${item.Product?.name || "Product"} (${vLabel})` 
                       : (item.Product?.name || `Product ID: ${item.productId}`);
                     return (
                       <tr key={item.id} className="hover:bg-card/50 transition-colors">

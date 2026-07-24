@@ -2,20 +2,39 @@
 export interface ProductVariant {
   id: number;
   productId: number;
-  materialName: string;
+  variantType: string; // e.g., "material", "color", "size", "finish"
+  variantValue: string; // e.g., "Silver Coated", "Black", "XL"
+  materialName?: string; // Backward compatibility fallback
   price: number;
+  salePrice?: number | null;
   stock: number;
   imageUrl?: string | null;
+  sku?: string | null;
+  status?: string;
 }
 
 export interface VariantInput {
   id?: number; // present when editing existing variant
-  materialName: string;
+  variantType: string;
+  variantValue: string;
+  materialName?: string; // Backward compatibility fallback
   price: number;
+  salePrice?: number | null;
   stock: number;
   imageUrl?: string | null;
   imageFile?: File | null;
+  sku?: string | null;
+  status?: string;
 }
+
+export const COMMON_VARIANT_TYPES = [
+  "Material",
+  "Color",
+  "Size",
+  "Finish",
+  "Edition",
+  "Capacity",
+] as const;
 
 export const MATERIAL_OPTIONS = [
   "Silver Coated",

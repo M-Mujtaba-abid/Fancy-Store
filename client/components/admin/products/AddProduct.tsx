@@ -135,10 +135,14 @@ const AddProduct = ({
         setVariants(
           initialData.variants.map((v) => ({
             id: v.id,
-            materialName: v.materialName,
+            variantType: v.variantType || "Material",
+            variantValue: v.variantValue || v.materialName || "",
+            materialName: v.variantValue || v.materialName || "",
             price: Number(v.price),
+            salePrice: v.salePrice ? Number(v.salePrice) : null,
             stock: Number(v.stock),
             imageUrl: v.imageUrl || null,
+            sku: v.sku || "",
           }))
         );
       } else {
@@ -228,7 +232,15 @@ const AddProduct = ({
   const addVariant = () => {
     setVariants((prev) => [
       ...prev,
-      { materialName: MATERIAL_OPTIONS[0], price: 0, stock: 50 },
+      {
+        variantType: "Material",
+        variantValue: "Silver Coated",
+        materialName: "Silver Coated",
+        price: Number(form.price) || 0,
+        salePrice: Number(form.discountPrice) || null,
+        stock: Number(form.stock) || 50,
+        sku: "",
+      },
     ]);
   };
 
@@ -247,7 +259,9 @@ const AddProduct = ({
           ? {
               ...v,
               [field]:
-                field === "price" || field === "stock" ? Number(value) : value,
+                field === "price" || field === "stock" || field === "salePrice"
+                  ? value === "" ? null : Number(value)
+                  : value,
             }
           : v
       )
@@ -271,7 +285,12 @@ const AddProduct = ({
     const payload = {
       ...form,
       existingImages: existingImages,
-      variants: variants,
+      variants: variants.map(v => ({
+        ...v,
+        variantType: v.variantType || "Material",
+        variantValue: v.variantValue || v.materialName || "Option",
+        materialName: v.variantValue || v.materialName || "Option",
+      })),
     };
 
     onSubmit(payload);
@@ -455,7 +474,7 @@ const AddProduct = ({
           </div>
         </div>
 
-        {/* --- SECTION 4: Product Variants (Qualities) --- */}
+        {/* --- SECTION 4: Product Variants (Generic Options) --- */}
         <div className="border-t border-border/50 pt-6">
           <h3 className="text-lg font-semibold text-text-main mb-4">
             4. Product Variants
@@ -484,10 +503,10 @@ const AddProduct = ({
                 </div>
                 <div>
                   <div className={styles.variantsTitle}>
-                    Material Qualities
+                    Dynamic Product Variants
                   </div>
                   <div className={styles.variantsSubtitle}>
-                    Add different material qualities with individual pricing
+                    Add Material, Color, Size, Finish options with individual price & stock
                   </div>
                 </div>
               </div>
@@ -507,7 +526,7 @@ const AddProduct = ({
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Add Quality
+                Add Variant
               </button>
             </div>
 
@@ -519,8 +538,8 @@ const AddProduct = ({
                   No variants added yet
                 </div>
                 <div className={styles.variantsEmptyHint}>
-                  Click &quot;Add Quality&quot; to define material options like
-                  Silver Coated, PVC + Cotton, etc.
+                  Click &quot;Add Variant&quot; to define custom options like
+                  Material (Silver Coated, PVC), Color (Black, Blue), Size, etc.
                 </div>
               </div>
             ) : (
@@ -530,7 +549,7 @@ const AddProduct = ({
                     {/* Card Header */}
                     <div className={styles.variantCardHeader}>
                       <span className={styles.variantBadge}>
-                        ✦ Quality #{index + 1}
+                        ✦ Variant #{index + 1}
                         {variant.id ? " (Saved)" : " (New)"}
                       </span>
                       <button
@@ -637,34 +656,64 @@ const AddProduct = ({
 
                       <div className={styles.variantFieldGroup}>
                         <label className={styles.variantFieldLabel}>
-                          Material
+                          Variant Type
                         </label>
-                        <select
-                          className={styles.variantSelect}
-                          value={variant.materialName}
+                        <input
+                          type="text"
+                          className={styles.variantInput}
+                          placeholder="e.g. Material, Color, Size"
+                          value={variant.variantType || "Material"}
                           onChange={(e) =>
-                            updateVariant(index, "materialName", e.target.value)
+                            updateVariant(index, "variantType", e.target.value)
                           }
-                        >
-                          {MATERIAL_OPTIONS.map((mat) => (
-                            <option key={mat} value={mat}>
-                              {mat}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
 
                       <div className={styles.variantFieldGroup}>
                         <label className={styles.variantFieldLabel}>
-                          Price (Rs)
+                          Variant Option Value *
+                        </label>
+                        <input
+                          type="text"
+                          className={styles.variantInput}
+                          placeholder="e.g. Silver Coated, Black, XL"
+                          value={variant.variantValue || variant.materialName || ""}
+                          onChange={(e) => {
+                            updateVariant(index, "variantValue", e.target.value);
+                            updateVariant(index, "materialName", e.target.value);
+                          }}
+                          required
+                        />
+                      </div>
+
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          Price (Rs) *
                         </label>
                         <input
                           type="number"
                           className={styles.variantInput}
-                          placeholder="e.g. 4497"
+                          placeholder="e.g. 4500"
                           value={variant.price || ""}
                           onChange={(e) =>
                             updateVariant(index, "price", e.target.value)
+                          }
+                          min={0}
+                          required
+                        />
+                      </div>
+
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          Sale Price (Rs)
+                        </label>
+                        <input
+                          type="number"
+                          className={styles.variantInput}
+                          placeholder="e.g. 3999"
+                          value={variant.salePrice ?? ""}
+                          onChange={(e) =>
+                            updateVariant(index, "salePrice", e.target.value)
                           }
                           min={0}
                         />
@@ -672,7 +721,7 @@ const AddProduct = ({
 
                       <div className={styles.variantFieldGroup}>
                         <label className={styles.variantFieldLabel}>
-                          Stock
+                          Stock *
                         </label>
                         <input
                           type="number"
@@ -683,6 +732,22 @@ const AddProduct = ({
                             updateVariant(index, "stock", e.target.value)
                           }
                           min={0}
+                          required
+                        />
+                      </div>
+
+                      <div className={styles.variantFieldGroup}>
+                        <label className={styles.variantFieldLabel}>
+                          SKU (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          className={styles.variantInput}
+                          placeholder="e.g. MAT-SLV-01"
+                          value={variant.sku || ""}
+                          onChange={(e) =>
+                            updateVariant(index, "sku", e.target.value)
+                          }
                         />
                       </div>
                     </div>

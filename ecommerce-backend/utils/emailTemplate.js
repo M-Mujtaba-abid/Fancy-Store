@@ -88,7 +88,7 @@ export const orderConfirmationTemplate = (userName, order) => {
             <!-- CTA -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr><td align="center">
-                <a href="${process.env.FRONTEND_URL}/orders/${order.id}"
+                <a href="${process.env.FRONTEND_URL}/order?orderId=${order.id}&phone=${order.phoneNumber || ""}"
                   style="display:inline-block;background:#e94560;color:#fff;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;">
                   Track Your Order
                 </a>
@@ -251,6 +251,206 @@ export const adminNewOrderTemplate = (userName, userEmail, order) => {
             <p style="font-size:12px;color:#999;margin:0;">
               Automated alert from FancyStore Admin System &nbsp;|&nbsp;
               <a href="${process.env.ADMIN_PANEL_URL}" style="color:#999;">Admin Panel</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+};
+
+
+// ================= USER ORDER STATUS UPDATE =================
+export const orderStatusUpdateTemplate = (userName, order) => {
+  const date = new Date().toLocaleDateString("en-PK", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  const mapStatusToStepIndex = (status) => {
+    const s = (status || "").toLowerCase();
+    if (s === "pending") return 0;
+    if (s === "accepted" || s === "processing" || s === "ready_to_ship") return 1;
+    if (s === "shipped") return 2;
+    if (s === "delivered") return 3;
+    return -1;
+  };
+
+  const currentStepIndex = mapStatusToStepIndex(order.status);
+  const isCancelled = order.status.toLowerCase() === "cancelled";
+
+  // Friendly status name to show in title
+  let statusDisplay = order.status;
+  if (order.status.toLowerCase() === "pending") statusDisplay = "Confirmed";
+  else if (order.status.toLowerCase() === "accepted" || order.status.toLowerCase() === "processing" || order.status.toLowerCase() === "ready_to_ship") {
+    statusDisplay = "Processing";
+  } else {
+    statusDisplay = order.status.charAt(0).toUpperCase() + order.status.slice(1).replace(/_/g, " ");
+  }
+
+  // Banner details depending on status
+  let bannerMessage = `Your order is currently in the <strong>${statusDisplay}</strong> stage.`;
+  let bannerTitle = "Order Status Updated";
+  let statusIcon = "ℹ️";
+  let iconBg = "#e8f0fe";
+  let iconColor = "#1a73e8";
+
+  if (order.status.toLowerCase() === "pending") {
+    bannerTitle = "Order Confirmed!";
+    bannerMessage = `Your order has been confirmed. We're getting it ready!`;
+    statusIcon = "✓";
+    iconBg = "#e8f5e9";
+    iconColor = "#43a047";
+  } else if (order.status.toLowerCase() === "accepted" || order.status.toLowerCase() === "processing" || order.status.toLowerCase() === "ready_to_ship") {
+    bannerTitle = "Order is Processing!";
+    bannerMessage = `We are preparing your package. It will be ready to ship soon!`;
+    statusIcon = "📦";
+    iconBg = "#e3f2fd";
+    iconColor = "#1e88e5";
+  } else if (order.status.toLowerCase() === "shipped") {
+    bannerTitle = "Order Shipped! 🚚";
+    bannerMessage = `Good news! Your package is on its way. Use the link below to track your delivery.`;
+    statusIcon = "🚚";
+    iconBg = "#f3e5f5";
+    iconColor = "#8e24aa";
+  } else if (order.status.toLowerCase() === "delivered") {
+    bannerTitle = "Order Delivered! 🎉";
+    bannerMessage = `Your order has been successfully delivered. Thank you for shopping with us!`;
+    statusIcon = "✓";
+    iconBg = "#e8f5e9";
+    iconColor = "#43a047";
+  } else if (isCancelled) {
+    bannerTitle = "Order Cancelled";
+    bannerMessage = `Your order has been cancelled. If you have any questions, please contact our support.`;
+    statusIcon = "✕";
+    iconBg = "#ffebee";
+    iconColor = "#e53935";
+  }
+
+  // If order is cancelled, we replace the final step 'Delivered' with 'Cancelled' in the bar
+  const activeSteps = ["Confirmed", "Processing", "Shipped", isCancelled ? "Cancelled" : "Delivered"];
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order Status Update – FancyStore</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#1a1a2e;padding:24px 32px;text-align:center;">
+            <span style="font-size:22px;font-weight:700;color:#fff;letter-spacing:1px;">
+              Fancy<span style="color:#e94560;">Store</span>
+            </span>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px;">
+
+            <!-- Status icon -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center" style="padding-bottom:16px;">
+                <div style="width:56px;height:56px;background:${iconBg};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;">
+                  <span style="color:${iconColor};font-size:24px;">${statusIcon}</span>
+                </div>
+              </td></tr>
+              <tr><td align="center">
+                <h1 style="margin:0 0 6px;font-size:20px;color:#1a1a2e;">${bannerTitle}</h1>
+                <p style="margin:0 0 24px;font-size:14px;color:#666;">
+                  Hi <strong>${userName}</strong>, ${bannerMessage}
+                </p>
+              </td></tr>
+            </table>
+
+            <!-- Order Progress -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+              <tr>
+                ${activeSteps.map((step, i) => {
+                  const isCancelledStep = step === "Cancelled";
+                  let isCompleted = false;
+                  let isActive = false;
+
+                  if (isCancelled) {
+                    if (isCancelledStep) {
+                      isActive = true;
+                    } else {
+                      isCompleted = true; // Mark previous steps as completed
+                    }
+                  } else {
+                    isCompleted = i < currentStepIndex;
+                    isActive = i === currentStepIndex;
+                  }
+
+                  const bg = isActive ? (isCancelled ? "#e53935" : "#43a047") : isCompleted ? "#43a047" : "#f0f0f0";
+                  const color = isActive || isCompleted ? "#fff" : "#aaa";
+                  const textWeight = isActive ? "600" : "400";
+                  const textColor = isActive ? (isCancelled ? "#e53935" : "#43a047") : isCompleted ? "#43a047" : "#aaa";
+                  const symbol = isCompleted ? "✓" : isCancelledStep ? "✕" : i + 1;
+
+                  return `
+                  <td align="center" style="width: 25%;">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${bg};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${color};margin-bottom:6px;">
+                      ${symbol}
+                    </div>
+                    <div style="font-size:10px;color:${textColor};font-weight:${textWeight};">${step}</div>
+                  </td>
+                  `;
+                }).join("")}
+              </tr>
+            </table>
+
+            <!-- Order Summary Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9ff;border:1px solid #e0e4f0;border-radius:6px;padding:16px;margin-bottom:20px;">
+              <tr><td>
+                <p style="margin:0 0 12px;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.8px;">Order Summary</p>
+                ${[
+                  ["Order ID", `#${order.id}`],
+                  ["Date", date],
+                  ["Total Amount", `Rs. ${(Number(order.totalAmount) || 0).toLocaleString()}`],
+                  ["Payment Method", order.paymentMethod || "Cash on Delivery"],
+                  ["Current Status", `<span style="background:${isCancelled ? "#ffebee" : "#e8f5e9"};color:${isCancelled ? "#c62828" : "#2e7d32"};font-size:12px;padding:2px 10px;border-radius:20px;">● ${statusDisplay}</span>`],
+                ].map(([label, value]) => `
+                  <table width="100%" style="border-bottom:1px solid #eee;">
+                    <tr>
+                      <td style="padding:8px 0;font-size:14px;color:#666;">${label}</td>
+                      <td style="padding:8px 0;font-size:14px;color:#1a1a2e;font-weight:500;text-align:right;">${value}</td>
+                    </tr>
+                  </table>
+                `).join("")}
+              </td></tr>
+            </table>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center">
+                <a href="${process.env.FRONTEND_URL}/order?orderId=${order.id}&phone=${order.phoneNumber || ""}"
+                  style="display:inline-block;background:#e94560;color:#fff;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;">
+                  Track Your Order
+                </a>
+              </td></tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f4f4f4;padding:20px 32px;text-align:center;">
+            <p style="font-size:12px;color:#999;line-height:1.8;margin:0;">
+              Questions? <a href="mailto:support@fancystore.pk" style="color:#1a1a2e;">Contact Support</a><br/>
+              &copy; ${new Date().getFullYear()} FancyStore &nbsp;|&nbsp;
+              <a href="${process.env.FRONTEND_URL}/unsubscribe" style="color:#999;">Unsubscribe</a>
             </p>
           </td>
         </tr>

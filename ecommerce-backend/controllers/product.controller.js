@@ -18,6 +18,9 @@ import {
   getProductsByFilterService,
   getRelatedProductsService,
   buildProductTextForAI,
+  addVariantService,
+  updateVariantService,
+  deleteVariantService,
 } from "../services/product.service.js";
 import ApiError from "../utils/apiError.js";
 import Product from "../models/product.model.js";
@@ -29,7 +32,7 @@ export const addProduct = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, product, "Product added successfully"));
 });
-// no
+
 export const searchProducts = asyncHandler(async (req, res) => {
   const data = await searchProductsService(
     req.query.q,
@@ -146,7 +149,6 @@ export const getRelatedProducts = asyncHandler(async (req, res) => {
 });
 
 export const syncProductEmbeddings = asyncHandler(async (req, res) => {
-  // Un products ko dhoondein jinki embedding 'null' hai
   const products = await Product.findAll({ 
     where: { embedding: null } 
   });
@@ -159,14 +161,8 @@ export const syncProductEmbeddings = asyncHandler(async (req, res) => {
   console.log(`Found ${products.length} products to vectorize. Starting...`);
 
   for (const product of products) {
-    // 1. Apne V2 helper se product ki detail ka rich text banayein
     const textToEmbed = buildProductTextForAI(product);
-    
-    // 2. Vector Generate karein
     const vectorArray = await generateEmbedding(textToEmbed, "search_document");
-    
-    // 3. Database mein vector save karein
-    // product.embedding = vectorArray;
     product.embedding = `[${vectorArray.join(',')}]`;
     await product.save();
     
@@ -178,4 +174,23 @@ export const syncProductEmbeddings = asyncHandler(async (req, res) => {
     success: true, 
     message: `Successfully generated rich embeddings for ${count} products.` 
   });
+});
+
+// ================= STANDALONE VARIANT CONTROLLER HANDLERS =================
+
+export const addVariant = asyncHandler(async (req, res) => {
+  const variantFile = req.file || (req.files && req.files[0]);
+  const variant = await addVariantService(req.params.productId, req.body, variantFile);
+  res.status(201).json(new ApiResponse(201, variant, "Product variant added successfully"));
+});
+
+export const updateVariant = asyncHandler(async (req, res) => {
+  const variantFile = req.file || (req.files && req.files[0]);
+  const variant = await updateVariantService(req.params.id, req.body, variantFile);
+  res.status(200).json(new ApiResponse(200, variant, "Product variant updated successfully"));
+});
+
+export const deleteVariant = asyncHandler(async (req, res) => {
+  await deleteVariantService(req.params.id);
+  res.status(200).json(new ApiResponse(200, null, "Product variant deleted successfully"));
 });

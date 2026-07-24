@@ -61,8 +61,13 @@ export default function ProductDetailsClient({ product }: Props) {
   );
 
   // 🌟 COMPUTED: Active price based on selected variant
+  const getVariantPrice = (v: ProductVariant) => {
+    if (v.salePrice && Number(v.salePrice) > 0) return Number(v.salePrice);
+    return Number(v.price);
+  };
+
   const activePrice = selectedVariant
-    ? selectedVariant.price
+    ? getVariantPrice(selectedVariant)
     : product.isOnSale && product.discountPrice
       ? product.discountPrice
       : product.price;
@@ -109,7 +114,7 @@ export default function ProductDetailsClient({ product }: Props) {
     }
   };
 
-  // ✅ Buy Now Function (AddToCart Hook nikal dein isme se)
+  // ✅ Buy Now Function
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
 
@@ -120,23 +125,30 @@ export default function ProductDetailsClient({ product }: Props) {
 
     // If variants exist but none selected, prompt user
     if (hasVariants && !selectedVariant) {
-      toast.error("Please select a material quality first!");
+      toast.error("Please select an option first!");
       return;
     }
 
     setIsBuyNowPending(true);
+
+    const variantLabel = selectedVariant ? (selectedVariant.variantValue || selectedVariant.materialName) : "";
 
     sessionStorage.setItem(
       "buyNowItem",
       JSON.stringify({
         productId: product.id,
         name: selectedVariant
-          ? `${product.name} (${selectedVariant.materialName})`
+          ? `${product.name} (${variantLabel})`
           : product.name,
         image: activeImage || product.imageUrl || product.images?.[0],
         price: activePrice,
         quantity: 1,
-        ...(selectedVariant && { variantId: selectedVariant.id, materialName: selectedVariant.materialName }),
+        ...(selectedVariant && { 
+          variantId: selectedVariant.id, 
+          materialName: variantLabel,
+          variantType: selectedVariant.variantType,
+          variantValue: variantLabel
+        }),
       }),
     );
 
@@ -262,14 +274,14 @@ export default function ProductDetailsClient({ product }: Props) {
           </div>
 
           {/* ===================================================== */}
-          {/* 🌟 PRODUCT VARIANTS SELECTOR (Material Quality Cards) */}
+          {/* 🌟 PRODUCT VARIANTS SELECTOR (Generic Variant Cards) */}
           {/* ===================================================== */}
           {hasVariants && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <Layers size={18} className="text-primary" />
                 <span className="text-sm font-semibold text-text-main uppercase tracking-wider">
-                  Available Qualities
+                  Available Options {product.variants![0]?.variantType ? `(${product.variants![0].variantType})` : ""}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -277,6 +289,9 @@ export default function ProductDetailsClient({ product }: Props) {
                   const isSelected = selectedVariant?.id === variant.id;
                   const variantOutOfStock = variant.stock <= 0;
                   const variantImage = variant.imageUrl || galleryImages[idx] || galleryImages[0] || "/placeholder.png";
+                  const variantTitle = variant.variantValue || variant.materialName || "Standard";
+                  const hasSalePrice = variant.salePrice && Number(variant.salePrice) > 0 && Number(variant.salePrice) < Number(variant.price);
+                  const effectivePrice = getVariantPrice(variant);
 
                   return (
                     <button
@@ -300,7 +315,7 @@ export default function ProductDetailsClient({ product }: Props) {
                       `}>
                         <Image
                           src={variantImage}
-                          alt={variant.materialName}
+                          alt={variantTitle}
                           fill
                           className="object-cover"
                           sizes="56px"
@@ -309,18 +324,32 @@ export default function ProductDetailsClient({ product }: Props) {
 
                       {/* Variant Info */}
                       <div className="flex-1 min-w-0">
-                        <p className={`
-                          text-sm font-semibold truncate transition-colors duration-200
-                          ${isSelected ? "text-primary" : "text-text-main"}
-                        `}>
-                          {variant.materialName}
-                        </p>
-                        <p className={`
-                          text-lg font-bold mt-0.5 transition-colors duration-200
-                          ${isSelected ? "text-primary" : "text-text-main"}
-                        `}>
-                          Rs. {variant.price.toLocaleString()}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`
+                            text-sm font-semibold truncate transition-colors duration-200
+                            ${isSelected ? "text-primary" : "text-text-main"}
+                          `}>
+                            {variantTitle}
+                          </p>
+                          {variant.sku && (
+                            <span className="text-[9px] font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-text-muted">
+                              {variant.sku}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-0.5">
+                          <p className={`
+                            text-lg font-bold transition-colors duration-200
+                            ${isSelected ? "text-primary" : "text-text-main"}
+                          `}>
+                            Rs. {effectivePrice.toLocaleString()}
+                          </p>
+                          {hasSalePrice && (
+                            <p className="text-xs text-text-muted line-through">
+                              Rs. {Number(variant.price).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Stock / Selected indicator */}
@@ -350,7 +379,7 @@ export default function ProductDetailsClient({ product }: Props) {
               {!selectedVariant && (
                 <p className="text-xs text-text-muted mt-2 flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  Select a quality to see its price
+                  Select an option to see its price
                 </p>
               )}
             </div>

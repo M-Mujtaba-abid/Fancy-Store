@@ -13,7 +13,8 @@ export const addToCartService = async (userId, productId, quantity, variantId = 
     const variant = await models.ProductVariant.findOne({ where: { id: normalizedVariantId, productId } });
     if (!variant) throw { status: 404, message: "Variant not found" };
     if (variant.stock < quantity) {
-      throw { status: 400, message: `Insufficient stock. Only ${variant.stock} left for variant (${variant.materialName}).` };
+      const vLabel = variant.variantValue || variant.materialName;
+      throw { status: 400, message: `Insufficient stock. Only ${variant.stock} left for variant (${vLabel}).` };
     }
   } else {
     if (product.stock < quantity) {
@@ -128,8 +129,11 @@ export const getCartService = async (userId) => {
     let availableStock = item.Product.stock;
 
     if (item.variant) {
-      activePrice = item.variant.price;
-      name = `${item.Product.name} (${item.variant.materialName})`;
+      activePrice = (item.variant.salePrice && Number(item.variant.salePrice) > 0 && Number(item.variant.salePrice) < Number(item.variant.price))
+        ? Number(item.variant.salePrice)
+        : Number(item.variant.price);
+      const vLabel = item.variant.variantValue || item.variant.materialName;
+      name = `${item.Product.name} (${vLabel})`;
       if (item.variant.imageUrl) {
         image = item.variant.imageUrl;
       }

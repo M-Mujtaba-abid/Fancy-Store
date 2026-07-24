@@ -1,6 +1,6 @@
 import models from "../models/index.js";
 import sendEmail from "../utils/sendEmail.js";
-import { orderConfirmationTemplate, adminNewOrderTemplate } from "../utils/emailTemplate.js";
+import { orderConfirmationTemplate, adminNewOrderTemplate, orderStatusUpdateTemplate } from "../utils/emailTemplate.js";
 import { SHIPPING_FEE } from "../constants/index.js";
 
 const { Cart, CartItem, Product, Order, OrderItem, User } = models;
@@ -43,9 +43,13 @@ export const placeOrderService = async (userId, orderData) => {
         });
         if (!variant) throw { status: 404, message: "Product variant not found." };
         if (variant.stock < quantity) {
-          throw { status: 400, message: `Insufficient stock for variant (${variant.materialName}) of product ${product.name}.` };
+          const vLabel = variant.variantValue || variant.materialName;
+          throw { status: 400, message: `Insufficient stock for variant (${vLabel}) of product ${product.name}.` };
         }
-        activePrice = variant.price;
+        activePrice = (variant.salePrice && Number(variant.salePrice) > 0 && Number(variant.salePrice) < Number(variant.price))
+          ? Number(variant.salePrice)
+          : Number(variant.price);
+
         variant.stock -= quantity;
         await variant.save({ transaction: t });
 
@@ -203,16 +207,13 @@ export const getOrdersService = async (userId, guestData = null) => {
     // Registered user ke liye sirf uski userId match karo
     whereClause.userId = userId;
   } else if (guestData) {
-    // Guest user ke liye dono matching requirements lagao
+    // Guest user / direct tracking ke liye Order ID aur Phone Number match karo
     const { orderId, phone } = guestData;
     if (!orderId || !phone) {
-      throw { status: 400, message: "Both Order ID and Phone Number are required for guest tracking." };
+      throw { status: 400, message: "Both Order ID and Phone Number are required for order tracking." };
     }
     whereClause.id = orderId;
     whereClause.phoneNumber = phone;
-    
-    // Safety check: Taake guest flow mein registered users ke orders leak na hon
-    whereClause.userId = null; 
   }
 
   const orders = await Order.findAll({
@@ -261,9 +262,73 @@ export const getOrdersCountService = async () => {
 // ================= ADMIN: UPDATE STATUS =================
 export const updateOrderStatusService = async (id, status) => {
   const order = await Order.findByPk(id);
-  if (!order) throw { status: 404, message: "Order not found" };
+  if (!order) {
+    throw { status: 404, message: "Order not found" };
+  }
 
+  const previousStatus = order.status;
   order.status = status;
   await order.save();
+
+  // Restore inventory if status changed to cancelled
+  if (status.toLowerCase() === "cancelled" && previousStatus.toLowerCase() !== "cancelled") {
+    try {
+      const orderItems = await OrderItem.findAll({ where: { orderId: order.id } });
+      for (const item of orderItems) {
+        if (item.variantId) {
+          const variant = await models.ProductVariant.findByPk(item.variantId);
+          if (variant) {
+            variant.stock += item.quantity;
+            await variant.save();
+          }
+        }
+        const product = await Product.findByPk(item.productId);
+        if (product) {
+          if (!item.variantId) {
+            product.stock += item.quantity;
+          }
+          product.sold = Math.max(0, (product.sold || 0) - item.quantity);
+          await product.save();
+        }
+      }
+    } catch (stockErr) {
+      console.error("Failed to restore stock on cancellation:", stockErr);
+    }
+  }
+
+  // Send status update email to the customer asynchronously
+  try {
+    const customerName = order.fullName || "Customer";
+    let subject = `Order #${order.id} Status Update — Fancy Store`;
+    
+    const lowerStatus = (status || "").toLowerCase();
+    if (lowerStatus === "pending") {
+      subject = `Order Confirmed — Fancy Store 🎉`;
+    } else if (lowerStatus === "accepted" || lowerStatus === "processing") {
+      subject = `Your order has been accepted! 📦 — Fancy Store`;
+    } else if (lowerStatus === "ready_to_ship") {
+      subject = `Your order is ready to ship! 📦 — Fancy Store`;
+    } else if (lowerStatus === "shipped") {
+      subject = `Your order has been shipped! 🚚 — Fancy Store`;
+    } else if (lowerStatus === "delivered") {
+      subject = `Your order has been delivered! 🎉 — Fancy Store`;
+    } else if (lowerStatus === "cancelled") {
+      subject = `Your order has been cancelled — Fancy Store`;
+    }
+
+    if (order.email) {
+      sendEmail(
+        order.email,
+        subject,
+        orderStatusUpdateTemplate(customerName, order)
+      )
+      .catch(err => {
+        console.error("Error sending status update email:", err);
+      });
+    }
+  } catch (emailErr) {
+    console.error("Failed to prepare status update email:", emailErr);
+  }
+
   return order;
 };

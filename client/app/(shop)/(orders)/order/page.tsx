@@ -41,6 +41,20 @@ export default function MyOrdersPage() {
   // Fetching orders dynamically based on login or guest search parameters
   const { data: orders, isLoading, isError, error } = useMyOrders(trackParams);
 
+  // Auto-track if orderId and phone query parameters are present in URL
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("orderId");
+      const phone = params.get("phone");
+      if (orderId && phone) {
+        setTrackOrderId(orderId);
+        setTrackPhone(phone);
+        setTrackParams({ orderId, phone });
+      }
+    }
+  }, []);
+
   // Review Modal State
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ id: string | number, name: string, image: string } | null>(null);
@@ -225,7 +239,7 @@ export default function MyOrdersPage() {
                             <div className="flex flex-col justify-between h-full py-1">
                               <Link href={`/products/${item.productId}`} className="font-semibold text-text-main hover:text-primary line-clamp-2 text-sm sm:text-base leading-tight">
                                 {item.variant
-                                  ? `${item.Product?.name} (${item.variant.materialName})`
+                                  ? `${item.Product?.name} (${item.variant.variantValue || item.variant.materialName})`
                                   : (item.Product?.name || "Product Name")}
                               </Link>
                               <div className="mt-1 sm:mt-2">
