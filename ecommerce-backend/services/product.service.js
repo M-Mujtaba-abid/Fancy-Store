@@ -532,8 +532,18 @@ export const getProductsByCategoryService = async (category, queryPage, queryLim
     DEFAULT_LIMITS.PRODUCTS,
   );
 
+  const cleanCategory = (category || "").trim();
+  const normalizedCategory = cleanCategory.replace(/-/g, "_");
+
   const data = await Product.findAndCountAll({
-    where: { category },
+    where: {
+      [Op.or]: [
+        { category: cleanCategory },
+        { category: normalizedCategory },
+        { category: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } },
+        { subCategory: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } }
+      ]
+    },
     limit,
     offset,
     order: [["createdAt", "DESC"]],
@@ -553,7 +563,16 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
 
   const where = {};
   if (filters.vehicleType) where.vehicleType = filters.vehicleType;
-  if (filters.category) where.category = filters.category;
+  if (filters.category) {
+    const cleanCategory = filters.category.trim();
+    const normalizedCategory = cleanCategory.replace(/-/g, "_");
+    where[Op.or] = [
+      { category: cleanCategory },
+      { category: normalizedCategory },
+      { category: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } },
+      { subCategory: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } }
+    ];
+  }
   if (filters.subCategory) where.subCategory = filters.subCategory;
 
   const data = await Product.findAndCountAll({

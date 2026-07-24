@@ -57,7 +57,7 @@ export const HOME_CATEGORIES = [
     direction: 50, // Slide from right
   },
   {
-    id: "rain-caot ",
+    id: "rain_coat",
     title: "Rain Coat",
     subtitle: "100% WaterProof",
     image: "/category/raincoat.jpeg",
