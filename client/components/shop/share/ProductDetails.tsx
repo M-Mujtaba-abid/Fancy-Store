@@ -133,6 +133,14 @@ export default function ProductDetailsClient({ product }: Props) {
 
     const variantLabel = selectedVariant ? (selectedVariant.variantValue || selectedVariant.materialName) : "";
 
+    const origPrice = selectedVariant
+      ? (selectedVariant.salePrice && Number(selectedVariant.salePrice) > 0 && Number(selectedVariant.salePrice) < Number(selectedVariant.price)
+          ? Number(selectedVariant.price)
+          : null)
+      : (product.isOnSale || (product.discountPrice > 0 && product.discountPrice < product.price)) && product.discountPrice
+        ? product.price
+        : null;
+
     sessionStorage.setItem(
       "buyNowItem",
       JSON.stringify({
@@ -142,6 +150,7 @@ export default function ProductDetailsClient({ product }: Props) {
           : product.name,
         image: activeImage || product.imageUrl || product.images?.[0],
         price: activePrice,
+        originalPrice: origPrice,
         quantity: 1,
         ...(selectedVariant && { 
           variantId: selectedVariant.id, 
@@ -154,6 +163,12 @@ export default function ProductDetailsClient({ product }: Props) {
 
     router.push("/checkout?type=buynow");
   };
+
+  const isProductOnSale = Boolean(
+    product.isOnSale ||
+      (product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price) ||
+      (product.variants && product.variants.some((v) => v.salePrice && Number(v.salePrice) > 0 && Number(v.salePrice) < Number(v.price)))
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
@@ -207,10 +222,20 @@ export default function ProductDetailsClient({ product }: Props) {
         {/* Right: Content */}
         <div className="flex flex-col">
           {/* Categories / Badges */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-3">
+            {isProductOnSale && (
+              <span className="bg-red-100 text-red-600 text-[10px] uppercase font-bold px-2 py-1 rounded">
+                Sale
+              </span>
+            )}
             {product.isNewArrival && (
               <span className="bg-green-100 text-green-700 text-[10px] uppercase font-bold px-2 py-1 rounded">
                 New Arrival
+              </span>
+            )}
+            {product.isFeatured && (
+              <span className="bg-amber-100 text-amber-700 text-[10px] uppercase font-bold px-2 py-1 rounded">
+                Featured
               </span>
             )}
             {product.category && (
@@ -234,16 +259,58 @@ export default function ProductDetailsClient({ product }: Props) {
           {/* Pricing Logic — now variant-aware */}
           <div className="flex items-center space-x-4 mb-6 border-b border-border/50 pb-6">
             {selectedVariant ? (
-              /* When a variant is selected, show variant price */
-              <>
-                <span className="text-3xl font-bold text-primary">
-                  Rs. {selectedVariant.price.toLocaleString()}
-                </span>
-                <span className="text-sm text-text-muted font-medium bg-primary/10 px-2 py-1 rounded">
-                  {selectedVariant.materialName}
-                </span>
-              </>
-            ) : product.isOnSale && product.discountPrice ? (
+              (() => {
+                const effectivePrice = getVariantPrice(selectedVariant);
+                const hasVariantSale = selectedVariant.salePrice && Number(selectedVariant.salePrice) > 0 && Number(selectedVariant.salePrice) < Number(selectedVariant.price);
+                return (
+                  <>
+                    <span className="text-3xl font-bold text-primary">
+                      Rs. {effectivePrice.toLocaleString()}
+                    </span>
+                    {hasVariantSale && (
+                      <span className="text-xl text-text-muted line-through font-medium">
+                        Rs. {Number(selectedVariant.price).toLocaleString()}
+                      </span>
+                    )}
+                    <span className="text-sm text-text-muted font-medium bg-primary/10 px-2 py-1 rounded">
+                      {selectedVariant.variantValue || selectedVariant.materialName}
+                    </span>
+                  </>
+                );
+              })()
+            ) : hasVariants ? (
+              (() => {
+                const minVariantPrice = Math.min(
+                  ...product.variants!.map((v) =>
+                    v.salePrice && Number(v.salePrice) > 0 && Number(v.salePrice) < Number(v.price)
+                      ? Number(v.salePrice)
+                      : Number(v.price)
+                  )
+                );
+                const minVariantRegularPrice = Math.min(
+                  ...product.variants!.map((v) => Number(v.price))
+                );
+                const variantHasSale = minVariantPrice < minVariantRegularPrice || product.isOnSale;
+
+                return (
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Starting From</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl font-bold text-primary">
+                          Rs. {minVariantPrice.toLocaleString()}
+                        </span>
+                        {variantHasSale && minVariantRegularPrice > minVariantPrice && (
+                          <span className="text-xl text-text-muted line-through font-medium">
+                            Rs. {minVariantRegularPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
               <>
                 <span className="text-3xl font-bold text-primary">
                   Rs. {product.discountPrice.toLocaleString()}

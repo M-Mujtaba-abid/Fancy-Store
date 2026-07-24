@@ -114,9 +114,16 @@ export default function CartPage() {
                   >
                     {item.name}
                   </Link>
-                  <span className="font-bold text-lg">
-                    Rs. {item.itemTotal.toLocaleString()}
-                  </span>
+                  <div className="flex flex-col items-end">
+                    <span className="font-bold text-lg">
+                      Rs. {item.itemTotal.toLocaleString()}
+                    </span>
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="text-xs text-text-muted line-through font-medium">
+                        Rs. {(item.originalPrice * item.quantity).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-end mt-4">
