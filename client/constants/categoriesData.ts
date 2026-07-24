@@ -1,14 +1,14 @@
 // src/constants/categoriesData.ts
 export const HOME_CATEGORIES = [
-    // 1
+  // 1
   {
     id: "seat_cover", // 👈 Link ke liye use hoga
     title: "Seat Cover",
     subtitle: "Custom fit for your car seats",
-    image: "/category/seatCover.png", 
+    image: "/category/seatCover.png",
     direction: -50, // Slide from left
   },
-//   2
+  //   2
   {
     id: "dashboard_mat",
     title: "Dashboard Mat",
@@ -16,7 +16,7 @@ export const HOME_CATEGORIES = [
     image: "/category/dashboardMat.png",
     direction: 50, // Slide from right
   },
-//   3
+  //   3
   {
     id: "trunk_tray",
     title: "Trunc Tray Mat",
@@ -24,7 +24,7 @@ export const HOME_CATEGORIES = [
     image: "/category/trunkTrayMat.png",
     direction: 50, // Slide from right
   },
-//   4
+  //   4
   {
     id: "steering_cover",
     title: "Steering Cover",
@@ -32,7 +32,7 @@ export const HOME_CATEGORIES = [
     image: "/category/steeringCover.png",
     direction: 50, // Slide from right
   },
-//   5
+  //   5
   {
     id: "car_topCover",
     title: "Car Top Cover",
@@ -40,20 +40,27 @@ export const HOME_CATEGORIES = [
     image: "/sportage.png",
     direction: 50, // Slide from right
   },
-//   6
+  //   6
   {
-    id: "floor_mat", 
+    id: "floor_mat",
     title: "Floor Mat",
     subtitle: "clean and easy to remove",
     image: "/category/footMat.png",
     direction: 50, // Slide from right
   },
-//   7
+  //   7
   {
-    id: "bike_topCover", 
+    id: "bike_topCover",
     title: "Bike Top Cover",
     subtitle: "High protection for your bike",
     image: "/category/bikeTopCover.png",
+    direction: 50, // Slide from right
+  },
+  {
+    id: "rain-caot ",
+    title: "Rain Coat",
+    subtitle: "100% WaterProof",
+    image: "/category/raincoat.jpeg",
     direction: 50, // Slide from right
   },
 ];

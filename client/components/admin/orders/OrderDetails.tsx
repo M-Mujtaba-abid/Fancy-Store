@@ -127,7 +127,24 @@ const OrderDetails = ({ order, onClose }: OrderDetailsProps) => {
                             <p className="text-xs text-text-muted mt-0.5">Product ID: {item.productId}</p>
                           </div>
                         </td>
-                        <td className="p-4 text-center text-text-muted">Rs. {item.price.toLocaleString()}</td>
+                        <td className="p-4 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-text-main font-semibold">Rs. {item.price.toLocaleString()}</span>
+                            {(() => {
+                              const reg = item.variant
+                                ? Number(item.variant.price)
+                                : (item.Product?.price ? Number(item.Product.price) : null);
+                              if (reg && reg > item.price) {
+                                return (
+                                  <span className="text-xs text-text-muted line-through">
+                                    Rs. {reg.toLocaleString()}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </td>
                         <td className="p-4 text-center text-text-main font-bold">x{item.quantity}</td>
                         <td className="p-4 text-right text-primary font-bold">Rs. {(item.price * item.quantity).toLocaleString()}</td>
                       </tr>

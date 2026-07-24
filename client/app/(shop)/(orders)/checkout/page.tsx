@@ -216,6 +216,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   required
                   type="text"
                   name="fullName"
+                  placeholder="e.g. Muhammad Noman"
                   value={formData.fullName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -229,6 +230,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   required
                   type="tel"
                   name="phoneNumber"
+                  placeholder="e.g. 03001234567"
                   value={formData.phoneNumber}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -244,6 +246,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                 required
                 type="email"
                 name="email"
+                placeholder="e.g. name@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -258,6 +261,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                 required
                 type="text"
                 name="address"
+                placeholder="e.g. House #12, Street 5, Sector G-8"
                 value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -273,6 +277,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   required
                   type="text"
                   name="city"
+                  placeholder="e.g. Lahore"
                   value={formData.city}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -286,6 +291,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   required
                   type="text"
                   name="postalCode"
+                  placeholder="e.g. 54000"
                   value={formData.postalCode}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary outline-none"
@@ -299,9 +305,10 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                   required
                   type="text"
                   name="country"
+                  placeholder="Pakistan"
                   value={formData.country}
                   readOnly
-                className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 border border-border outline-none cursor-not-allowed"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 border border-border outline-none cursor-not-allowed"
                 />
               </div>
             </div>
@@ -338,19 +345,31 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
 
           <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 no-scrollbar">
             {/* ✅ Yahan cartData.items ki jagah displayItems use karein */}
-            {displayItems.map((item: any) => (
-              <div
-                key={item.productId}
-                className="flex justify-between text-sm"
-              >
-                <span className="text-text-muted truncate pr-4">
-                  {item.quantity}x {item.name}
-                </span>
-                <span className="font-medium">
-                  Rs. {(item.itemTotal || item.price).toLocaleString()}
-                </span>
-              </div>
-            ))}
+            {displayItems.map((item: any) => {
+              const orig = item.originalPrice;
+              const hasCutPrice = orig && orig > item.price;
+              const qty = item.quantity || 1;
+              return (
+                <div
+                  key={item.productId || item.id}
+                  className="flex justify-between text-sm items-center"
+                >
+                  <span className="text-text-muted truncate pr-4">
+                    {qty}x {item.name}
+                  </span>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="font-medium">
+                      Rs. {(item.itemTotal || item.price * qty).toLocaleString()}
+                    </span>
+                    {hasCutPrice && (
+                      <span className="text-[11px] text-text-muted line-through">
+                        Rs. {(orig * qty).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="space-y-3 border-t border-border/50 pt-4 mb-6">

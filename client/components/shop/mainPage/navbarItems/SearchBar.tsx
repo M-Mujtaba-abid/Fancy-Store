@@ -139,9 +139,20 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
                     <span className="text-sm font-medium text-text-main truncate">
                       {product.name}
                     </span>
-                    <span className="text-xs font-bold text-primary">
-                      Rs. {product.discountPrice || product.price}
-                    </span>
+                    {product.isOnSale && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-primary">
+                          Rs. {product.discountPrice.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] text-text-muted line-through">
+                          Rs. {product.price.toLocaleString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-primary">
+                        Rs. {product.price.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 </Link>
               ))}

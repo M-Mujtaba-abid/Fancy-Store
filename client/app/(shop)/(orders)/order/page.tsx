@@ -242,10 +242,23 @@ export default function MyOrdersPage() {
                                   ? `${item.Product?.name} (${item.variant.variantValue || item.variant.materialName})`
                                   : (item.Product?.name || "Product Name")}
                               </Link>
-                              <div className="mt-1 sm:mt-2">
+                              <div className="mt-1 sm:mt-2 flex items-center gap-1.5 flex-wrap">
                                 <span className="text-xs sm:text-sm text-text-muted">Qty: {item.quantity}</span>
-                                <span className="mx-2 text-border">|</span>
+                                <span className="text-border">|</span>
                                 <span className="text-xs sm:text-sm font-bold text-text-main">Rs. {item.price.toLocaleString()}</span>
+                                {(() => {
+                                  const reg = item.variant
+                                    ? Number(item.variant.price)
+                                    : (item.Product?.price ? Number(item.Product.price) : null);
+                                  if (reg && reg > item.price) {
+                                    return (
+                                      <span className="text-xs text-text-muted line-through">
+                                        Rs. {reg.toLocaleString()}
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                               </div>
                             </div>
                           </div>

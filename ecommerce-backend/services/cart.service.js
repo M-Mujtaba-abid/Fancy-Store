@@ -124,14 +124,18 @@ export const getCartService = async (userId) => {
   let subtotal = 0;
   const formattedItems = cart.CartItems.map((item) => {
     let activePrice;
+    let originalPrice = null;
     let name = item.Product.name;
     let image = item.Product.imageUrl;
     let availableStock = item.Product.stock;
 
     if (item.variant) {
-      activePrice = (item.variant.salePrice && Number(item.variant.salePrice) > 0 && Number(item.variant.salePrice) < Number(item.variant.price))
-        ? Number(item.variant.salePrice)
-        : Number(item.variant.price);
+      if (item.variant.salePrice && Number(item.variant.salePrice) > 0 && Number(item.variant.salePrice) < Number(item.variant.price)) {
+        activePrice = Number(item.variant.salePrice);
+        originalPrice = Number(item.variant.price);
+      } else {
+        activePrice = Number(item.variant.price);
+      }
       const vLabel = item.variant.variantValue || item.variant.materialName;
       name = `${item.Product.name} (${vLabel})`;
       if (item.variant.imageUrl) {
@@ -139,7 +143,12 @@ export const getCartService = async (userId) => {
       }
       availableStock = item.variant.stock;
     } else {
-      activePrice = item.Product.discountPrice > 0 ? item.Product.discountPrice : item.Product.price;
+      if (item.Product.discountPrice && Number(item.Product.discountPrice) > 0 && Number(item.Product.discountPrice) < Number(item.Product.price)) {
+        activePrice = Number(item.Product.discountPrice);
+        originalPrice = Number(item.Product.price);
+      } else {
+        activePrice = Number(item.Product.price);
+      }
     }
 
     const itemTotal = activePrice * item.quantity;
@@ -153,6 +162,7 @@ export const getCartService = async (userId) => {
       image,
       quantity: item.quantity,
       price: activePrice,
+      originalPrice,
       itemTotal: parseFloat(itemTotal.toFixed(2)),
       availableStock,
     };
