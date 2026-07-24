@@ -278,7 +278,39 @@ export default function ProductDetailsClient({ product }: Props) {
                   </>
                 );
               })()
-            ) : product.isOnSale && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
+            ) : hasVariants ? (
+              (() => {
+                const minVariantPrice = Math.min(
+                  ...product.variants!.map((v) =>
+                    v.salePrice && Number(v.salePrice) > 0 && Number(v.salePrice) < Number(v.price)
+                      ? Number(v.salePrice)
+                      : Number(v.price)
+                  )
+                );
+                const minVariantRegularPrice = Math.min(
+                  ...product.variants!.map((v) => Number(v.price))
+                );
+                const variantHasSale = minVariantPrice < minVariantRegularPrice || product.isOnSale;
+
+                return (
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Starting From</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl font-bold text-primary">
+                          Rs. {minVariantPrice.toLocaleString()}
+                        </span>
+                        {variantHasSale && minVariantRegularPrice > minVariantPrice && (
+                          <span className="text-xl text-text-muted line-through font-medium">
+                            Rs. {minVariantRegularPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price ? (
               <>
                 <span className="text-3xl font-bold text-primary">
                   Rs. {product.discountPrice.toLocaleString()}
