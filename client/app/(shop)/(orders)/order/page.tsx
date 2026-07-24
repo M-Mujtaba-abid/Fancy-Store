@@ -41,6 +41,20 @@ export default function MyOrdersPage() {
   // Fetching orders dynamically based on login or guest search parameters
   const { data: orders, isLoading, isError, error } = useMyOrders(trackParams);
 
+  // Auto-track if orderId and phone query parameters are present in URL
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("orderId");
+      const phone = params.get("phone");
+      if (orderId && phone) {
+        setTrackOrderId(orderId);
+        setTrackPhone(phone);
+        setTrackParams({ orderId, phone });
+      }
+    }
+  }, []);
+
   // Review Modal State
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ id: string | number, name: string, image: string } | null>(null);
