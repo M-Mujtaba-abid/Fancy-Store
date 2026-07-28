@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Speech Bubble -->
+  <g id="speech-bubble">
+    <path d="M480 100c0-33.1-26.9-60-60-60H360c-33.1 0-60 26.9-60 60s26.9 60 60 60h20l10 25 25-25h5c33.1 0 60-26.9 60-60z" fill="#D2D7DC"/>
+    <circle cx="360" cy="100" r="10" fill="#0F2851"/>
+    <circle cx="410" cy="100" r="10" fill="#0F2851"/>
+    <circle cx="460" cy="100" r="10" fill="#0F2851"/>
+  </g>
+
+  <!-- Antenna -->
+  <g id="antenna">
+    <rect x="242" y="110" width="28" height="50" rx="6" fill="#0F2851"/>
+    <circle cx="256" cy="95" r="28" fill="#2B97FF"/>
+    <path d="M210 160h92c10 0 18 8 18 18v6H192v-6c0-10 8-18 18-18z" fill="#2B97FF"/>
+  </g>
+
+  <!-- Side Ears -->
+  <g id="ears">
+    <!-- Left Ear -->
+    <path d="M100 230c-25 0-45 20-45 45s20 45 45 45v-90z" fill="#2B97FF"/>
+    <rect x="80" y="240" width="30" height="70" rx="15" fill="#1C86EE"/>
+    <!-- Right Ear -->
+    <path d="M412 230c25 0 45 20 45 45s-20 45-45 45v-90z" fill="#2B97FF"/>
+    <rect x="402" y="240" width="30" height="70" rx="15" fill="#1C86EE"/>
+  </g>
+
+  <!-- Main Head Body -->
+  <g id="head-base">
+    <!-- Outer light grey helmet -->
+    <rect x="90" y="170" width="332" height="230" rx="115" fill="#E6EBEF"/>
+    <path d="M90 285h332v60c0 63.5-51.5 115-115 115H195c-63.5 0-115-51.5-115-115v-60z" fill="#D5DCE2"/>
+    <!-- Bottom Chin Pointer / Tail -->
+    <path d="M236 440l-20 35 45-20h-25z" fill="#D5DCE2"/>
+  </g>
+
+  <!-- Screen Visor (Navy Blue) -->
+  <g id="visor">
+    <rect x="135" y="200" width="242" height="155" rx="77" fill="#0C1F42"/>
+    <!-- Visor Glass Reflection Highlight -->
+    <path d="M140 265 C170 215, 230 205, 330 205 C250 205, 180 220, 140 265 Z" fill="#ffffff" opacity="0.12"/>
+  </g>
+
+  <!-- Glowing Blue Eyes -->
+  <g id="eyes">
+    <!-- Left Eye -->
+    <rect x="180" y="245" width="48" height="72" rx="24" fill="#2ED1FF"/>
+    <!-- Right Eye -->
+    <rect x="284" y="245" width="48" height="72" rx="24" fill="#2ED1FF"/>
+  </g>
+</svg>
