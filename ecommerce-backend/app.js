@@ -133,21 +133,8 @@ app.get("/", (req, res) => {
 
 
 app.use(errorHandler);
-// Database + Server
-const startServer = async () => {
-  try {
-    await dbConnection();
+// Database Connection
+dbConnection();
 
-    httpServer.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Socket.IO running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-};
-
-startServer();
-
+export { app, httpServer };
 export default app;
