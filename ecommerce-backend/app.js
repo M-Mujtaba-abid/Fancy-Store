@@ -1,4 +1,8 @@
 import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { Server } from "socket.io";
+import { createServer } from "http";
 import { dbConnection } from "./config/db.js";
 import userRoutes from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
@@ -10,17 +14,17 @@ import contactRoutes from "./routes/contact.route.js";
 import reviewRoutes from "./routes/review.route.js";
 import wishlistRoutes from "./routes/wishlist.route.js";
 import chatRoutes from "./routes/chat.route.js";
-// import adminRoutes from "./routes/admin.route.js"; // ✅ add admin routes
+import adminRoutes from "./routes/admin.route.js";
+
 import { stripeWebhook } from "./controllers/payment.controller.js";
-import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/error.middleware.js";
-import cors from "cors";
+import { initializeSocket } from "./socket/socketHandler.js";
 
 const app = express();
 
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); 
-app.use(cookieParser());
+const PORT = process.env.PORT || 5000;
+
+// CORS
 
 const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
 
@@ -38,19 +42,43 @@ const allowedOrigins = Array.from(
     baseAllowedOrigins.flatMap((origin) => {
       try {
         const parsed = new URL(origin);
+
         if (parsed.hostname.startsWith("www.")) {
-          return [origin, `${parsed.protocol}//${parsed.hostname.replace("www.", "")}`];
+          return [
+            origin,
+            `${parsed.protocol}//${parsed.hostname.replace("www.", "")}`,
+          ];
         }
+
         if (!parsed.hostname.startsWith("localhost")) {
-          return [origin, `${parsed.protocol}//www.${parsed.hostname}`];
+          return [
+            origin,
+            `${parsed.protocol}//www.${parsed.hostname}`,
+          ];
         }
       } catch {
         return [origin];
       }
+
       return [origin];
-    }),
-  ),
+    })
+  )
 );
+
+// ----------------------------------
+// Stripe Webhook
+
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
+
+// Global Middleware
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   cors({
@@ -58,34 +86,68 @@ app.use(
       if (!origin) return callback(null, true);
 
       const normalizedOrigin = normalizeOrigin(origin);
+
       if (!allowedOrigins.includes(normalizedOrigin)) {
-        return callback(new Error("CORS policy: Not allowed by server"), false);
+        return callback(
+          new Error("CORS policy: Not allowed by server"),
+          false
+        );
       }
+
       return callback(null, true);
     },
     credentials: true,
-  }),
+  })
 );
 
-// ✅ Routes
+// HTTP + Socket.IO Server
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
+initializeSocket(io);
+
+// Routes
 app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
-// app.use("/api/payment", paymentRoutes);
+app.use("/api/payment", paymentRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/admin", userRoutes);
+app.use("/api/admin", adminRoutes);
 
-dbConnection();
-
+// Health Check
 app.get("/", (req, res) => {
   res.send("Hello Fancy Store!");
 });
+// Error Handler
+
 
 app.use(errorHandler);
+// Database + Server
+const startServer = async () => {
+  try {
+    await dbConnection();
+
+    httpServer.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Socket.IO running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 export default app;
