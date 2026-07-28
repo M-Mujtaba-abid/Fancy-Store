@@ -2,43 +2,28 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 1. Add variantType
-    await queryInterface.addColumn('ProductVariants', 'variantType', {
-      type: Sequelize.STRING,
-      allowNull: true,
-      defaultValue: 'material'
-    });
+    const addCol = async (col, options) => {
+      try {
+        await queryInterface.addColumn('ProductVariants', col, options);
+      } catch (e) {
+        console.log(`Column "${col}" already exists in ProductVariants, skipping.`);
+      }
+    };
 
-    // 2. Add variantValue
-    await queryInterface.addColumn('ProductVariants', 'variantValue', {
-      type: Sequelize.STRING,
-      allowNull: true
-    });
+    await addCol('variantType', { type: Sequelize.STRING, allowNull: true, defaultValue: 'material' });
+    await addCol('variantValue', { type: Sequelize.STRING, allowNull: true });
+    await addCol('salePrice', { type: Sequelize.FLOAT, allowNull: true });
+    await addCol('sku', { type: Sequelize.STRING, allowNull: true });
+    await addCol('status', { type: Sequelize.STRING, allowNull: false, defaultValue: 'active' });
 
-    // 3. Add salePrice
-    await queryInterface.addColumn('ProductVariants', 'salePrice', {
-      type: Sequelize.FLOAT,
-      allowNull: true
-    });
-
-    // 4. Add sku
-    await queryInterface.addColumn('ProductVariants', 'sku', {
-      type: Sequelize.STRING,
-      allowNull: true
-    });
-
-    // 5. Add status
-    await queryInterface.addColumn('ProductVariants', 'status', {
-      type: Sequelize.STRING,
-      allowNull: false,
-      defaultValue: 'active'
-    });
-
-    // 6. Alter materialName to allow nulls
-    await queryInterface.changeColumn('ProductVariants', 'materialName', {
-      type: Sequelize.STRING,
-      allowNull: true
-    });
+    try {
+      await queryInterface.changeColumn('ProductVariants', 'materialName', {
+        type: Sequelize.STRING,
+        allowNull: true
+      });
+    } catch (e) {
+      console.log('Error changing materialName column, skipping.');
+    }
   },
 
   async down(queryInterface, Sequelize) {

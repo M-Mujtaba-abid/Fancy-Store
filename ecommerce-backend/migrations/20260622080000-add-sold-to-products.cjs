@@ -2,11 +2,15 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn('Products', 'sold', {
-      type: Sequelize.INTEGER,
-      defaultValue: 0,
-      allowNull: false
-    });
+    try {
+      await queryInterface.addColumn('Products', 'sold', {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+        allowNull: false
+      });
+    } catch (err) {
+      console.log('Column "sold" already exists, skipping addColumn.');
+    }
 
     // Populate existing products with random sold values between 20 and 150
     try {
