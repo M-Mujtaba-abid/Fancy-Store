@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   X,
   MessageSquare,
+  MessageCircle,
   Star,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -185,6 +186,19 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
               </div>
             )}
           </div>
+
+          <Link
+            href="/dashboard/chat"
+            onClick={handleLinkClick}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+              isActive("/dashboard/chat")
+                ? "bg-primary text-white"
+                : "bg-background text-text-main hover:bg-background/80"
+            }`}
+          >
+            <MessageCircle size={18} />
+            Live Chat
+          </Link>
 
           <Link
             href="/dashboard/contacts"

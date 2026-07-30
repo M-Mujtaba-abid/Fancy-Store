@@ -17,3 +17,10 @@ export const useGetAllUsers = () => {
     queryFn: adminService.getAllUsers,
   });
 };
+
+export const useGetChatRooms = () => {
+  return useQuery({
+    queryKey: ["adminChatRooms"],
+    queryFn: adminService.getChatRooms,
+  });
+};

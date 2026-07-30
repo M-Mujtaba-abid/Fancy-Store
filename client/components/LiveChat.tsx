@@ -2,6 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send } from "lucide-react"; // Agar Lucide icons install hain
+import { io, Socket } from "socket.io-client";
+import { v4 as uuidv4 } from "uuid";
+// import console from "console";
+
+// Aap ke backend ka URL (Apne env variable ke mutabiq adjust karein)
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 interface Message {
     id: string;
@@ -10,24 +17,61 @@ interface Message {
     time: string;
 }
 
-export default function LiveChat() {
+interface LiveChatProps {
+    user?: {
+        id: string | number;
+        name?: string;
+        email?: string;
+    } | null;
+}
+
+let socket: Socket;
+
+
+export default function LiveChat({ user }: LiveChatProps = {}) {
     const [isOpen, setIsOpen] = useState(false);
     const [isOtherChatOpen, setIsOtherChatOpen] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
+    const [chatRoomId, setChatRoomId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            sender: "admin",
-            text: "Hello! Welcome to Fancy Store. How can we help you today?",
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
+        // {
+        //     id: "1",
+        //     sender: "admin",
+        //     text: "Hello! Welcome to Fancy Store. How can we help you today?",
+        //     time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        // },
     ]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // 1. Guest ID Manage (sessionStorage se per-tab isolation)
+    const getGuestId = () => {
+        if (typeof window === "undefined") return "";
+        let gId = sessionStorage.getItem("fancy_guest_id");
+        if (!gId) {
+            gId = `guest_${uuidv4()}`;
+            sessionStorage.setItem("fancy_guest_id", gId);
+        }
+        return gId;
+    };
+
+    const guestId = getGuestId();
+    const userId = user?.id ? String(user.id) : null;
+    const userType = user ? "registered" : "guest";
+    const senderId = user ? String(user.id) : guestId;
+
+
     useEffect(() => {
         window.dispatchEvent(new CustomEvent("livechat-state", { detail: { isOpen } }));
     }, [isOpen]);
+
+    useEffect(() => {
+        const handleOpenLiveChat = () => {
+            setIsOpen(true);
+        };
+        window.addEventListener("open-livechat", handleOpenLiveChat);
+        return () => window.removeEventListener("open-livechat", handleOpenLiveChat);
+    }, []);
 
     useEffect(() => {
         const handleChatWidgetState = (e: Event) => {
@@ -43,19 +87,108 @@ export default function LiveChat() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // Local send message handler (Dummy logic for now)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        socket = io(BACKEND_URL, {
+            withCredentials: true,
+            transports: ["websocket", "polling"],
+        });
+
+        // 🔴 CHECK 1: Connection Bana ya Nahi?
+        socket.on("connect", () => {
+            console.log("🟢 [CLIENT] Socket Connected Successfully! ID:", socket.id);
+        });
+
+        // Connection fail ho to yeh chalega
+        socket.on("connect_error", (err) => {
+            console.error("🔴 [CLIENT] Connection Error:", err.message);
+        });
+
+        // Room Join Request Bhejo (Backend userId/guestId se private room assign karega)
+        console.log("📤 [CLIENT] Emitting join_room...");
+        socket.emit("join_room", {
+            userId,
+            guestId,
+            userType,
+        });
+
+        // 🔴 CHECK 2: Server ne Room Join Confirm Kiya?
+        socket.on("room_joined", ({ chatRoomId: assignedRoomId, messages: serverMessages }) => {
+            console.log("🎉 [CLIENT] Room Join Ho Gaya! Room ID:", assignedRoomId);
+            setChatRoomId(assignedRoomId);
+            sessionStorage.setItem("fancy_chat_room_id", assignedRoomId);
+
+            if (Array.isArray(serverMessages)) {
+                const formatted = serverMessages.map((m: any) => ({
+                    id: m.id,
+                    sender: m.senderType === "admin" ? "admin" : "user",
+                    text: m.message,
+                    time: new Date(m.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    }),
+                }));
+                setMessages(formatted);
+            }
+        });
+
+        socket.on("receive_message", (newMessageData: any) => {
+            console.log("📩 [CLIENT] New Message Received:", newMessageData);
+
+            const formattedMessage: Message = {
+                id: newMessageData.id || Date.now().toString(),
+                sender: newMessageData.senderType === "admin" ? "admin" : "user",
+                text: newMessageData.message,
+                time: new Date(newMessageData.createdAt || Date.now()).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                }),
+            };
+
+            setMessages((prev) => {
+                if (prev.some((m) => m.id === formattedMessage.id)) return prev;
+                return [...prev, formattedMessage];
+            });
+        });
+
+        socket.on("error", (err: any) => {
+            console.error("🔴 [CLIENT] Socket Error:", err);
+        });
+
+        return () => {
+            if (socket) socket.disconnect();
+        };
+    }, [isOpen]);
+
+    // Local send message handler
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputMessage.trim()) return;
+        const text = inputMessage.trim();
+        if (!text) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            sender: "user",
-            text: inputMessage,
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        const activeRoomId = chatRoomId || sessionStorage.getItem("fancy_chat_room_id");
+        if (!activeRoomId) {
+            console.error("🔴 [CLIENT] Cannot send message: Room ID not assigned yet!");
+            return;
+        }
+
+        const payload = {
+            chatRoomId: activeRoomId,
+            senderType: user ? "user" : "guest",
+            senderId,
+            message: text,
+            messageType: "text",
         };
 
-        setMessages((prev) => [...prev, newMessage]);
+        console.log("📤 [CLIENT] Sending message payload:", payload);
+
+        // Socket ko message bhejein
+        if (socket) {
+            socket.emit("send_message", payload);
+        }
+
+        // Input field clear karein
         setInputMessage("");
     };
 

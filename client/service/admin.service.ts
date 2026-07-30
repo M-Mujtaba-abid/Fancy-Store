@@ -1,6 +1,6 @@
 // service/adminService/admin.service.ts
 
-import { AdminUsersResponse, DashboardStatsResponse } from "@/types/admin.type";
+import { AdminUsersResponse, ChatRoomsResponse, DashboardStatsResponse } from "@/types/admin.type";
 import api from "./api";
 
 // import api from "../api"; // Apne axios instance ka sahi path check kar lein
@@ -16,6 +16,11 @@ export const adminService = {
 
   getAllUsers: async (): Promise<AdminUsersResponse> => {
     const response = await api.get("/admin/users");
+    return response.data;
+  },
+
+  getChatRooms: async (): Promise<ChatRoomsResponse> => {
+    const response = await api.get("/admin/chat/rooms");
     return response.data;
   },
 };

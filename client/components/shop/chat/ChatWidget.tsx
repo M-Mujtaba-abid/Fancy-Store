@@ -44,6 +44,14 @@ const ChatWidget = () => {
   }, [isOpen]);
 
   useEffect(() => {
+    const handleOpenChatWidget = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener("open-chatwidget", handleOpenChatWidget);
+    return () => window.removeEventListener("open-chatwidget", handleOpenChatWidget);
+  }, []);
+
+  useEffect(() => {
     const handleLiveChatState = (e: Event) => {
       const customEvent = e as CustomEvent<{ isOpen: boolean }>;
       setIsOtherChatOpen(customEvent.detail?.isOpen || false);
