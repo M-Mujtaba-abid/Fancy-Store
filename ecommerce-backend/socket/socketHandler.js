@@ -39,10 +39,30 @@ export const initializeSocket = (io) => {
         if (!room && userId && userType !== "admin") {
           const numericUserId = Number(userId);
           if (!isNaN(numericUserId)) {
+            // First check if active room with this userId already exists
             room = await ChatRoom.findOne({
               where: { userId: numericUserId, status: "active" },
               include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
             });
+
+            // If not found by userId, check if there's an existing guest room for this guestId to claim
+            if (!room && guestId) {
+              const cleanGuestId = String(guestId).trim();
+              const guestRoom = await ChatRoom.findOne({
+                where: { guestId: cleanGuestId, status: "active" },
+              });
+              if (guestRoom) {
+                await guestRoom.update({
+                  userId: numericUserId,
+                  userType: "registered",
+                });
+                room = await ChatRoom.findByPk(guestRoom.id, {
+                  include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+                });
+              }
+            }
+
+            // If still not found, create new room for this registered user
             if (!room) {
               room = await ChatRoom.create({
                 userId: numericUserId,
@@ -50,6 +70,14 @@ export const initializeSocket = (io) => {
               });
               room = await ChatRoom.findByPk(room.id, {
                 include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+              });
+            }
+
+            // Notify admin room about updated room user info
+            if (room) {
+              io.to("admin_room").emit("room_updated", {
+                chatRoomId: room.id,
+                room,
               });
             }
           }

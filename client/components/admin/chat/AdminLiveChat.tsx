@@ -79,6 +79,30 @@ export default function AdminLiveChat() {
       }
     });
 
+    socket.on("room_updated", (payload: any) => {
+      const { chatRoomId, unreadAdminCount, room: updatedRoom } = payload || {};
+      if (!chatRoomId) return;
+
+      setRooms((prev) => {
+        const exists = prev.some((r) => r.id === chatRoomId);
+        if (!exists) {
+          refetchRooms();
+          return prev;
+        }
+        return prev.map((r) => {
+          if (r.id === chatRoomId) {
+            return {
+              ...r,
+              ...(updatedRoom || {}),
+              unreadAdminCount:
+                unreadAdminCount !== undefined ? unreadAdminCount : r.unreadAdminCount,
+            };
+          }
+          return r;
+        });
+      });
+    });
+
     socket.on("receive_message", (msg: any) => {
       setRooms((prev) => {
         const exists = prev.some((r) => r.id === msg.chatRoomId);
@@ -223,7 +247,10 @@ export default function AdminLiveChat() {
               <UserCircle size={28} className="text-primary" />
               <div>
                 <p className="font-semibold text-sm text-text-main">{roomLabel(selectedRoom)}</p>
-                <p className="text-xs text-text-muted capitalize">{selectedRoom.userType}</p>
+                <p className="text-xs text-text-muted">
+                  <span className="capitalize font-medium">{selectedRoom.userType}</span>
+                  {selectedRoom.user?.email && <span className="ml-1.5 opacity-80">({selectedRoom.user.email})</span>}
+                </p>
               </div>
             </div>
 

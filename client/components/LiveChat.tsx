@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send } from "lucide-react"; // Agar Lucide icons install hain
 import { io, Socket } from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
+import { useGetProfile } from "@/hooks/useAuth";
 // import console from "console";
 
 // Aap ke backend ka URL (Apne env variable ke mutabiq adjust karein)
@@ -28,7 +29,11 @@ interface LiveChatProps {
 let socket: Socket;
 
 
-export default function LiveChat({ user }: LiveChatProps = {}) {
+export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
+    const { data: profileResponse } = useGetProfile();
+    const userProfile = profileResponse?.data;
+    const currentUser = userProp || (userProfile ? { id: userProfile.id, name: userProfile.name, email: userProfile.email } : null);
+
     const [isOpen, setIsOpen] = useState(false);
     const [isOtherChatOpen, setIsOtherChatOpen] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
@@ -56,9 +61,9 @@ export default function LiveChat({ user }: LiveChatProps = {}) {
     };
 
     const guestId = getGuestId();
-    const userId = user?.id ? String(user.id) : null;
-    const userType = user ? "registered" : "guest";
-    const senderId = user ? String(user.id) : guestId;
+    const userId = currentUser?.id ? String(currentUser.id) : null;
+    const userType = currentUser ? "registered" : "guest";
+    const senderId = currentUser ? String(currentUser.id) : guestId;
 
 
     useEffect(() => {
@@ -159,7 +164,7 @@ export default function LiveChat({ user }: LiveChatProps = {}) {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [isOpen]);
+    }, [isOpen, userId, guestId, userType]);
 
     // Local send message handler
     const handleSendMessage = (e: React.FormEvent) => {
@@ -175,7 +180,7 @@ export default function LiveChat({ user }: LiveChatProps = {}) {
 
         const payload = {
             chatRoomId: activeRoomId,
-            senderType: user ? "user" : "guest",
+            senderType: currentUser ? "user" : "guest",
             senderId,
             message: text,
             messageType: "text",
