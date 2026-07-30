@@ -70,6 +70,9 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
     const senderId = currentUser ? String(currentUser.id) : guestId;
 
 
+    const [isAdminTyping, setIsAdminTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
         window.dispatchEvent(new CustomEvent("livechat-state", { detail: { isOpen } }));
     }, [isOpen]);
@@ -189,6 +192,13 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             }
         });
 
+        socket.on("user_typing", (data: any) => {
+            const currentRoomId = chatRoomIdRef.current || sessionStorage.getItem("fancy_chat_room_id");
+            if (data.chatRoomId === currentRoomId && data.senderType === "admin") {
+                setIsAdminTyping(data.isTyping);
+            }
+        });
+
         socket.on("error", (err: any) => {
             console.error("🔴 [CLIENT] Socket Error:", err);
         });
@@ -197,6 +207,25 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             if (socket) socket.disconnect();
         };
     }, [userId, guestId, userType]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputMessage(val);
+
+        const activeRoomId = chatRoomId || chatRoomIdRef.current || sessionStorage.getItem("fancy_chat_room_id");
+        if (socket && activeRoomId) {
+            const senderType = currentUser ? "user" : "guest";
+            if (val.trim()) {
+                socket.emit("typing_start", { chatRoomId: activeRoomId, senderType });
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => {
+                    socket.emit("typing_stop", { chatRoomId: activeRoomId, senderType });
+                }, 2000);
+            } else {
+                socket.emit("typing_stop", { chatRoomId: activeRoomId, senderType });
+            }
+        }
+    };
 
     // Local send message handler
     const handleSendMessage = (e: React.FormEvent) => {
@@ -210,9 +239,16 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             return;
         }
 
+        const senderType = currentUser ? "user" : "guest";
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        if (socket && activeRoomId) {
+            socket.emit("typing_stop", { chatRoomId: activeRoomId, senderType });
+        }
+
         const payload = {
             chatRoomId: activeRoomId,
-            senderType: currentUser ? "user" : "guest",
+            senderType,
             senderId,
             message: text,
             messageType: "text",
@@ -300,6 +336,18 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                                 </div>
                             );
                         })}
+                        {isAdminTyping && (
+                            <div className="mr-auto max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-background border border-border/50 text-text-main text-xs flex items-center gap-2 shadow-sm">
+                                    <span className="font-medium text-primary">Support Agent is typing</span>
+                                    <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -312,7 +360,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                             type="text"
                             placeholder="Write a message..."
                             value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
+                            onChange={handleInputChange}
                             className="flex-1 bg-background text-text-main placeholder:text-text-muted border border-border/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                         />
                         <button

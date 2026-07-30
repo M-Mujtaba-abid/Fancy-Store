@@ -37,6 +37,9 @@ export default function AdminLiveChat() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [onlineRoomIds, setOnlineRoomIds] = useState<string[]>([]);
+  const [typingRoomIds, setTypingRoomIds] = useState<string[]>([]);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const selectedRoomIdRef = useRef<string | null>(null);
@@ -80,6 +83,34 @@ export default function AdminLiveChat() {
     socket.on("connect", () => {
       console.log("🟢 [ADMIN] Socket Connected:", socket.id);
       socket.emit("join_admin_room");
+    });
+
+    socket.on("online_users_list", ({ onlineRoomIds: ids }: { onlineRoomIds: string[] }) => {
+      if (Array.isArray(ids)) {
+        setOnlineRoomIds(ids);
+      }
+    });
+
+    socket.on("user_status_changed", ({ chatRoomId, isOnline }: { chatRoomId: string; isOnline: boolean }) => {
+      setOnlineRoomIds((prev) => {
+        if (isOnline) {
+          return prev.includes(chatRoomId) ? prev : [...prev, chatRoomId];
+        } else {
+          return prev.filter((id) => id !== chatRoomId);
+        }
+      });
+    });
+
+    socket.on("user_typing", ({ chatRoomId, senderType, isTyping }: { chatRoomId: string; senderType: string; isTyping: boolean }) => {
+      if (senderType !== "admin") {
+        setTypingRoomIds((prev) => {
+          if (isTyping) {
+            return prev.includes(chatRoomId) ? prev : [...prev, chatRoomId];
+          } else {
+            return prev.filter((id) => id !== chatRoomId);
+          }
+        });
+      }
     });
 
     socket.on("room_joined", ({ chatRoomId, messages: history }: any) => {
@@ -200,10 +231,30 @@ export default function AdminLiveChat() {
     });
   };
 
+  const handleAdminInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputMessage(val);
+
+    if (socketRef.current && selectedRoomId) {
+      if (val.trim()) {
+        socketRef.current.emit("typing_start", { chatRoomId: selectedRoomId, senderType: "admin" });
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          socketRef.current?.emit("typing_stop", { chatRoomId: selectedRoomId, senderType: "admin" });
+        }, 2000);
+      } else {
+        socketRef.current.emit("typing_stop", { chatRoomId: selectedRoomId, senderType: "admin" });
+      }
+    }
+  };
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const text = inputMessage.trim();
     if (!text || !selectedRoomId || !socketRef.current || !adminId) return;
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    socketRef.current.emit("typing_stop", { chatRoomId: selectedRoomId, senderType: "admin" });
 
     socketRef.current.emit("send_message", {
       chatRoomId: selectedRoomId,
@@ -237,39 +288,55 @@ export default function AdminLiveChat() {
           {rooms.length === 0 && (
             <p className="text-sm text-text-muted p-4">No conversations yet.</p>
           )}
-          {rooms.map((room) => (
-            <div
-              key={room.id}
-              onClick={() => handleSelectRoom(room)}
-              className={`group relative w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors cursor-pointer ${
-                selectedRoomId === room.id ? "bg-background" : ""
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-sm text-text-main truncate">
-                  {roomLabel(room)}
-                </span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {!!room.unreadAdminCount && (
-                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {room.unreadAdminCount}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteRoom(room.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-all"
-                    title="Delete Chat"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+          {rooms.map((room) => {
+            const isUserOnline = onlineRoomIds.includes(room.id);
+            const isUserTyping = typingRoomIds.includes(room.id);
+            return (
+              <div
+                key={room.id}
+                onClick={() => handleSelectRoom(room)}
+                className={`group relative w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors cursor-pointer ${
+                  selectedRoomId === room.id ? "bg-background" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-sm text-text-main truncate flex items-center gap-2">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${
+                        isUserOnline
+                          ? "bg-emerald-500 ring-2 ring-emerald-500/20 animate-pulse"
+                          : "bg-gray-300 dark:bg-gray-600"
+                      }`}
+                      title={isUserOnline ? "Online on website" : "Offline"}
+                    />
+                    {roomLabel(room)}
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {!!room.unreadAdminCount && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                        {room.unreadAdminCount}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteRoom(room.id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-all"
+                      title="Delete Chat"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
+                <p className="text-xs text-text-muted truncate mt-0.5 pr-6">
+                  {isUserTyping ? (
+                    <span className="text-primary font-medium italic animate-pulse">typing...</span>
+                  ) : (
+                    room.lastMessage || "No messages yet"
+                  )}
+                </p>
               </div>
-              <p className="text-xs text-text-muted truncate mt-0.5 pr-6">
-                {room.lastMessage || "No messages yet"}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -289,9 +356,27 @@ export default function AdminLiveChat() {
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <UserCircle size={28} className="text-primary" />
+                <div className="relative">
+                  <UserCircle size={28} className="text-primary" />
+                  <span
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-card ${
+                      onlineRoomIds.includes(selectedRoom.id) ? "bg-emerald-500" : "bg-gray-300"
+                    }`}
+                  />
+                </div>
                 <div>
-                  <p className="font-semibold text-sm text-text-main">{roomLabel(selectedRoom)}</p>
+                  <p className="font-semibold text-sm text-text-main flex items-center gap-1.5">
+                    {roomLabel(selectedRoom)}
+                    <span
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        onlineRoomIds.includes(selectedRoom.id)
+                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                          : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                      }`}
+                    >
+                      {onlineRoomIds.includes(selectedRoom.id) ? "Online" : "Offline"}
+                    </span>
+                  </p>
                   <p className="text-xs text-text-muted">
                     <span className="capitalize font-medium">{selectedRoom.userType}</span>
                     {selectedRoom.user?.email && <span className="ml-1.5 opacity-80">({selectedRoom.user.email})</span>}
@@ -329,6 +414,18 @@ export default function AdminLiveChat() {
                   </div>
                 );
               })}
+              {selectedRoomId && typingRoomIds.includes(selectedRoomId) && (
+                <div className="mr-auto max-w-[75%] animate-in fade-in duration-300">
+                  <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-card border border-border/50 text-text-main text-xs flex items-center gap-2 shadow-sm">
+                    <span className="font-medium text-primary">Customer is typing</span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
+                    </span>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -340,7 +437,7 @@ export default function AdminLiveChat() {
                 type="text"
                 placeholder="Type a reply..."
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
+                onChange={handleAdminInputChange}
                 className="flex-1 bg-background text-text-main placeholder:text-text-muted border border-border/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
               />
               <button
