@@ -23,4 +23,9 @@ export const adminService = {
     const response = await api.get("/admin/chat/rooms");
     return response.data;
   },
+
+  deleteChatRoom: async (roomId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete(`/admin/chat/rooms/${roomId}`);
+    return response.data;
+  },
 };

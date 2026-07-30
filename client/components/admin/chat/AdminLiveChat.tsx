@@ -2,9 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { ArrowLeft, MessageCircle, Send, UserCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send, Trash2, UserCircle } from "lucide-react";
 import { useGetProfile } from "@/hooks/useAuth";
-import { useGetChatRooms } from "@/hooks/useAdmin";
+import { useDeleteChatRoom, useGetChatRooms } from "@/hooks/useAdmin";
 import { ChatRoom } from "@/types/admin.type";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -31,6 +31,8 @@ export default function AdminLiveChat() {
   const adminId = profile?.data?.id;
 
   const { data: roomsData, refetch: refetchRooms } = useGetChatRooms();
+  const { mutate: deleteRoom, isPending: isDeleting } = useDeleteChatRoom();
+
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -39,6 +41,21 @@ export default function AdminLiveChat() {
   const socketRef = useRef<Socket | null>(null);
   const selectedRoomIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleDeleteRoom = (roomId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this chat conversation?")) {
+      deleteRoom(roomId, {
+        onSuccess: () => {
+          setRooms((prev) => prev.filter((r) => r.id !== roomId));
+          if (selectedRoomId === roomId) {
+            setSelectedRoomId(null);
+            setMessages([]);
+          }
+        },
+      });
+    }
+  };
 
   useEffect(() => {
     selectedRoomIdRef.current = selectedRoomId;
@@ -108,23 +125,40 @@ export default function AdminLiveChat() {
         const exists = prev.some((r) => r.id === msg.chatRoomId);
         if (!exists) {
           refetchRooms();
-          return prev;
         }
-        const next = prev.map((r) =>
-          r.id === msg.chatRoomId
-            ? {
-                ...r,
+
+        const next = exists
+          ? prev.map((r) =>
+              r.id === msg.chatRoomId
+                ? {
+                    ...r,
+                    lastMessage: msg.message,
+                    lastMessageAt: msg.createdAt || new Date().toISOString(),
+                    unreadAdminCount:
+                      msg.chatRoomId === selectedRoomIdRef.current
+                        ? 0
+                        : msg.senderType !== "admin"
+                        ? (r.unreadAdminCount || 0) + 1
+                        : r.unreadAdminCount,
+                  }
+                : r
+            )
+          : [
+              {
+                id: msg.chatRoomId,
+                guestId: msg.senderType === "guest" ? msg.senderId : null,
+                userType: msg.senderType === "guest" ? "guest" : "registered",
                 lastMessage: msg.message,
                 lastMessageAt: msg.createdAt || new Date().toISOString(),
-                unreadAdminCount:
-                  msg.chatRoomId === selectedRoomIdRef.current
-                    ? 0
-                    : msg.senderType !== "admin"
-                    ? (r.unreadAdminCount || 0) + 1
-                    : r.unreadAdminCount,
-              }
-            : r
-        );
+                unreadAdminCount: msg.chatRoomId === selectedRoomIdRef.current ? 0 : 1,
+                unreadUserCount: 0,
+                status: "active",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              } as ChatRoom,
+              ...prev,
+            ];
+
         return [...next].sort(
           (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
         );
@@ -204,10 +238,10 @@ export default function AdminLiveChat() {
             <p className="text-sm text-text-muted p-4">No conversations yet.</p>
           )}
           {rooms.map((room) => (
-            <button
+            <div
               key={room.id}
               onClick={() => handleSelectRoom(room)}
-              className={`w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors ${
+              className={`group relative w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors cursor-pointer ${
                 selectedRoomId === room.id ? "bg-background" : ""
               }`}
             >
@@ -215,16 +249,26 @@ export default function AdminLiveChat() {
                 <span className="font-semibold text-sm text-text-main truncate">
                   {roomLabel(room)}
                 </span>
-                {!!room.unreadAdminCount && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
-                    {room.unreadAdminCount}
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {!!room.unreadAdminCount && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {room.unreadAdminCount}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteRoom(room.id, e)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-all"
+                    title="Delete Chat"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-text-muted truncate mt-0.5">
+              <p className="text-xs text-text-muted truncate mt-0.5 pr-6">
                 {room.lastMessage || "No messages yet"}
               </p>
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -237,21 +281,32 @@ export default function AdminLiveChat() {
           </div>
         ) : (
           <>
-            <div className="px-4 py-3 border-b border-border/50 flex items-center gap-3">
-              <button
-                onClick={() => setSelectedRoomId(null)}
-                className="md:hidden p-1.5 rounded-lg hover:bg-background"
-              >
-                <ArrowLeft size={18} />
-              </button>
-              <UserCircle size={28} className="text-primary" />
-              <div>
-                <p className="font-semibold text-sm text-text-main">{roomLabel(selectedRoom)}</p>
-                <p className="text-xs text-text-muted">
-                  <span className="capitalize font-medium">{selectedRoom.userType}</span>
-                  {selectedRoom.user?.email && <span className="ml-1.5 opacity-80">({selectedRoom.user.email})</span>}
-                </p>
+            <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedRoomId(null)}
+                  className="md:hidden p-1.5 rounded-lg hover:bg-background"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <UserCircle size={28} className="text-primary" />
+                <div>
+                  <p className="font-semibold text-sm text-text-main">{roomLabel(selectedRoom)}</p>
+                  <p className="text-xs text-text-muted">
+                    <span className="capitalize font-medium">{selectedRoom.userType}</span>
+                    {selectedRoom.user?.email && <span className="ml-1.5 opacity-80">({selectedRoom.user.email})</span>}
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteRoom(selectedRoom.id)}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 text-red-500 hover:bg-red-500/10 text-xs font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                <Trash2 size={15} />
+                <span>Delete Chat</span>
+              </button>
             </div>
 
             <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-background/30">

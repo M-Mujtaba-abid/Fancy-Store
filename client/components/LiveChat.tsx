@@ -38,22 +38,26 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
     const [isOtherChatOpen, setIsOtherChatOpen] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
     const [chatRoomId, setChatRoomId] = useState<string | null>(null);
-    const [messages, setMessages] = useState<Message[]>([
-        // {
-        //     id: "1",
-        //     sender: "admin",
-        //     text: "Hello! Welcome to Fancy Store. How can we help you today?",
-        //     time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        // },
-    ]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [messages, setMessages] = useState<Message[]>([]);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isOpenRef = useRef(isOpen);
+    const chatRoomIdRef = useRef<string | null>(chatRoomId);
+
+    useEffect(() => {
+        isOpenRef.current = isOpen;
+    }, [isOpen]);
+
+    useEffect(() => {
+        chatRoomIdRef.current = chatRoomId;
+    }, [chatRoomId]);
 
     // 1. Guest ID Manage (sessionStorage se per-tab isolation)
     const getGuestId = () => {
         if (typeof window === "undefined") return "";
         let gId = sessionStorage.getItem("fancy_guest_id");
-        if (!gId) {
+        if (!gId || gId === "undefined" || gId === "null" || gId.trim() === "" || gId.length < 5) {
             gId = `guest_${uuidv4()}`;
             sessionStorage.setItem("fancy_guest_id", gId);
         }
@@ -92,25 +96,33 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    // Clear unread count when chat opens
     useEffect(() => {
-        if (!isOpen) return;
+        if (isOpen) {
+            setUnreadCount(0);
+            const activeRoomId = chatRoomId || sessionStorage.getItem("fancy_chat_room_id");
+            if (socket && activeRoomId) {
+                socket.emit("mark_read", { chatRoomId: activeRoomId, userType: currentUser ? "user" : "guest" });
+            }
+        }
+    }, [isOpen, chatRoomId, currentUser]);
 
+    // Initialize Socket connection immediately on mount so user receives real-time admin messages & badge alerts
+    useEffect(() => {
         socket = io(BACKEND_URL, {
             withCredentials: true,
             transports: ["websocket", "polling"],
         });
 
-        // 🔴 CHECK 1: Connection Bana ya Nahi?
         socket.on("connect", () => {
             console.log("🟢 [CLIENT] Socket Connected Successfully! ID:", socket.id);
         });
 
-        // Connection fail ho to yeh chalega
         socket.on("connect_error", (err) => {
             console.error("🔴 [CLIENT] Connection Error:", err.message);
         });
 
-        // Room Join Request Bhejo (Backend userId/guestId se private room assign karega)
+        // Room Join Request Bhejo
         console.log("📤 [CLIENT] Emitting join_room...");
         socket.emit("join_room", {
             userId,
@@ -118,11 +130,15 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             userType,
         });
 
-        // 🔴 CHECK 2: Server ne Room Join Confirm Kiya?
-        socket.on("room_joined", ({ chatRoomId: assignedRoomId, messages: serverMessages }) => {
+        socket.on("room_joined", ({ chatRoomId: assignedRoomId, room: roomData, messages: serverMessages }: any) => {
             console.log("🎉 [CLIENT] Room Join Ho Gaya! Room ID:", assignedRoomId);
             setChatRoomId(assignedRoomId);
+            chatRoomIdRef.current = assignedRoomId;
             sessionStorage.setItem("fancy_chat_room_id", assignedRoomId);
+
+            if (roomData?.unreadUserCount && !isOpenRef.current) {
+                setUnreadCount(roomData.unreadUserCount);
+            }
 
             if (Array.isArray(serverMessages)) {
                 const formatted = serverMessages.map((m: any) => ({
@@ -139,7 +155,12 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         });
 
         socket.on("receive_message", (newMessageData: any) => {
-            console.log("📩 [CLIENT] New Message Received:", newMessageData);
+            const currentRoomId = chatRoomIdRef.current || sessionStorage.getItem("fancy_chat_room_id");
+            if (!currentRoomId || newMessageData.chatRoomId !== currentRoomId) {
+                return;
+            }
+
+            console.log("📩 [CLIENT] New Message Received for my room:", newMessageData);
 
             const formattedMessage: Message = {
                 id: newMessageData.id || Date.now().toString(),
@@ -155,6 +176,17 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                 if (prev.some((m) => m.id === formattedMessage.id)) return prev;
                 return [...prev, formattedMessage];
             });
+
+            // If message comes from admin for MY specific room, notify user via icon badge if chat box is closed
+            if (newMessageData.senderType === "admin") {
+                if (!isOpenRef.current) {
+                    setUnreadCount((prev) => prev + 1);
+                } else {
+                    if (socket && currentRoomId) {
+                        socket.emit("mark_read", { chatRoomId: currentRoomId, userType: currentUser ? "user" : "guest" });
+                    }
+                }
+            }
         });
 
         socket.on("error", (err: any) => {
@@ -164,7 +196,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [isOpen, userId, guestId, userType]);
+    }, [userId, guestId, userType]);
 
     // Local send message handler
     const handleSendMessage = (e: React.FormEvent) => {
@@ -172,7 +204,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         const text = inputMessage.trim();
         if (!text) return;
 
-        const activeRoomId = chatRoomId || sessionStorage.getItem("fancy_chat_room_id");
+        const activeRoomId = chatRoomId || chatRoomIdRef.current || sessionStorage.getItem("fancy_chat_room_id");
         if (!activeRoomId) {
             console.error("🔴 [CLIENT] Cannot send message: Room ID not assigned yet!");
             return;
@@ -188,12 +220,10 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
 
         console.log("📤 [CLIENT] Sending message payload:", payload);
 
-        // Socket ko message bhejein
         if (socket) {
             socket.emit("send_message", payload);
         }
 
-        // Input field clear karein
         setInputMessage("");
     };
 
@@ -203,13 +233,21 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-[102px] sm:bottom-[136px] md:bottom-[164px] right-4 md:right-8"}`}>
             {/* Toggle Button */}
             {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 active:scale-95"
-                    aria-label="Open Live Chat Support"
-                >
-                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 active:scale-95"
+                        aria-label="Open Live Chat Support"
+                    >
+                        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+                    </button>
+
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-red-500 text-[10px] sm:text-xs font-bold text-white animate-bounce shadow-lg ring-2 ring-background z-10">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                    )}
+                </div>
             )}
 
             {/* Chat Box */}

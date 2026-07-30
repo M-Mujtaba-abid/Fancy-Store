@@ -55,3 +55,19 @@ export const markRoomAsRead = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, {}, "Room marked as read successfully"));
 });
+
+export const deleteChatRoom = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+
+  // Delete messages first to clean up associations
+  await LiveChatMessage.destroy({ where: { chatRoomId: roomId } });
+
+  // Delete the chat room
+  const deletedCount = await ChatRoom.destroy({ where: { id: roomId } });
+
+  if (!deletedCount) {
+    return res.status(404).json(new ApiResponse(404, null, "Chat room not found"));
+  }
+
+  res.status(200).json(new ApiResponse(200, { roomId }, "Chat room deleted successfully"));
+});

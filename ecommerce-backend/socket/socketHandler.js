@@ -38,16 +38,18 @@ export const initializeSocket = (io) => {
         // 2. Registered User (non-admin): Find or Create active room by userId
         if (!room && userId && userType !== "admin") {
           const numericUserId = Number(userId);
-          if (!isNaN(numericUserId)) {
+          if (!isNaN(numericUserId) && numericUserId > 0) {
             // First check if active room with this userId already exists
             room = await ChatRoom.findOne({
               where: { userId: numericUserId, status: "active" },
               include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
             });
 
-            // If not found by userId, check if there's an existing guest room for this guestId to claim
-            if (!room && guestId) {
-              const cleanGuestId = String(guestId).trim();
+            // If not found by userId, check if there's an existing valid guest room for this guestId to claim
+            const cleanGuestId = guestId ? String(guestId).trim() : "";
+            const isValidGuestId = cleanGuestId && cleanGuestId !== "undefined" && cleanGuestId !== "null" && cleanGuestId.length > 5;
+
+            if (!room && isValidGuestId) {
               const guestRoom = await ChatRoom.findOne({
                 where: { guestId: cleanGuestId, status: "active" },
               });
@@ -83,9 +85,11 @@ export const initializeSocket = (io) => {
           }
         }
 
-        // 3. Guest User: Find or Create active room by guestId
-        if (!room && guestId) {
-          const cleanGuestId = String(guestId).trim();
+        // 3. Guest User: Find or Create active room by unique guestId
+        const cleanGuestId = guestId ? String(guestId).trim() : "";
+        const isValidGuestId = cleanGuestId && cleanGuestId !== "undefined" && cleanGuestId !== "null" && cleanGuestId.length > 5;
+
+        if (!room && isValidGuestId) {
           room = await ChatRoom.findOne({
             where: { guestId: cleanGuestId, status: "active" },
           });
@@ -102,22 +106,30 @@ export const initializeSocket = (io) => {
           room = await ChatRoom.findByPk(chatRoomId);
         }
 
-        // 5. Ultimate fallback if still no room
+        // 5. Ultimate fallback: Create a NEW unique guest room with unique UUID
         if (!room) {
-          const fallbackGuestId = `guest_${socket.id}`;
+          const fallbackGuestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           room = await ChatRoom.create({
             guestId: fallbackGuestId,
-            userType: userType || "guest",
+            userType: "guest",
           });
         }
 
         socket.join(room.id);
         console.log(`🔑 User/Guest/Admin (${userType}) joined room: ${room.id} (User: ${userId || guestId})`);
 
-        // If user is Admin, also auto-join admin_room
+        // If user is Admin, auto-join admin_room. Otherwise notify admin_room about active customer room
         if (userType === "admin") {
           socket.join("admin_room");
           console.log(`👨‍💻 Auto-joined Admin socket: ${socket.id} to admin_room`);
+        } else {
+          const roomDetails = await ChatRoom.findByPk(room.id, {
+            include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+          });
+          io.to("admin_room").emit("room_updated", {
+            chatRoomId: room.id,
+            room: roomDetails,
+          });
         }
 
         // Fetch existing messages for this room
@@ -178,11 +190,15 @@ export const initializeSocket = (io) => {
           include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
         });
 
-        // 3. Broadcast message to the specific customer room
+        // 3. Broadcast message to the specific customer room (both Customer and active Admin in room receive it)
         io.to(chatRoomId).emit("receive_message", newMessage);
 
-        // 4. ALSO broadcast to admin_room so connected Admins receive customer messages & room updates in real-time
-        io.to("admin_room").emit("receive_message", newMessage);
+        // 4. If message came from customer, also notify admin_room so other admins receive live message
+        if (senderType !== "admin") {
+          io.to("admin_room").emit("receive_message", newMessage);
+        }
+
+        // 5. Broadcast room_updated metadata to admin_room so sidebar status stays in sync
         io.to("admin_room").emit("room_updated", {
           chatRoomId,
           lastMessage: message,
