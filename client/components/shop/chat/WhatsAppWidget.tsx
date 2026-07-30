@@ -1,9 +1,37 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 const WhatsAppWidget = () => {
+  const [isAnyChatOpen, setIsAnyChatOpen] = useState(false);
+
+  useEffect(() => {
+    let isLiveChatOpen = false;
+    let isChatWidgetOpen = false;
+
+    const updateState = () => {
+      setIsAnyChatOpen(isLiveChatOpen || isChatWidgetOpen);
+    };
+
+    const handleLiveChat = (e: Event) => {
+      isLiveChatOpen = (e as CustomEvent<{ isOpen: boolean }>).detail?.isOpen || false;
+      updateState();
+    };
+
+    const handleChatWidget = (e: Event) => {
+      isChatWidgetOpen = (e as CustomEvent<{ isOpen: boolean }>).detail?.isOpen || false;
+      updateState();
+    };
+
+    window.addEventListener("livechat-state", handleLiveChat);
+    window.addEventListener("chatwidget-state", handleChatWidget);
+    return () => {
+      window.removeEventListener("livechat-state", handleLiveChat);
+      window.removeEventListener("chatwidget-state", handleChatWidget);
+    };
+  }, []);
+
   // ✅ Apna WhatsApp Number yahan likhein (Country code 92 ke sath, bina + lagaye)
   const phoneNumber = "923414159747";
 
@@ -12,9 +40,11 @@ const WhatsAppWidget = () => {
 
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
+  if (isAnyChatOpen) return null;
+
   return (
     // ✅ Positioned safely above the ChatWidget on both mobile and desktop
-    <div className="fixed bottom-[136px] md:bottom-28 right-4 md:right-8 z-50">
+    <div className="fixed bottom-[58px] sm:bottom-[76px] md:bottom-[96px] right-4 md:right-8 z-50">
       <Link
         href={whatsappUrl}
         target="_blank"

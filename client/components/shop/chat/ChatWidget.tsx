@@ -26,6 +26,7 @@ const formatTimestamp = (isoTime: string) =>
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isOtherChatOpen, setIsOtherChatOpen] = useState(false);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageWithMeta[]>([]);
@@ -37,6 +38,27 @@ const ChatWidget = () => {
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const { mutateAsync: sendMessage, isPending } = useChat();
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("chatwidget-state", { detail: { isOpen } }));
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleOpenChatWidget = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener("open-chatwidget", handleOpenChatWidget);
+    return () => window.removeEventListener("open-chatwidget", handleOpenChatWidget);
+  }, []);
+
+  useEffect(() => {
+    const handleLiveChatState = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen: boolean }>;
+      setIsOtherChatOpen(customEvent.detail?.isOpen || false);
+    };
+    window.addEventListener("livechat-state", handleLiveChatState);
+    return () => window.removeEventListener("livechat-state", handleLiveChatState);
+  }, []);
 
   const canSend = useMemo(
     () => input.trim().length > 0 && !isPending && input.length <= MAX_CHARACTERS,
@@ -125,19 +147,19 @@ const ChatWidget = () => {
         },
       ]);
     } catch (error: any) {
-  // Agar backend se rate limit ka error aaye (429) ya custom message ho
-  const errorMessage = error.response?.data?.message || "I am facing a temporary issue. Please try again in a moment.";
-  
-  setMessages((prev) => [
-    ...prev,
-    {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: errorMessage, // 👈 Yahan aapka "Agent is busy..." wala message aayega
-      createdAt: new Date().toISOString(),
-    },
-  ]);
-}
+      // Agar backend se rate limit ka error aaye (429) ya custom message ho
+      const errorMessage = error.response?.data?.message || "I am facing a temporary issue. Please try again in a moment.";
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: errorMessage, // 👈 Yahan aapka "Agent is busy..." wala message aayega
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    }
   };
 
   const openChat = () => {
@@ -159,14 +181,24 @@ const ChatWidget = () => {
     setUnreadCount(0);
   };
 
+  if (!isOpen && isOtherChatOpen) return null;
+
   return (
-    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-20 md:bottom-8 right-4 md:right-8"}`}>
+    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-4 md:bottom-8 right-4 md:right-8"}`}>
       {isOpen ? (
         <div className="w-full h-[85dvh] md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-t md:border border-border/50 rounded-t-2xl md:rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
-            <div>
-              <p className="text-sm font-semibold text-text-main">Fancy Store Assistant</p>
-              <p className="text-xs text-text-muted">Vehicle covers support</p>
+            <div className="flex items-center gap-3">
+              <div className="h-7 w-7 rounded-full bg-primary/10 p-1 flex items-center justify-center border border-primary/20 shadow-sm">
+                <img src="/chatbot-icon.svg" alt="AI Chatbot" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-text-main">AI Chatbot Assistant</p>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <p className="text-xs text-text-muted">Vehicle covers support</p>
+              </div>
             </div>
             <button
               type="button"
@@ -184,17 +216,15 @@ const ChatWidget = () => {
               return (
                 <div
                   key={message.id}
-                  className={`max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-                    isUser ? "ml-auto" : "mr-auto"
-                  }`}
+                  className={`max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-300 ${isUser ? "ml-auto" : "mr-auto"
+                    }`}
                 >
                   {!isUser ? (
                     <div className="flex items-end gap-2">
-                      <div className="h-7 w-7 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                        <Bot size={14} />
+                      <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 p-1 border border-primary/20 flex items-center justify-center">
+                        <img src="/chatbot-icon.svg" alt="AI Bot" className="w-full h-full object-contain" />
                       </div>
                       <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 text-sm leading-relaxed break-words overflow-hidden bg-background border border-border/50 text-text-main prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-pre:p-0 max-w-none">
-                        {/* ✅ 2. Markdown Component add kiya, aur links ko new tab mein kholne ka logic lagaya */}
                         <ReactMarkdown
                           components={{
                             a: ({ node, ...props }) => (
@@ -220,12 +250,11 @@ const ChatWidget = () => {
                 </div>
               );
             })}
-            {/* Loading Indicator Remains Unchanged */}
             {isPending && (
               <div className="mr-auto max-w-[90%] animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-end gap-2">
-                  <div className="h-7 w-7 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                    <Bot size={14} />
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 p-1 border border-primary/20 flex items-center justify-center">
+                    <img src="/chatbot-icon.svg" alt="AI Bot" className="w-full h-full object-contain" />
                   </div>
                   <div className="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-md px-3.5 py-3 bg-background border border-border/50">
                     <span className="h-2 w-2 rounded-full bg-text-muted animate-bounce [animation-delay:-0.24s]" />
@@ -238,7 +267,6 @@ const ChatWidget = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Scroll to bottom button Remains Unchanged */}
           {showScrollToBottom && (
             <button
               type="button"
@@ -254,7 +282,6 @@ const ChatWidget = () => {
           )}
 
           <div className="sticky bottom-0 px-4 py-3 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-border/50 bg-card">
-            {/* Suggestions Remains Unchanged */}
             <div className="flex flex-wrap gap-2 mb-3">
               {SUGGESTIONS.slice(0, 2).map((suggestion) => (
                 <button
@@ -269,14 +296,14 @@ const ChatWidget = () => {
               ))}
             </div>
 
-            <div className="flex items-end gap-2.5">
+            <div className="flex items-end gap-2">
               <textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value.slice(0, MAX_CHARACTERS))}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleSend();
+                    if (canSend) handleSend();
                   }
                 }}
                 placeholder="Ask about car covers..."
@@ -302,14 +329,13 @@ const ChatWidget = () => {
         <div className="relative">
           <button
             type="button"
-            onClick={openChat} // ✅ 3. Yahan 'openChat' call karna tha taa ke welcome message aaye!
-            className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300"
-            aria-label="Open chat support"
+            onClick={openChat}
+            className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-card border-2 border-primary/30 p-1 sm:p-2 shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 group"
+            aria-label="Open AI Chatbot support"
           >
-            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
+            <img src="/chatbot-icon.svg" alt="AI Chatbot" className="w-full h-full object-contain group-hover:rotate-6 transition-transform" />
           </button>
-          
-          {/* ✅ 4. Unread badge add kiya gaya */}
+
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[10px] sm:text-xs font-bold text-white animate-bounce">
               {unreadCount}

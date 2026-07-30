@@ -4,12 +4,13 @@ import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import Review from "../models/review.model.js";
+import { ChatRoom, LiveChatMessage } from "../models/index.js";
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
   // Yahan hum Sequelize ka .count() use kar rahe hain
   const [totalUsers, totalProducts, totalOrders, totalReviews] = await Promise.all([
-    User.count(),    
-    Product.count(), 
+    User.count(),
+    Product.count(),
     Order.count(),
     Review.count()
   ]);
@@ -26,4 +27,47 @@ export const getAllUsers = asyncHandler(async (req, res) => {
   });
 
   res.status(200).json(new ApiResponse(200, users, "Users fetched successfully"));
+});
+
+export const getChatRooms = asyncHandler(async (req, res) => {
+  const rooms = await ChatRoom.findAll({
+    include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+    order: [["lastMessageAt", "DESC"]],
+  });
+
+  res.status(200).json(new ApiResponse(200, rooms, "Chat rooms fetched successfully"));
+});
+
+export const getRoomMessages = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+  const messages = await LiveChatMessage.findAll({
+    where: { chatRoomId: roomId },
+    order: [["createdAt", "ASC"]],
+  });
+
+  res.status(200).json(new ApiResponse(200, messages, "Room messages fetched successfully"));
+});
+
+export const markRoomAsRead = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+  await ChatRoom.update({ unreadAdminCount: 0 }, { where: { id: roomId } });
+  await LiveChatMessage.update({ isRead: true }, { where: { chatRoomId: roomId } });
+
+  res.status(200).json(new ApiResponse(200, {}, "Room marked as read successfully"));
+});
+
+export const deleteChatRoom = asyncHandler(async (req, res) => {
+  const { roomId } = req.params;
+
+  // Delete messages first to clean up associations
+  await LiveChatMessage.destroy({ where: { chatRoomId: roomId } });
+
+  // Delete the chat room
+  const deletedCount = await ChatRoom.destroy({ where: { id: roomId } });
+
+  if (!deletedCount) {
+    return res.status(404).json(new ApiResponse(404, null, "Chat room not found"));
+  }
+
+  res.status(200).json(new ApiResponse(200, { roomId }, "Chat room deleted successfully"));
 });
