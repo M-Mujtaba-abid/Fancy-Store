@@ -144,8 +144,8 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             }
 
             if (Array.isArray(serverMessages)) {
-                const formatted = serverMessages.map((m: any) => ({
-                    id: m.id,
+                const formatted: Message[] = serverMessages.map((m: any) => ({
+                    id: String(m.id),
                     sender: m.senderType === "admin" ? "admin" : "user",
                     text: m.message,
                     time: new Date(m.createdAt).toLocaleTimeString([], {

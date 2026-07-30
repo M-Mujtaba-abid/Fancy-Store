@@ -177,6 +177,7 @@ export default function AdminLiveChat() {
           : [
               {
                 id: msg.chatRoomId,
+                userId: msg.senderType !== "guest" && !isNaN(Number(msg.senderId)) ? Number(msg.senderId) : null,
                 guestId: msg.senderType === "guest" ? msg.senderId : null,
                 userType: msg.senderType === "guest" ? "guest" : "registered",
                 lastMessage: msg.message,
@@ -184,8 +185,7 @@ export default function AdminLiveChat() {
                 unreadAdminCount: msg.chatRoomId === selectedRoomIdRef.current ? 0 : 1,
                 unreadUserCount: 0,
                 status: "active",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                user: msg.room?.user || null,
               } as ChatRoom,
               ...prev,
             ];
