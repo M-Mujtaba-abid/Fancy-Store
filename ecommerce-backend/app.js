@@ -105,9 +105,18 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalizedOrigin) || allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   },
+  transports: ["polling", "websocket"],
+  allowEIO3: true,
 });
 
 initializeSocket(io);
