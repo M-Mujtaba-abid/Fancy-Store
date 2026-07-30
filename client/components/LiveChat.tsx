@@ -114,7 +114,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
     useEffect(() => {
         socket = io(BACKEND_URL, {
             withCredentials: true,
-            transports: ["websocket", "polling"],
+            transports: ["polling", "websocket"],
         });
 
         socket.on("connect", () => {

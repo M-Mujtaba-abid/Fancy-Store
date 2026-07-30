@@ -76,7 +76,7 @@ export default function AdminLiveChat() {
   useEffect(() => {
     const socket = io(BACKEND_URL, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
     });
     socketRef.current = socket;
 
