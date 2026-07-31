@@ -13,9 +13,13 @@ import {
   Star,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { io } from "socket.io-client";
 import AuthButtons from "@/components/shop/share/AuthButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useGetAllContacts } from "@/hooks/useContact";
+import { useGetChatRooms } from "@/hooks/useAdmin";
+import { ChatRoom } from "@/types/admin.type";
 
 interface SidebarNavProps {
   isOpen: boolean;
@@ -23,10 +27,38 @@ interface SidebarNavProps {
 }
 
 const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const [openProducts, setOpenProducts] = React.useState(true);
   const [openOrders, setOpenOrders] = React.useState(true);
   const { data: contacts = [] } = useGetAllContacts();
+  const { data: chatRoomsResponse } = useGetChatRooms();
+  const chatRooms: ChatRoom[] = chatRoomsResponse?.data || [];
+
+  const unreadChatCount = chatRooms.reduce(
+    (sum: number, r: ChatRoom) => sum + (r.unreadAdminCount || 0),
+    0
+  );
+
+  useEffect(() => {
+    const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL || "", {
+      withCredentials: true,
+      transports: ["polling", "websocket"],
+    });
+
+    socket.on("connect", () => {
+      socket.emit("join_admin_room");
+    });
+
+    socket.on("room_updated", () => {
+      queryClient.invalidateQueries({ queryKey: ["adminChatRooms"] });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [queryClient]);
+
   const [openReview, setOpenReview] = React.useState(true);
   // const [pendingCount, setPendingCount] = useState(0);
 
@@ -190,14 +222,21 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
           <Link
             href="/dashboard/chat"
             onClick={handleLinkClick}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm ${
               isActive("/dashboard/chat")
                 ? "bg-primary text-white"
                 : "bg-background text-text-main hover:bg-background/80"
             }`}
           >
-            <MessageCircle size={18} />
-            Live Chat
+            <span className="flex items-center gap-3">
+              <MessageCircle size={18} />
+              Live Chat
+            </span>
+            {unreadChatCount > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {unreadChatCount}
+              </span>
+            )}
           </Link>
 
           <Link

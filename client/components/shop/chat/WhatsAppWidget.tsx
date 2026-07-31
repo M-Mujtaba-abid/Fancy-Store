@@ -2,8 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useGetProfile } from "@/hooks/useAuth";
+import { getUserRole } from "@/utils/auth";
 
 const WhatsAppWidget = () => {
+  const pathname = usePathname();
+  const { data: profileResponse } = useGetProfile();
+  const userProfile = profileResponse?.data;
+
   const [isAnyChatOpen, setIsAnyChatOpen] = useState(false);
 
   useEffect(() => {
@@ -40,6 +47,13 @@ const WhatsAppWidget = () => {
 
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
+  const isAdminRoute =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
+
+  if (isAdminRoute) return null;
   if (isAnyChatOpen) return null;
 
   return (

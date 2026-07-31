@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, ChevronDown, MessageCircle, Send, X } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { ChatMessage } from "@/types/chat.types";
 import ReactMarkdown from "react-markdown"; // ✅ 1. Markdown import kiya
+import { useGetProfile } from "@/hooks/useAuth";
+import { getUserRole } from "@/utils/auth";
 
 const SUGGESTIONS: string[] = [
   // "Which cover is best for Honda Civic 2022?",
@@ -25,6 +28,9 @@ const formatTimestamp = (isoTime: string) =>
   new Date(isoTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 const ChatWidget = () => {
+  const pathname = usePathname();
+  const { data: profileResponse } = useGetProfile();
+  const userProfile = profileResponse?.data;
   const [isOpen, setIsOpen] = useState(false);
   const [isOtherChatOpen, setIsOtherChatOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -181,6 +187,13 @@ const ChatWidget = () => {
     setUnreadCount(0);
   };
 
+  const isAdminRoute =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
+
+  if (isAdminRoute) return null;
   if (!isOpen && isOtherChatOpen) return null;
 
   return (
