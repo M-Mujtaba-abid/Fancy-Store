@@ -63,16 +63,24 @@ export const metadata: Metadata = {
 };
 
 const HomePage = async () => {
-  // Data server par hi fetch karein
-  const [newArrivalsResponse, saleProductsResponse, featuredProductsResponse] = await Promise.all([
-    productService.getNewArrivals(1, 10),
-    productService.getSaleProducts(1, 10),
-    productService.getFeatured(1, 10),
-  ]);
+  let newArrivals: any[] = [];
+  let saleProducts: any[] = [];
+  let featuredProducts: any[] = [];
 
-  const newArrivals = newArrivalsResponse?.products || [];
-  const saleProducts = saleProductsResponse?.products || [];
-  const featuredProducts = featuredProductsResponse?.products || [];
+  try {
+    const [newArrivalsResponse, saleProductsResponse, featuredProductsResponse] =
+      await Promise.all([
+        productService.getNewArrivals(1, 10).catch(() => null),
+        productService.getSaleProducts(1, 10).catch(() => null),
+        productService.getFeatured(1, 10).catch(() => null),
+      ]);
+
+    newArrivals = newArrivalsResponse?.products || [];
+    saleProducts = saleProductsResponse?.products || [];
+    featuredProducts = featuredProductsResponse?.products || [];
+  } catch (error) {
+    console.error("HomePage data fetching error:", error);
+  }
 
   // ==========================================
   // 🌟 2. JSON-LD SCHEMA (Google ko batane ke liye ke ye ek Store hai)
