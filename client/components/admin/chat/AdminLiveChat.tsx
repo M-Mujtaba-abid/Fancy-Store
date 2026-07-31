@@ -7,6 +7,8 @@ import { useGetProfile } from "@/hooks/useAuth";
 import { useDeleteChatRoom, useGetChatRooms } from "@/hooks/useAdmin";
 import { ChatRoom } from "@/types/admin.type";
 
+import api from "@/service/api";
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 interface Message {
@@ -42,7 +44,7 @@ export default function AdminLiveChat() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
-  const selectedRoomIdRef = useRef<string | null>(null);
+  const selectedRoomIdRef = useRef<string | null>(selectedRoomId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleDeleteRoom = (roomId: string, e?: React.MouseEvent) => {
@@ -72,190 +74,241 @@ export default function AdminLiveChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // 3s Background HTTP Sync for Admin (Guarantees fresh rooms and messages on Vercel)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchRooms();
+      if (selectedRoomIdRef.current) {
+        api.get(`/admin/chat/rooms/${selectedRoomIdRef.current}/messages`)
+          .then((res) => {
+            if (Array.isArray(res.data?.data)) {
+              const formatted = res.data.data.map((m: any) => ({
+                id: String(m.id),
+                sender: m.senderType === "admin" ? "admin" : "customer",
+                text: m.message,
+                time: formatTime(m.createdAt),
+              }));
+              setMessages(formatted);
+            }
+          })
+          .catch(() => null);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [refetchRooms]);
+
   // Connect socket once and join the admin broadcast room so we receive every customer message live
   useEffect(() => {
-    const socket = io(BACKEND_URL, {
-      withCredentials: true,
-      transports: ["polling", "websocket"],
-    });
-    socketRef.current = socket;
+    if (!BACKEND_URL) return;
+    try {
+      const socket = io(BACKEND_URL, {
+        withCredentials: true,
+        transports: ["polling", "websocket"],
+      });
+      socketRef.current = socket;
 
-    socket.on("connect", () => {
-      console.log("🟢 [ADMIN] Socket Connected:", socket.id);
-      socket.emit("join_admin_room");
-    });
+      socket.on("connect", () => {
+        console.log("🟢 [ADMIN] Socket Connected:", socket.id);
+        socket.emit("join_admin_room");
+      });
 
-    socket.on("online_users_list", ({ onlineRoomIds: ids }: { onlineRoomIds: string[] }) => {
-      if (Array.isArray(ids)) {
-        setOnlineRoomIds(ids);
-      }
-    });
-
-    socket.on("user_status_changed", ({ chatRoomId, isOnline }: { chatRoomId: string; isOnline: boolean }) => {
-      setOnlineRoomIds((prev) => {
-        if (isOnline) {
-          return prev.includes(chatRoomId) ? prev : [...prev, chatRoomId];
-        } else {
-          return prev.filter((id) => id !== chatRoomId);
+      socket.on("online_users_list", ({ onlineRoomIds: ids }: { onlineRoomIds: string[] }) => {
+        if (Array.isArray(ids)) {
+          setOnlineRoomIds(ids);
         }
       });
-    });
 
-    socket.on("user_typing", ({ chatRoomId, senderType, isTyping }: { chatRoomId: string; senderType: string; isTyping: boolean }) => {
-      if (senderType !== "admin") {
-        setTypingRoomIds((prev) => {
-          if (isTyping) {
+      socket.on("user_status_changed", ({ chatRoomId, isOnline }: { chatRoomId: string; isOnline: boolean }) => {
+        setOnlineRoomIds((prev) => {
+          if (isOnline) {
             return prev.includes(chatRoomId) ? prev : [...prev, chatRoomId];
           } else {
             return prev.filter((id) => id !== chatRoomId);
           }
         });
-      }
-    });
+      });
 
-    socket.on("room_joined", ({ chatRoomId, messages: history }: any) => {
-      if (chatRoomId !== selectedRoomIdRef.current) return;
-      if (Array.isArray(history)) {
+      socket.on("user_typing", ({ chatRoomId, senderType, isTyping }: { chatRoomId: string; senderType: string; isTyping: boolean }) => {
+        if (senderType !== "admin") {
+          setTypingRoomIds((prev) => {
+            if (isTyping) {
+              return prev.includes(chatRoomId) ? prev : [...prev, chatRoomId];
+            } else {
+              return prev.filter((id) => id !== chatRoomId);
+            }
+          });
+        }
+      });
+
+      socket.on("room_joined", ({ chatRoomId, messages: history }: any) => {
+        if (chatRoomId !== selectedRoomIdRef.current) return;
+        if (Array.isArray(history)) {
+          setMessages(
+            history.map((m: any) => ({
+              id: String(m.id),
+              sender: m.senderType === "admin" ? "admin" : "customer",
+              text: m.message,
+              time: formatTime(m.createdAt),
+            }))
+          );
+        }
+      });
+
+      socket.on("room_updated", (payload: any) => {
+        const { chatRoomId, unreadAdminCount, room: updatedRoom, lastMessage, lastMessageAt, senderType } = payload || {};
+        if (!chatRoomId) return;
+
+        setRooms((prev) => {
+          const exists = prev.some((r) => r.id === chatRoomId);
+          if (!exists) {
+            refetchRooms();
+            if (updatedRoom) {
+              const isSelected = chatRoomId === selectedRoomIdRef.current;
+              const newUnread = isSelected ? 0 : (updatedRoom.unreadAdminCount ?? 1);
+              return [{ ...updatedRoom, unreadAdminCount: newUnread }, ...prev];
+            }
+            return prev;
+          }
+
+          const next = prev.map((r) => {
+            if (r.id === chatRoomId) {
+              const isSelected = chatRoomId === selectedRoomIdRef.current;
+              let targetUnread = r.unreadAdminCount || 0;
+
+              if (isSelected) {
+                targetUnread = 0;
+              } else if (unreadAdminCount !== undefined) {
+                targetUnread = unreadAdminCount;
+              } else if (updatedRoom?.unreadAdminCount !== undefined) {
+                targetUnread = updatedRoom.unreadAdminCount;
+              } else if (senderType !== "admin" && senderType !== undefined) {
+                targetUnread = (r.unreadAdminCount || 0) + 1;
+              }
+
+              return {
+                ...r,
+                ...(updatedRoom || {}),
+                lastMessage: lastMessage || updatedRoom?.lastMessage || r.lastMessage,
+                lastMessageAt: lastMessageAt || updatedRoom?.lastMessageAt || r.lastMessageAt || new Date().toISOString(),
+                unreadAdminCount: targetUnread,
+              };
+            }
+            return r;
+          });
+
+          return [...next].sort(
+            (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
+          );
+        });
+      });
+
+      socket.on("receive_message", (msg: any) => {
+        setRooms((prev) => {
+          const exists = prev.some((r) => r.id === msg.chatRoomId);
+          if (!exists) {
+            refetchRooms();
+          }
+
+          const isSelected = msg.chatRoomId === selectedRoomIdRef.current;
+
+          const next = exists
+            ? prev.map((r) =>
+              r.id === msg.chatRoomId
+                ? {
+                  ...r,
+                  lastMessage: msg.message,
+                  lastMessageAt: msg.createdAt || new Date().toISOString(),
+                  unreadAdminCount:
+                    isSelected
+                      ? 0
+                      : msg.senderType !== "admin"
+                        ? (r.unreadAdminCount || 0) + 1
+                        : r.unreadAdminCount,
+                }
+                : r
+            )
+            : [
+              {
+                id: msg.chatRoomId,
+                userId: msg.senderType !== "guest" && !isNaN(Number(msg.senderId)) ? Number(msg.senderId) : null,
+                guestId: msg.senderType === "guest" ? msg.senderId : null,
+                userType: msg.senderType === "guest" ? "guest" : "registered",
+                lastMessage: msg.message,
+                lastMessageAt: msg.createdAt || new Date().toISOString(),
+                unreadAdminCount: isSelected ? 0 : 1,
+                unreadUserCount: 0,
+                status: "active",
+                user: msg.room?.user || null,
+              } as ChatRoom,
+              ...prev,
+            ];
+
+          return [...next].sort(
+            (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
+          );
+        });
+
+        if (msg.chatRoomId === selectedRoomIdRef.current) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === String(msg.id))) return prev;
+            return [
+              ...prev,
+              {
+                id: String(msg.id),
+                sender: msg.senderType === "admin" ? "admin" : "customer",
+                text: msg.message,
+                time: formatTime(msg.createdAt || Date.now()),
+              },
+            ];
+          });
+          socketRef.current?.emit("mark_read", { chatRoomId: msg.chatRoomId, userType: "admin" });
+        }
+      });
+
+      socket.on("error", (err: any) => {
+        console.error("🔴 [ADMIN] Socket Error:", err);
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    } catch (err) {
+      console.error("Admin socket initialization error:", err);
+    }
+  }, [refetchRooms]);
+
+  const handleSelectRoom = async (room: ChatRoom) => {
+    setSelectedRoomId(room.id);
+    setMessages([]);
+    setRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, unreadAdminCount: 0 } : r)));
+
+    api.post("/chat/live/mark-read", { chatRoomId: room.id, userType: "admin" }).catch(() => null);
+
+    if (socketRef.current) {
+      socketRef.current.emit("join_room", {
+        chatRoomId: room.id,
+        userId: adminId,
+        userType: "admin",
+      });
+    }
+
+    try {
+      const res = await api.get(`/admin/chat/rooms/${room.id}/messages`);
+      const serverMsgs = res.data?.data;
+      if (Array.isArray(serverMsgs)) {
         setMessages(
-          history.map((m: any) => ({
-            id: m.id,
+          serverMsgs.map((m: any) => ({
+            id: String(m.id),
             sender: m.senderType === "admin" ? "admin" : "customer",
             text: m.message,
             time: formatTime(m.createdAt),
           }))
         );
       }
-    });
-
-    socket.on("room_updated", (payload: any) => {
-      const { chatRoomId, unreadAdminCount, room: updatedRoom, lastMessage, lastMessageAt, senderType } = payload || {};
-      if (!chatRoomId) return;
-
-      setRooms((prev) => {
-        const exists = prev.some((r) => r.id === chatRoomId);
-        if (!exists) {
-          refetchRooms();
-          if (updatedRoom) {
-            const isSelected = chatRoomId === selectedRoomIdRef.current;
-            const newUnread = isSelected ? 0 : (updatedRoom.unreadAdminCount ?? 1);
-            return [{ ...updatedRoom, unreadAdminCount: newUnread }, ...prev];
-          }
-          return prev;
-        }
-
-        const next = prev.map((r) => {
-          if (r.id === chatRoomId) {
-            const isSelected = chatRoomId === selectedRoomIdRef.current;
-            let targetUnread = r.unreadAdminCount || 0;
-
-            if (isSelected) {
-              targetUnread = 0;
-            } else if (unreadAdminCount !== undefined) {
-              targetUnread = unreadAdminCount;
-            } else if (updatedRoom?.unreadAdminCount !== undefined) {
-              targetUnread = updatedRoom.unreadAdminCount;
-            } else if (senderType !== "admin" && senderType !== undefined) {
-              targetUnread = (r.unreadAdminCount || 0) + 1;
-            }
-
-            return {
-              ...r,
-              ...(updatedRoom || {}),
-              lastMessage: lastMessage || updatedRoom?.lastMessage || r.lastMessage,
-              lastMessageAt: lastMessageAt || updatedRoom?.lastMessageAt || r.lastMessageAt || new Date().toISOString(),
-              unreadAdminCount: targetUnread,
-            };
-          }
-          return r;
-        });
-
-        return [...next].sort(
-          (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
-        );
-      });
-    });
-
-    socket.on("receive_message", (msg: any) => {
-      setRooms((prev) => {
-        const exists = prev.some((r) => r.id === msg.chatRoomId);
-        if (!exists) {
-          refetchRooms();
-        }
-
-        const isSelected = msg.chatRoomId === selectedRoomIdRef.current;
-
-        const next = exists
-          ? prev.map((r) =>
-            r.id === msg.chatRoomId
-              ? {
-                ...r,
-                lastMessage: msg.message,
-                lastMessageAt: msg.createdAt || new Date().toISOString(),
-                unreadAdminCount:
-                  isSelected
-                    ? 0
-                    : msg.senderType !== "admin"
-                      ? (r.unreadAdminCount || 0) + 1
-                      : r.unreadAdminCount,
-              }
-              : r
-          )
-          : [
-            {
-              id: msg.chatRoomId,
-              userId: msg.senderType !== "guest" && !isNaN(Number(msg.senderId)) ? Number(msg.senderId) : null,
-              guestId: msg.senderType === "guest" ? msg.senderId : null,
-              userType: msg.senderType === "guest" ? "guest" : "registered",
-              lastMessage: msg.message,
-              lastMessageAt: msg.createdAt || new Date().toISOString(),
-              unreadAdminCount: isSelected ? 0 : 1,
-              unreadUserCount: 0,
-              status: "active",
-              user: msg.room?.user || null,
-            } as ChatRoom,
-            ...prev,
-          ];
-
-        return [...next].sort(
-          (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
-        );
-      });
-
-      if (msg.chatRoomId === selectedRoomIdRef.current) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [
-            ...prev,
-            {
-              id: msg.id,
-              sender: msg.senderType === "admin" ? "admin" : "customer",
-              text: msg.message,
-              time: formatTime(msg.createdAt || Date.now()),
-            },
-          ];
-        });
-        socketRef.current?.emit("mark_read", { chatRoomId: msg.chatRoomId, userType: "admin" });
-      }
-    });
-
-    socket.on("error", (err: any) => {
-      console.error("🔴 [ADMIN] Socket Error:", err);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [refetchRooms]);
-
-  const handleSelectRoom = (room: ChatRoom) => {
-    setSelectedRoomId(room.id);
-    setMessages([]);
-    setRooms((prev) => prev.map((r) => (r.id === room.id ? { ...r, unreadAdminCount: 0 } : r)));
-    socketRef.current?.emit("join_room", {
-      chatRoomId: room.id,
-      userId: adminId,
-      userType: "admin",
-    });
+    } catch (err) {
+      console.error("Admin HTTP load room messages error:", err);
+    }
   };
 
   const handleAdminInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,23 +328,43 @@ export default function AdminLiveChat() {
     }
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = inputMessage.trim();
-    if (!text || !selectedRoomId || !socketRef.current || !adminId) return;
+    if (!text || !selectedRoomId || !adminId) return;
+
+    const tempMsg: Message = {
+      id: Date.now().toString(),
+      sender: "admin",
+      text,
+      time: formatTime(Date.now()),
+    };
+
+    setMessages((prev) => [...prev, tempMsg]);
+    setInputMessage("");
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    socketRef.current.emit("typing_stop", { chatRoomId: selectedRoomId, senderType: "admin" });
+    if (socketRef.current) {
+      socketRef.current.emit("typing_stop", { chatRoomId: selectedRoomId, senderType: "admin" });
+    }
 
-    socketRef.current.emit("send_message", {
+    const payload = {
       chatRoomId: selectedRoomId,
       senderType: "admin",
-      senderId: adminId,
+      senderId: String(adminId),
       message: text,
       messageType: "text",
-    });
+    };
 
-    setInputMessage("");
+    if (socketRef.current) {
+      socketRef.current.emit("send_message", payload);
+    }
+
+    try {
+      await api.post("/chat/live/send", payload);
+    } catch (err) {
+      console.error("Admin HTTP send error:", err);
+    }
   };
 
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId) || null;
