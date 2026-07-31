@@ -28,6 +28,21 @@ const roomLabel = (room: ChatRoom) => {
 const formatTime = (date: string | number) =>
   new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+const addOrReplaceAdminMessage = (prev: Message[], newMsg: Message): Message[] => {
+  if (prev.some((m) => m.id === newMsg.id)) {
+    return prev;
+  }
+  const tempIndex = prev.findIndex(
+    (m) => m.sender === newMsg.sender && m.text.trim() === newMsg.text.trim()
+  );
+  if (tempIndex !== -1) {
+    const updated = [...prev];
+    updated[tempIndex] = newMsg;
+    return updated;
+  }
+  return [...prev, newMsg];
+};
+
 export default function AdminLiveChat() {
   const { data: profile } = useGetProfile();
   const adminId = profile?.data?.id;
@@ -82,13 +97,19 @@ export default function AdminLiveChat() {
         api.get(`/admin/chat/rooms/${selectedRoomIdRef.current}/messages`)
           .then((res) => {
             if (Array.isArray(res.data?.data)) {
-              const formatted = res.data.data.map((m: any) => ({
-                id: String(m.id),
-                sender: m.senderType === "admin" ? "admin" : "customer",
-                text: m.message,
-                time: formatTime(m.createdAt),
-              }));
-              setMessages(formatted);
+              setMessages((prev) => {
+                let updated = [...prev];
+                res.data.data.forEach((m: any) => {
+                  const formatted: Message = {
+                    id: String(m.id),
+                    sender: m.senderType === "admin" ? "admin" : "customer",
+                    text: m.message,
+                    time: formatTime(m.createdAt),
+                  };
+                  updated = addOrReplaceAdminMessage(updated, formatted);
+                });
+                return updated;
+              });
             }
           })
           .catch(() => null);
@@ -144,14 +165,19 @@ export default function AdminLiveChat() {
       socket.on("room_joined", ({ chatRoomId, messages: history }: any) => {
         if (chatRoomId !== selectedRoomIdRef.current) return;
         if (Array.isArray(history)) {
-          setMessages(
-            history.map((m: any) => ({
-              id: String(m.id),
-              sender: m.senderType === "admin" ? "admin" : "customer",
-              text: m.message,
-              time: formatTime(m.createdAt),
-            }))
-          );
+          setMessages((prev) => {
+            let updated = [...prev];
+            history.forEach((m: any) => {
+              const formatted: Message = {
+                id: String(m.id),
+                sender: m.senderType === "admin" ? "admin" : "customer",
+                text: m.message,
+                time: formatTime(m.createdAt),
+              };
+              updated = addOrReplaceAdminMessage(updated, formatted);
+            });
+            return updated;
+          });
         }
       });
 
@@ -250,18 +276,13 @@ export default function AdminLiveChat() {
         });
 
         if (msg.chatRoomId === selectedRoomIdRef.current) {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === String(msg.id))) return prev;
-            return [
-              ...prev,
-              {
-                id: String(msg.id),
-                sender: msg.senderType === "admin" ? "admin" : "customer",
-                text: msg.message,
-                time: formatTime(msg.createdAt || Date.now()),
-              },
-            ];
-          });
+          const formatted: Message = {
+            id: String(msg.id),
+            sender: msg.senderType === "admin" ? "admin" : "customer",
+            text: msg.message,
+            time: formatTime(msg.createdAt || Date.now()),
+          };
+          setMessages((prev) => addOrReplaceAdminMessage(prev, formatted));
           socketRef.current?.emit("mark_read", { chatRoomId: msg.chatRoomId, userType: "admin" });
         }
       });
@@ -297,14 +318,19 @@ export default function AdminLiveChat() {
       const res = await api.get(`/admin/chat/rooms/${room.id}/messages`);
       const serverMsgs = res.data?.data;
       if (Array.isArray(serverMsgs)) {
-        setMessages(
-          serverMsgs.map((m: any) => ({
-            id: String(m.id),
-            sender: m.senderType === "admin" ? "admin" : "customer",
-            text: m.message,
-            time: formatTime(m.createdAt),
-          }))
-        );
+        setMessages((prev) => {
+          let updated = [...prev];
+          serverMsgs.forEach((m: any) => {
+            const formatted: Message = {
+              id: String(m.id),
+              sender: m.senderType === "admin" ? "admin" : "customer",
+              text: m.message,
+              time: formatTime(m.createdAt),
+            };
+            updated = addOrReplaceAdminMessage(updated, formatted);
+          });
+          return updated;
+        });
       }
     } catch (err) {
       console.error("Admin HTTP load room messages error:", err);
@@ -334,13 +360,13 @@ export default function AdminLiveChat() {
     if (!text || !selectedRoomId || !adminId) return;
 
     const tempMsg: Message = {
-      id: Date.now().toString(),
+      id: String(Date.now()),
       sender: "admin",
       text,
       time: formatTime(Date.now()),
     };
 
-    setMessages((prev) => [...prev, tempMsg]);
+    setMessages((prev) => addOrReplaceAdminMessage(prev, tempMsg));
     setInputMessage("");
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -356,14 +382,24 @@ export default function AdminLiveChat() {
       messageType: "text",
     };
 
-    if (socketRef.current) {
+    if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("send_message", payload);
-    }
-
-    try {
-      await api.post("/chat/live/send", payload);
-    } catch (err) {
-      console.error("Admin HTTP send error:", err);
+    } else {
+      try {
+        const res = await api.post("/chat/live/send", payload);
+        const data = res.data?.data;
+        if (data?.message?.id) {
+          const serverMsg: Message = {
+            id: String(data.message.id),
+            sender: "admin",
+            text: data.message.message,
+            time: formatTime(data.message.createdAt || Date.now()),
+          };
+          setMessages((prev) => addOrReplaceAdminMessage(prev, serverMsg));
+        }
+      } catch (err) {
+        console.error("Admin HTTP send error:", err);
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import ApiError from "../utils/apiError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import { chatWithAgent } from "../services/agent.service.js"; // 👈 Hamari nayi LangChain service
 import { getChatUserContextService, saveChatTurnService } from "../services/chat.service.js"; // Aapki purani services
+import { ChatRoom, LiveChatMessage, User } from "../models/index.js";
 
 const getOptionalUserIdFromCookie = (req) => {
   const token = req.cookies?.token;
