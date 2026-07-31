@@ -186,35 +186,35 @@ export default function AdminLiveChat() {
 
         const next = exists
           ? prev.map((r) =>
-              r.id === msg.chatRoomId
-                ? {
-                    ...r,
-                    lastMessage: msg.message,
-                    lastMessageAt: msg.createdAt || new Date().toISOString(),
-                    unreadAdminCount:
-                      isSelected
-                        ? 0
-                        : msg.senderType !== "admin"
-                        ? (r.unreadAdminCount || 0) + 1
-                        : r.unreadAdminCount,
-                  }
-                : r
-            )
-          : [
-              {
-                id: msg.chatRoomId,
-                userId: msg.senderType !== "guest" && !isNaN(Number(msg.senderId)) ? Number(msg.senderId) : null,
-                guestId: msg.senderType === "guest" ? msg.senderId : null,
-                userType: msg.senderType === "guest" ? "guest" : "registered",
+            r.id === msg.chatRoomId
+              ? {
+                ...r,
                 lastMessage: msg.message,
                 lastMessageAt: msg.createdAt || new Date().toISOString(),
-                unreadAdminCount: isSelected ? 0 : 1,
-                unreadUserCount: 0,
-                status: "active",
-                user: msg.room?.user || null,
-              } as ChatRoom,
-              ...prev,
-            ];
+                unreadAdminCount:
+                  isSelected
+                    ? 0
+                    : msg.senderType !== "admin"
+                      ? (r.unreadAdminCount || 0) + 1
+                      : r.unreadAdminCount,
+              }
+              : r
+          )
+          : [
+            {
+              id: msg.chatRoomId,
+              userId: msg.senderType !== "guest" && !isNaN(Number(msg.senderId)) ? Number(msg.senderId) : null,
+              guestId: msg.senderType === "guest" ? msg.senderId : null,
+              userType: msg.senderType === "guest" ? "guest" : "registered",
+              lastMessage: msg.message,
+              lastMessageAt: msg.createdAt || new Date().toISOString(),
+              unreadAdminCount: isSelected ? 0 : 1,
+              unreadUserCount: 0,
+              status: "active",
+              user: msg.room?.user || null,
+            } as ChatRoom,
+            ...prev,
+          ];
 
         return [...next].sort(
           (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
@@ -300,9 +300,8 @@ export default function AdminLiveChat() {
     <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden h-[calc(100vh-8rem)] flex">
       {/* Rooms List */}
       <div
-        className={`w-full md:w-80 shrink-0 border-r border-border/50 flex-col ${
-          selectedRoomId ? "hidden md:flex" : "flex"
-        }`}
+        className={`w-full md:w-80 shrink-0 border-r border-border/50 flex-col ${selectedRoomId ? "hidden md:flex" : "flex"
+          }`}
       >
         <div className="p-4 border-b border-border/50">
           <h2 className="text-lg font-bold text-text-main flex items-center gap-2">
@@ -322,18 +321,16 @@ export default function AdminLiveChat() {
               <div
                 key={room.id}
                 onClick={() => handleSelectRoom(room)}
-                className={`group relative w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors cursor-pointer ${
-                  selectedRoomId === room.id ? "bg-background" : ""
-                }`}
+                className={`group relative w-full text-left px-4 py-3 border-b border-border/30 hover:bg-background/80 transition-colors cursor-pointer ${selectedRoomId === room.id ? "bg-background" : ""
+                  }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold text-sm text-text-main truncate flex items-center gap-2">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${
-                        isUserOnline
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${isUserOnline
                           ? "bg-emerald-500 ring-2 ring-emerald-500/20 animate-pulse"
                           : "bg-gray-300 dark:bg-gray-600"
-                      }`}
+                        }`}
                       title={isUserOnline ? "Online on website" : "Offline"}
                     />
                     {roomLabel(room)}
@@ -386,20 +383,18 @@ export default function AdminLiveChat() {
                 <div className="relative">
                   <UserCircle size={28} className="text-primary" />
                   <span
-                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-card ${
-                      onlineRoomIds.includes(selectedRoom.id) ? "bg-emerald-500" : "bg-gray-300"
-                    }`}
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-card ${onlineRoomIds.includes(selectedRoom.id) ? "bg-emerald-500" : "bg-gray-300"
+                      }`}
                   />
                 </div>
                 <div>
                   <p className="font-semibold text-sm text-text-main flex items-center gap-1.5">
                     {roomLabel(selectedRoom)}
                     <span
-                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        onlineRoomIds.includes(selectedRoom.id)
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${onlineRoomIds.includes(selectedRoom.id)
                           ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                           : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                      }`}
+                        }`}
                     >
                       {onlineRoomIds.includes(selectedRoom.id) ? "Online" : "Offline"}
                     </span>
@@ -427,11 +422,10 @@ export default function AdminLiveChat() {
                 return (
                   <div key={msg.id} className={`max-w-[75%] ${isAdmin ? "ml-auto" : "mr-auto"}`}>
                     <div
-                      className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm ${
-                        isAdmin
+                      className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm ${isAdmin
                           ? "bg-primary text-white rounded-br-md"
                           : "bg-card border border-border/50 text-text-main rounded-bl-md"
-                      }`}
+                        }`}
                     >
                       {msg.text}
                     </div>

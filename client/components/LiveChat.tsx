@@ -122,18 +122,16 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
 
         socket.on("connect", () => {
             console.log("🟢 [CLIENT] Socket Connected Successfully! ID:", socket.id);
+            console.log("📤 [CLIENT] Emitting join_room...");
+            socket.emit("join_room", {
+                userId,
+                guestId,
+                userType,
+            });
         });
 
         socket.on("connect_error", (err) => {
             console.error("🔴 [CLIENT] Connection Error:", err.message);
-        });
-
-        // Room Join Request Bhejo
-        console.log("📤 [CLIENT] Emitting join_room...");
-        socket.emit("join_room", {
-            userId,
-            guestId,
-            userType,
         });
 
         socket.on("room_joined", ({ chatRoomId: assignedRoomId, room: roomData, messages: serverMessages }: any) => {

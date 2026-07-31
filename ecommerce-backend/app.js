@@ -121,6 +121,11 @@ const io = new Server(httpServer, {
 
 initializeSocket(io);
 
+// 🔥 Route Socket.IO polling requests directly through Express (Required for Vercel Serverless)
+app.all("/socket.io*", (req, res) => {
+  io.engine.handleRequest(req, res);
+});
+
 // Routes
 app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
