@@ -33,6 +33,21 @@ interface LiveChatProps {
 let socket: Socket;
 
 
+const addOrReplaceMessage = (prev: Message[], newMsg: Message): Message[] => {
+    if (prev.some((m) => m.id === newMsg.id)) {
+        return prev;
+    }
+    const tempIndex = prev.findIndex(
+        (m) => m.sender === newMsg.sender && m.text.trim() === newMsg.text.trim()
+    );
+    if (tempIndex !== -1) {
+        const updated = [...prev];
+        updated[tempIndex] = newMsg;
+        return updated;
+    }
+    return [...prev, newMsg];
+};
+
 export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
     const pathname = usePathname();
     const { data: profileResponse } = useGetProfile();
@@ -98,16 +113,22 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                     }
 
                     if (Array.isArray(data.messages)) {
-                        const formatted: Message[] = data.messages.map((m: any) => ({
-                            id: String(m.id),
-                            sender: m.senderType === "admin" ? "admin" : "user",
-                            text: m.message,
-                            time: new Date(m.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            }),
-                        }));
-                        setMessages(formatted);
+                        setMessages((prev) => {
+                            let updated = [...prev];
+                            data.messages.forEach((m: any) => {
+                                const formatted: Message = {
+                                    id: String(m.id),
+                                    sender: m.senderType === "admin" ? "admin" : "user",
+                                    text: m.message,
+                                    time: new Date(m.createdAt).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    }),
+                                };
+                                updated = addOrReplaceMessage(updated, formatted);
+                            });
+                            return updated;
+                        });
                     }
                 }
             } catch (err) {
@@ -132,16 +153,22 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                 const res = await api.get(`/chat/live/messages?chatRoomId=${activeRoomId}`);
                 const serverMessages = res.data?.data;
                 if (Array.isArray(serverMessages)) {
-                    const formatted: Message[] = serverMessages.map((m: any) => ({
-                        id: String(m.id),
-                        sender: m.senderType === "admin" ? "admin" : "user",
-                        text: m.message,
-                        time: new Date(m.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }),
-                    }));
-                    setMessages(formatted);
+                    setMessages((prev) => {
+                        let updated = [...prev];
+                        serverMessages.forEach((m: any) => {
+                            const formatted: Message = {
+                                id: String(m.id),
+                                sender: m.senderType === "admin" ? "admin" : "user",
+                                text: m.message,
+                                time: new Date(m.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                }),
+                            };
+                            updated = addOrReplaceMessage(updated, formatted);
+                        });
+                        return updated;
+                    });
                 }
             } catch (err) {
                 // Silent catch
@@ -223,16 +250,22 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                 }
 
                 if (Array.isArray(serverMessages)) {
-                    const formatted: Message[] = serverMessages.map((m: any) => ({
-                        id: String(m.id),
-                        sender: m.senderType === "admin" ? "admin" : "user",
-                        text: m.message,
-                        time: new Date(m.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }),
-                    }));
-                    setMessages(formatted);
+                    setMessages((prev) => {
+                        let updated = [...prev];
+                        serverMessages.forEach((m: any) => {
+                            const formatted: Message = {
+                                id: String(m.id),
+                                sender: m.senderType === "admin" ? "admin" : "user",
+                                text: m.message,
+                                time: new Date(m.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                }),
+                            };
+                            updated = addOrReplaceMessage(updated, formatted);
+                        });
+                        return updated;
+                    });
                 }
             });
 
@@ -243,7 +276,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                 }
 
                 const formattedMessage: Message = {
-                    id: newMessageData.id || Date.now().toString(),
+                    id: String(newMessageData.id || Date.now()),
                     sender: newMessageData.senderType === "admin" ? "admin" : "user",
                     text: newMessageData.message,
                     time: new Date(newMessageData.createdAt || Date.now()).toLocaleTimeString([], {
@@ -252,10 +285,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                     }),
                 };
 
-                setMessages((prev) => {
-                    if (prev.some((m) => m.id === formattedMessage.id)) return prev;
-                    return [...prev, formattedMessage];
-                });
+                setMessages((prev) => addOrReplaceMessage(prev, formattedMessage));
 
                 if (newMessageData.senderType === "admin") {
                     if (!isOpenRef.current) {
@@ -312,13 +342,13 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         const senderType = currentUser ? "user" : "guest";
 
         const tempMessage: Message = {
-            id: Date.now().toString(),
+            id: String(Date.now()),
             sender: "user",
             text,
             time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
 
-        setMessages((prev) => [...prev, tempMessage]);
+        setMessages((prev) => addOrReplaceMessage(prev, tempMessage));
         setInputMessage("");
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -334,20 +364,29 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             messageType: "text",
         };
 
-        if (socket && activeRoomId) {
+        if (socket && socket.connected && activeRoomId) {
             socket.emit("send_message", payload);
-        }
-
-        try {
-            const res = await api.post("/chat/live/send", payload);
-            const data = res.data?.data;
-            if (data?.chatRoomId && !activeRoomId) {
-                setChatRoomId(data.chatRoomId);
-                chatRoomIdRef.current = data.chatRoomId;
-                sessionStorage.setItem("fancy_chat_room_id", data.chatRoomId);
+        } else {
+            try {
+                const res = await api.post("/chat/live/send", payload);
+                const data = res.data?.data;
+                if (data?.message?.id) {
+                    const serverMsg: Message = {
+                        id: String(data.message.id),
+                        sender: "user",
+                        text: data.message.message,
+                        time: new Date(data.message.createdAt || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    setMessages((prev) => addOrReplaceMessage(prev, serverMsg));
+                }
+                if (data?.chatRoomId && !activeRoomId) {
+                    setChatRoomId(data.chatRoomId);
+                    chatRoomIdRef.current = data.chatRoomId;
+                    sessionStorage.setItem("fancy_chat_room_id", data.chatRoomId);
+                }
+            } catch (err) {
+                console.error("LiveChat HTTP send error:", err);
             }
-        } catch (err) {
-            console.error("LiveChat HTTP send error:", err);
         }
     };
 
