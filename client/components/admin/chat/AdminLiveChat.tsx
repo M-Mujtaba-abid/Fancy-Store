@@ -128,26 +128,50 @@ export default function AdminLiveChat() {
     });
 
     socket.on("room_updated", (payload: any) => {
-      const { chatRoomId, unreadAdminCount, room: updatedRoom } = payload || {};
+      const { chatRoomId, unreadAdminCount, room: updatedRoom, lastMessage, lastMessageAt, senderType } = payload || {};
       if (!chatRoomId) return;
 
       setRooms((prev) => {
         const exists = prev.some((r) => r.id === chatRoomId);
         if (!exists) {
           refetchRooms();
+          if (updatedRoom) {
+            const isSelected = chatRoomId === selectedRoomIdRef.current;
+            const newUnread = isSelected ? 0 : (updatedRoom.unreadAdminCount ?? 1);
+            return [{ ...updatedRoom, unreadAdminCount: newUnread }, ...prev];
+          }
           return prev;
         }
-        return prev.map((r) => {
+
+        const next = prev.map((r) => {
           if (r.id === chatRoomId) {
+            const isSelected = chatRoomId === selectedRoomIdRef.current;
+            let targetUnread = r.unreadAdminCount || 0;
+
+            if (isSelected) {
+              targetUnread = 0;
+            } else if (unreadAdminCount !== undefined) {
+              targetUnread = unreadAdminCount;
+            } else if (updatedRoom?.unreadAdminCount !== undefined) {
+              targetUnread = updatedRoom.unreadAdminCount;
+            } else if (senderType !== "admin" && senderType !== undefined) {
+              targetUnread = (r.unreadAdminCount || 0) + 1;
+            }
+
             return {
               ...r,
               ...(updatedRoom || {}),
-              unreadAdminCount:
-                unreadAdminCount !== undefined ? unreadAdminCount : r.unreadAdminCount,
+              lastMessage: lastMessage || updatedRoom?.lastMessage || r.lastMessage,
+              lastMessageAt: lastMessageAt || updatedRoom?.lastMessageAt || r.lastMessageAt || new Date().toISOString(),
+              unreadAdminCount: targetUnread,
             };
           }
           return r;
         });
+
+        return [...next].sort(
+          (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
+        );
       });
     });
 
@@ -158,6 +182,8 @@ export default function AdminLiveChat() {
           refetchRooms();
         }
 
+        const isSelected = msg.chatRoomId === selectedRoomIdRef.current;
+
         const next = exists
           ? prev.map((r) =>
               r.id === msg.chatRoomId
@@ -166,7 +192,7 @@ export default function AdminLiveChat() {
                     lastMessage: msg.message,
                     lastMessageAt: msg.createdAt || new Date().toISOString(),
                     unreadAdminCount:
-                      msg.chatRoomId === selectedRoomIdRef.current
+                      isSelected
                         ? 0
                         : msg.senderType !== "admin"
                         ? (r.unreadAdminCount || 0) + 1
@@ -182,7 +208,7 @@ export default function AdminLiveChat() {
                 userType: msg.senderType === "guest" ? "guest" : "registered",
                 lastMessage: msg.message,
                 lastMessageAt: msg.createdAt || new Date().toISOString(),
-                unreadAdminCount: msg.chatRoomId === selectedRoomIdRef.current ? 0 : 1,
+                unreadAdminCount: isSelected ? 0 : 1,
                 unreadUserCount: 0,
                 status: "active",
                 user: msg.room?.user || null,
@@ -191,7 +217,7 @@ export default function AdminLiveChat() {
             ];
 
         return [...next].sort(
-          (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+          (a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
         );
       });
 
@@ -208,6 +234,7 @@ export default function AdminLiveChat() {
             },
           ];
         });
+        socketRef.current?.emit("mark_read", { chatRoomId: msg.chatRoomId, userType: "admin" });
       }
     });
 
