@@ -61,3 +61,202 @@ export const chatWithAssistant = asyncHandler(async (req, res) => {
     )
   );
 });
+
+// ================= LIVE CHAT SERVERLESS ENDPOINTS =================
+
+export const joinLiveChat = asyncHandler(async (req, res) => {
+  const { userId, guestId, userType } = req.body;
+  let room;
+
+  if (userId && userType !== "admin") {
+    const numericUserId = Number(userId);
+    if (!isNaN(numericUserId) && numericUserId > 0) {
+      room = await ChatRoom.findOne({
+        where: { userId: numericUserId, status: "active" },
+        include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+      });
+
+      const cleanGuestId = guestId ? String(guestId).trim() : "";
+      const isValidGuestId = cleanGuestId && cleanGuestId !== "undefined" && cleanGuestId !== "null" && cleanGuestId.length > 5;
+
+      if (!room && isValidGuestId) {
+        const guestRoom = await ChatRoom.findOne({
+          where: { guestId: cleanGuestId, status: "active" },
+        });
+        if (guestRoom) {
+          await guestRoom.update({
+            userId: numericUserId,
+            userType: "registered",
+          });
+          room = await ChatRoom.findByPk(guestRoom.id, {
+            include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+          });
+        }
+      }
+
+      if (!room) {
+        room = await ChatRoom.create({
+          userId: numericUserId,
+          userType: "registered",
+        });
+        room = await ChatRoom.findByPk(room.id, {
+          include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+        });
+      }
+    }
+  }
+
+  const cleanGuestId = guestId ? String(guestId).trim() : "";
+  const isValidGuestId = cleanGuestId && cleanGuestId !== "undefined" && cleanGuestId !== "null" && cleanGuestId.length > 5;
+
+  if (!room && isValidGuestId) {
+    room = await ChatRoom.findOne({
+      where: { guestId: cleanGuestId, status: "active" },
+    });
+    if (!room) {
+      room = await ChatRoom.create({
+        guestId: cleanGuestId,
+        userType: "guest",
+      });
+    }
+  }
+
+  if (!room) {
+    const fallbackGuestId = `guest_${crypto.randomUUID()}`;
+    room = await ChatRoom.create({
+      guestId: fallbackGuestId,
+      userType: "guest",
+    });
+  }
+
+  const roomDetails = await ChatRoom.findByPk(room.id, {
+    include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+  });
+
+  const existingMessages = await LiveChatMessage.findAll({
+    where: { chatRoomId: room.id },
+    order: [["createdAt", "ASC"]],
+  });
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        chatRoomId: room.id,
+        room: roomDetails,
+        messages: existingMessages,
+      },
+      "Joined live chat room successfully"
+    )
+  );
+});
+
+export const sendLiveChatMessage = asyncHandler(async (req, res) => {
+  let { chatRoomId, senderType, senderId, message, messageType, fileUrl } = req.body;
+
+  if (!message || !message.trim()) {
+    throw new ApiError(400, "Message content is required.");
+  }
+
+  let targetRoom;
+  if (chatRoomId) {
+    targetRoom = await ChatRoom.findByPk(chatRoomId);
+  }
+
+  if (!targetRoom) {
+    if (senderType === "user" && Number(senderId) > 0) {
+      targetRoom = await ChatRoom.findOne({
+        where: { userId: Number(senderId), status: "active" },
+      });
+      if (!targetRoom) {
+        targetRoom = await ChatRoom.create({
+          userId: Number(senderId),
+          userType: "registered",
+        });
+      }
+    } else {
+      const cleanGuestId = senderId ? String(senderId).trim() : `guest_${crypto.randomUUID()}`;
+      targetRoom = await ChatRoom.findOne({
+        where: { guestId: cleanGuestId, status: "active" },
+      });
+      if (!targetRoom) {
+        targetRoom = await ChatRoom.create({
+          guestId: cleanGuestId,
+          userType: "guest",
+        });
+      }
+    }
+    chatRoomId = targetRoom.id;
+  }
+
+  const newMessage = await LiveChatMessage.create({
+    chatRoomId,
+    senderType: senderType || "guest",
+    senderId: String(senderId || "guest"),
+    message: message.trim(),
+    messageType: messageType || "text",
+    fileUrl: fileUrl || null,
+  });
+
+  await ChatRoom.update(
+    {
+      lastMessage: message.trim(),
+      lastMessageAt: new Date(),
+    },
+    { where: { id: chatRoomId } }
+  );
+
+  if (senderType === "admin") {
+    await ChatRoom.increment("unreadUserCount", { by: 1, where: { id: chatRoomId } });
+  } else {
+    await ChatRoom.increment("unreadAdminCount", { by: 1, where: { id: chatRoomId } });
+  }
+
+  const roomDetails = await ChatRoom.findByPk(chatRoomId, {
+    include: [{ model: User, as: "user", attributes: ["id", "name", "email"] }],
+  });
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        chatRoomId,
+        message: newMessage,
+        room: roomDetails,
+      },
+      "Message sent successfully"
+    )
+  );
+});
+
+export const getLiveChatMessages = asyncHandler(async (req, res) => {
+  const { chatRoomId } = req.query;
+
+  if (!chatRoomId) {
+    throw new ApiError(400, "chatRoomId is required.");
+  }
+
+  const messages = await LiveChatMessage.findAll({
+    where: { chatRoomId },
+    order: [["createdAt", "ASC"]],
+  });
+
+  res.status(200).json(new ApiResponse(200, messages, "Messages fetched successfully"));
+});
+
+export const markLiveChatRead = asyncHandler(async (req, res) => {
+  const { chatRoomId, userType } = req.body;
+
+  if (!chatRoomId) {
+    throw new ApiError(400, "chatRoomId is required.");
+  }
+
+  if (userType === "admin") {
+    await ChatRoom.update({ unreadAdminCount: 0 }, { where: { id: chatRoomId } });
+    await LiveChatMessage.update({ isRead: true }, { where: { chatRoomId } });
+  } else {
+    await ChatRoom.update({ unreadUserCount: 0 }, { where: { id: chatRoomId } });
+  }
+
+  res.status(200).json(new ApiResponse(200, {}, "Marked as read successfully"));
+});
