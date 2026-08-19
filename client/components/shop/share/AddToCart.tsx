@@ -58,6 +58,9 @@ const AddToCart: React.FC<AddToCartProps> = ({
       price: product?.price || 0,
       name: product?.name || "Product",
       image: product?.image,
+      // Guest cart ko category bhi chahiye — warna guest checkout ke pixel
+      // events mein content_category missing rehta hai
+      category: product?.category,
       variantId: product?.variantId,
     });
 

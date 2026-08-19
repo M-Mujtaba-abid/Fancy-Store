@@ -157,6 +157,9 @@ export default function ProductDetailsClient({ product }: Props) {
           ? `${product.name} (${variantLabel})`
           : product.name,
         image: activeImage || product.imageUrl || product.images?.[0],
+        // Buy Now flow bhi category drop kar raha tha — is ke bina checkout ke
+        // Meta/TikTok events mein content_category undefined jata hai
+        category: product.category,
         price: activePrice,
         originalPrice: origPrice,
         quantity: 1,

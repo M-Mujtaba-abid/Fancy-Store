@@ -28,6 +28,45 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // Category URLs /category?category=<slug> se /category/<slug> pe move hui hain
+  // (SEO: query-string page pe generateMetadata possible nahi tha).
+  // Permanent redirects se koi purana link, bookmark ya Google result nahi tootega.
+  async redirects() {
+    return [
+      {
+        source: "/category",
+        has: [{ type: "query", key: "category", value: "(?<slug>.*)" }],
+        destination: "/category/:slug",
+        permanent: true,
+      },
+      // Bare /category (bina slug) -> saare products
+      {
+        source: "/category",
+        destination: "/products",
+        permanent: true,
+      },
+      // Teen legacy stub pages — inme placeholder text tha (aur bikeTopCover
+      // ka <h1> galti se "Car Top Covers" kehta tha). Sitemap mein priority 0.8
+      // pe listed thin duplicate pages the, jo asli category pages se compete
+      // karte the.
+      {
+        source: "/carTopCover",
+        destination: "/category/car_topCover",
+        permanent: true,
+      },
+      {
+        source: "/bikeTopCover",
+        destination: "/category/bike_topCover",
+        permanent: true,
+      },
+      {
+        source: "/truncTrayMat",
+        destination: "/category/trunk_tray",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

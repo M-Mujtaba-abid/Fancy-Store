@@ -1,6 +1,7 @@
 import sequelize from "../config/db.js";
 import Cart from "./cart.model.js";
 import CartItem from "./cartItem.model.js";
+import Category from "./category.model.js";
 import Product from "./product.model.js";
 import User from "./user.model.js";
 import UserIdentity from "./userIdentity.model.js";  // ✅ add
@@ -18,6 +19,9 @@ const models = {
   UserIdentity,
   Product,
   ProductVariant,
+  // NOTE: Category ka Product ke saath koi association NAHI hai — link sirf
+  // `slug` string ke through hai. Yahan hasMany/belongsTo add na karein.
+  Category,
   Cart,
   CartItem,
   Order,
@@ -56,6 +60,7 @@ export {
   UserIdentity,
   Product,
   ProductVariant,
+  Category,
   Cart,
   CartItem,
   Order,

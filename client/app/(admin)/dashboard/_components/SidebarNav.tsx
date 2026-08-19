@@ -11,6 +11,7 @@ import {
   MessageSquare,
   MessageCircle,
   Star,
+  Tags,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -153,6 +154,18 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
                   }`}
                 >
                   Add Product
+                </Link>
+                <Link
+                  href="/dashboard/categories"
+                  onClick={handleLinkClick}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm ${
+                    isActive("/dashboard/categories")
+                      ? "bg-primary text-white"
+                      : "text-text-main hover:bg-background"
+                  }`}
+                >
+                  <Tags size={15} />
+                  Categories
                 </Link>
               </div>
             )}

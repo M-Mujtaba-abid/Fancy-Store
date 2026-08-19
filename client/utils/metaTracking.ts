@@ -46,7 +46,9 @@ export const trackMetaViewContent = (product: ProductData): void => {
   try {
     window.fbq("track", "ViewContent", {
       content_name: product.name,
-      content_category: product.category,
+      // Conditional spread — pehle unconditional tha, to category missing hone
+      // pe `content_category: undefined` emit hota tha
+      ...(product.category && { content_category: product.category }),
       content_ids: [String(product.id)],
       content_type: "product",
       value: product.price,
@@ -68,7 +70,9 @@ export const trackMetaAddToCart = (
   try {
     window.fbq("track", "AddToCart", {
       content_name: product.name,
-      content_category: product.category,
+      // Conditional spread — pehle unconditional tha, to category missing hone
+      // pe `content_category: undefined` emit hota tha
+      ...(product.category && { content_category: product.category }),
       content_ids: [String(product.id)],
       content_type: "product",
       value: product.price * quantity,
@@ -94,7 +98,9 @@ export const trackMetaAddToWishlist = (product: ProductData): void => {
   try {
     window.fbq("track", "AddToWishlist", {
       content_name: product.name,
-      content_category: product.category,
+      // Conditional spread — pehle unconditional tha, to category missing hone
+      // pe `content_category: undefined` emit hota tha
+      ...(product.category && { content_category: product.category }),
       content_ids: [String(product.id)],
       content_type: "product",
       value: product.price,
@@ -142,9 +148,17 @@ export const trackMetaInitiateCheckout = (cartItems: CartItem[]): void => {
       0
     );
 
+    // Meta ek hi content_category leta hai, to cart ki distinct categories
+    // ko comma-separated bhejte hain. Pehle ye event category BILKUL nahi
+    // bhejta tha — yani funnel ke sab se ahem step pe attribution missing thi.
+    const categories = Array.from(
+      new Set(cartItems.map((item) => item.category).filter(Boolean))
+    );
+
     window.fbq("track", "InitiateCheckout", {
       content_ids: contentIds,
       content_type: "product",
+      ...(categories.length && { content_category: categories.join(",") }),
       num_items: numItems,
       value: totalValue,
       currency: "PKR",
@@ -152,6 +166,7 @@ export const trackMetaInitiateCheckout = (cartItems: CartItem[]): void => {
         id: String(item.id),
         quantity: item.quantity || 1,
         item_price: item.price,
+        ...(item.category && { item_category: item.category }),
       })),
     });
   } catch (error) {
@@ -178,9 +193,17 @@ export const trackMetaPurchase = (
       0
     );
 
+    // Revenue attribution ke liye sab se ahem jagah — yahan pehle category
+    // bilkul nahi jati thi, to Meta mein kaunsi category se sale hui ye pata
+    // hi nahi chalta tha.
+    const categories = Array.from(
+      new Set(cartItems.map((item) => item.category).filter(Boolean))
+    );
+
     const eventPayload: any = {
       content_ids: contentIds,
       content_type: "product",
+      ...(categories.length && { content_category: categories.join(",") }),
       num_items: numItems,
       value: totalValue,
       currency: "PKR",
@@ -188,6 +211,7 @@ export const trackMetaPurchase = (
         id: String(item.id),
         quantity: item.quantity || 1,
         item_price: item.price,
+        ...(item.category && { item_category: item.category }),
       })),
     };
 

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Product, ProductMutationInput, VariantInput, MATERIAL_OPTIONS } from "@/types/product.type";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import styles from "./AddProduct.module.css";
+import { useCategories } from "@/hooks/useCategories";
+import { compressImageFile } from "@/utils/imageCompression";
 
 interface AddProductProps {
   mode: "create" | "edit";
@@ -34,66 +36,11 @@ const defaultFormState: ProductMutationInput = {
 };
 
 const MAX_IMAGE_COUNT = 5;
-const MAX_IMAGE_DIMENSION = 1600;
-const IMAGE_QUALITY = 0.8;
-
-// Image Compression Utility
-const compressImageFile = (file: File): Promise<File> =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    const objectUrl = URL.createObjectURL(file);
-
-    image.onload = () => {
-      const canvas = document.createElement("canvas");
-      const scale = Math.min(
-        1,
-        MAX_IMAGE_DIMENSION / image.width,
-        MAX_IMAGE_DIMENSION / image.height,
-      );
-      const width = Math.max(1, Math.round(image.width * scale));
-      const height = Math.max(1, Math.round(image.height * scale));
-      canvas.width = width;
-      canvas.height = height;
-
-      const context = canvas.getContext("2d");
-      if (!context) {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error("Could not initialize image compressor"));
-        return;
-      }
-
-      context.drawImage(image, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          URL.revokeObjectURL(objectUrl);
-          if (!blob) {
-            reject(new Error("Image compression failed"));
-            return;
-          }
-          const compressedFile = new File(
-            [blob],
-            file.name.replace(/\.\w+$/, ".webp"),
-            {
-              type: "image/webp",
-              lastModified: Date.now(),
-            },
-          );
-          resolve(compressedFile);
-        },
-        "image/webp",
-        IMAGE_QUALITY,
-      );
-    };
-
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("Invalid image file"));
-    };
-
-    image.src = objectUrl;
-  });
 
 // --- Dynamic Categories Config & Suggestions ---
+// ⚠️ Ye ab OFFLINE FALLBACK hai, source of truth nahi.
+// Live list GET /api/categories se aati hai (useCategories hook, neeche).
+// Backend down ho to dropdown khali na ho, is liye ye array rakha gaya hai.
 export const DYNAMIC_CATEGORIES = [
   { id: "car_topCover", label: "Car Top Cover", suggestedVariantType: "Material" },
   { id: "bike_topCover", label: "Bike Top Cover", suggestedVariantType: "Material" },
@@ -135,6 +82,34 @@ const AddProduct = ({
   const [hasVariants, setHasVariants] = useState<boolean>(false);
   const [selectedVariantType, setSelectedVariantType] = useState<string>("Material");
   const [variants, setVariants] = useState<VariantInput[]>([]);
+
+  // --- Categories (live from API, static array as offline fallback) ---
+  const { data: fetchedCategories } = useCategories();
+
+  const categoryOptions = useMemo(() => {
+    const base = fetchedCategories?.length
+      ? fetchedCategories.map((c) => ({
+          id: c.slug,
+          label: c.title,
+          suggestedVariantType: c.suggestedVariantType || "Material",
+        }))
+      : DYNAMIC_CATEGORIES;
+
+    // ⚠️ Legacy option — ye zaroori hai, cosmetic nahi.
+    // Agar product ki category list mein na ho (deactivate ki gayi ho, ya
+    // orphan slug ho), to <select value> ka koi <option> match nahi karega ->
+    // DOM value "" ho jayegi -> `required` submit block kar dega ("Please select
+    // an item in the list") -> admin us product ki PRICE bhi change nahi kar
+    // sakega jab tak category badal na de (jo uska asal category tabah kar dega).
+    const current = form.category;
+    if (current && !base.some((c) => c.id === current)) {
+      return [
+        ...base,
+        { id: current, label: `${current} (legacy)`, suggestedVariantType: "Material" },
+      ];
+    }
+    return base;
+  }, [fetchedCategories, form.category]);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -194,7 +169,7 @@ const AddProduct = ({
     const newCategory = e.target.value;
     setForm((prev) => ({ ...prev, category: newCategory }));
 
-    const categoryObj = DYNAMIC_CATEGORIES.find((c) => c.id === newCategory);
+    const categoryObj = categoryOptions.find((c) => c.id === newCategory);
     if (categoryObj) {
       setSelectedVariantType(categoryObj.suggestedVariantType);
       // Update existing default variant types if unassigned
@@ -526,7 +501,7 @@ const AddProduct = ({
                 <option value="" disabled>
                   Select Category
                 </option>
-                {DYNAMIC_CATEGORIES.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.label}
                   </option>

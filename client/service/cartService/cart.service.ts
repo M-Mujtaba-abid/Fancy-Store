@@ -86,6 +86,9 @@ export const cartService = {
         variantId: data.variantId || null,
         name: data.name || "Product",
         image: data.image || "",
+        // Guest cart bhi category carry kare, warna guest checkout ke
+        // Meta/TikTok events mein content_category missing rehta hai
+        category: data.category,
         quantity: data.quantity,
         price: itemPrice,
         itemTotal: data.quantity * itemPrice,

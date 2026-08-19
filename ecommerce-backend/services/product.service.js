@@ -9,12 +9,21 @@ import {
   destroyByUrl,
 } from "../utils/cloudinaryMedia.js";
 import {
-  CATEGORIES,
   VEHICLE_TYPES,
   DEFAULT_LIMITS,
 } from "../constants/index.js"; // ✅ import
 import { generateEmbedding } from "../utils/ai.util.js"; // ✅ AI Utility Import Karein
 import { validateVariantsPayload } from "../validations/variant.validation.js";
+
+// ============================================================
+// LIKE / ILIKE ESCAPING
+// ============================================================
+// Postgres LIKE/ILIKE mein `_` single-char wildcard aur `%` multi-char wildcard
+// hai (default ESCAPE character backslash). Hamare category slugs mein
+// underscore hota hai (car_topCover), aur user search queries mein kuch bhi ho
+// sakta hai — is liye pattern banane se pehle escape karna zaroori hai.
+const escapeLikePattern = (value) =>
+  String(value).replace(/[\\%_]/g, (ch) => `\\${ch}`);
 
 // ============================================================
 // PAGINATION HELPERS
@@ -186,14 +195,26 @@ export const searchProductsService = async (q, queryPage, queryLimit) => {
     DEFAULT_LIMITS.SEARCH,
   );
 
-  const term = `%${q.toLowerCase()}%`;
+  // escapeLikePattern: warna "50%" ya "a_b" jaisi query wildcard ban jati hai
+  const term = `%${escapeLikePattern(q.toLowerCase())}%`;
+
+  // Category slug underscore-separated hai (e.g. "car_topCover"), lekin user
+  // "car top cover" type karta hai. Is liye query ke spaces ko `%` bana kar ek
+  // alag pattern banate hain, taake naye categories ke naam se search chale.
+  const categoryTerm = `%${escapeLikePattern(q.toLowerCase()).replace(/\s+/g, "%")}%`;
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: {
       [Op.or]: [
         { name: { [Op.iLike]: term } },
         { description: { [Op.iLike]: term } },
         { carModel: { [Op.iLike]: term } },
+        { category: { [Op.iLike]: categoryTerm } },
+        { subCategory: { [Op.iLike]: term } },
       ],
     },
     limit,
@@ -214,6 +235,10 @@ export const getFeaturedProductsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: { isFeatured: true },
     limit,
     offset,
@@ -233,6 +258,10 @@ export const getNewArrivalsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: { isNewArrival: true },
     limit,
     offset,
@@ -252,6 +281,10 @@ export const getOnSaleProductsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: { isOnSale: true },
     limit,
     offset,
@@ -271,6 +304,10 @@ export const getProductsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     limit,
     offset,
     order: [["createdAt", "DESC"]],
@@ -495,6 +532,10 @@ export const getCarProductsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: { vehicleType: VEHICLE_TYPES.CAR },
     limit,
     offset,
@@ -514,6 +555,10 @@ export const getBikeProductsService = async (queryPage, queryLimit) => {
   );
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where: { vehicleType: VEHICLE_TYPES.BIKE },
     limit,
     offset,
@@ -524,34 +569,11 @@ export const getBikeProductsService = async (queryPage, queryLimit) => {
   return formatPagingResponse(data, page, limit);
 };
 
-// 13. Get Category
-export const getProductsByCategoryService = async (category, queryPage, queryLimit) => {
-  const { page, limit, offset } = getPaginationData(
-    queryPage,
-    queryLimit,
-    DEFAULT_LIMITS.PRODUCTS,
-  );
-
-  const cleanCategory = (category || "").trim();
-  const normalizedCategory = cleanCategory.replace(/-/g, "_");
-
-  const data = await Product.findAndCountAll({
-    where: {
-      [Op.or]: [
-        { category: cleanCategory },
-        { category: normalizedCategory },
-        { category: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } },
-        { subCategory: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } }
-      ]
-    },
-    limit,
-    offset,
-    order: [["createdAt", "DESC"]],
-    include: [{ model: ProductVariant, as: 'variants' }]
-  });
-
-  return formatPagingResponse(data, page, limit);
-};
+// 13. (hata diya gaya) getProductsByCategoryService
+// Ye dead code tha — export hota tha, controller mein import bhi tha, lekin
+// kabhi call nahi hota (getProductsByCategory hamesha getProductsByFilterService
+// use karta hai). Isme fuzzy matcher ki DOOSRI copy thi, jo future fixes ke
+// liye landmine ban jati.
 
 // 14. Get Filter
 export const getProductsByFilterService = async (filters, queryPage, queryLimit) => {
@@ -566,16 +588,39 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
   if (filters.category) {
     const cleanCategory = filters.category.trim();
     const normalizedCategory = cleanCategory.replace(/-/g, "_");
-    where[Op.or] = [
-      { category: cleanCategory },
-      { category: normalizedCategory },
-      { category: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } },
-      { subCategory: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } }
-    ];
+
+    if (filters.matchMode === "exact") {
+      // Naye (aur ab saare) categories: case-insensitive EXACT match.
+      //
+      // escapeLikePattern zaroori hai — ILIKE mein `_` single-char wildcard hai,
+      // aur hamare slugs mein underscore hota hai. Bina escape ke
+      // ILIKE 'car_topCover' galti se "carXtopCover" ko bhi match kar leta.
+      //
+      // Pre-flight audit (49 products) mein verify hua ke ye 11 legacy slugs
+      // ke liye neeche wale fuzzy branch se bilkul same results deta hai.
+      where.category = { [Op.iLike]: escapeLikePattern(normalizedCategory) };
+    } else {
+      // LEGACY FUZZY — aaj ka original code, byte-for-byte. Sirf un rows ke liye
+      // jinka matchMode 'fuzzy' hai (seed ke baad koi nahi). Chhedna mat.
+      //
+      // Yahan `_` ko `%` bana diya jata hai, to `floor_mat` -> `%floor%mat%`.
+      // Isi wajah se naye categories ko exact mode milta hai: warna naya slug
+      // `bike_seat_cover` purane `seat_cover` ke page pe aa jata.
+      where[Op.or] = [
+        { category: cleanCategory },
+        { category: normalizedCategory },
+        { category: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } },
+        { subCategory: { [Op.iLike]: `%${normalizedCategory.replace(/_/g, "%")}%` } }
+      ];
+    }
   }
   if (filters.subCategory) where.subCategory = filters.subCategory;
 
   const data = await Product.findAndCountAll({
+    // distinct: variants ek hasMany include hai, is ke bina COUNT joined
+    // ROWS ginta hai products nahi — yani jis product ke variants hon woh
+    // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
+    distinct: true,
     where,
     limit,
     offset,
