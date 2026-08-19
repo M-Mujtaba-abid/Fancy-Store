@@ -21,6 +21,7 @@ import {
   trackCompleteRegistration,
   identifyTikTokUser,
 } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackMetaCompleteRegistration } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 // import GoogleAuth from "@/components/auth/GoogleAuth"; // Apna path verify kar lein
 
 export default function SignupPage() {
@@ -47,6 +48,12 @@ export default function SignupPage() {
       onSuccess: (response: any) => {
         // 🎯 TIKTOK CONTENT CODE: Registration completed
         trackCompleteRegistration({
+          userId: response.user?.id,
+          email: response.user?.email,
+        });
+
+        // 🎯 META PIXEL CONTENT CODE: Registration completed
+        trackMetaCompleteRegistration({
           userId: response.user?.id,
           email: response.user?.email,
         });

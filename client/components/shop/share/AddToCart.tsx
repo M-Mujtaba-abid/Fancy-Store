@@ -6,6 +6,7 @@ import { useAddToCart } from "@/hooks/useCart";
 import toast from "react-hot-toast";
 import { flyToCart } from "@/utils/flyToCart";
 import { trackAddToCart } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackMetaAddToCart } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
 interface AddToCartProps {
   productId: string;
@@ -60,9 +61,16 @@ const AddToCart: React.FC<AddToCartProps> = ({
       variantId: product?.variantId,
     });
 
-    // 🎯 TIKTOK CONTENT CODE
+    // 🎯 TRACKING CONTENT CODE
     if (product) {
       trackAddToCart({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+        }, 1);
+
+      trackMetaAddToCart({
           id: product.id,
           name: product.name,
           price: product.price,

@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import ExpandableDescription from "./ExpandableDescription";
 import ProductReviews from "../reviews/ProductReviews";
 import { trackViewContent } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackMetaViewContent } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
 interface Props {
   product: Product;
@@ -35,10 +36,17 @@ export default function ProductDetailsClient({ product }: Props) {
 
   const hasVariants = product.variants && product.variants.length > 0;
 
-  // 🎯 TIKTOK: Track product view on mount
+  // 🎯 TRACKING: Track product view on mount
   useEffect(() => {
     // 🎯 TIKTOK CONTENT CODE: Product details page viewed
     trackViewContent({
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.price,
+      category: product.category,
+    });
+    // 🎯 META PIXEL CONTENT CODE: Product details page viewed
+    trackMetaViewContent({
       id: product.id,
       name: product.name,
       price: product.discountPrice || product.price,
