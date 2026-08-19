@@ -4,6 +4,9 @@ export interface CartItemType {
   variantId?: number | null;
   name: string;
   image: string;
+  // Meta/TikTok Pixel ke content_category ke liye. Backend ab bhejta hai
+  // (services/cart.service.js), guest cart bhi store karta hai.
+  category?: string;
   quantity: number;
   price: number;
   originalPrice?: number | null;
@@ -28,4 +31,5 @@ export interface AddToCartPayload {
   price?: number;
   name?: string;
   image?: string;
+  category?: string;
 }

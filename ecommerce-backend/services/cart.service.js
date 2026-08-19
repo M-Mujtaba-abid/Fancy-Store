@@ -160,6 +160,12 @@ export const getCartService = async (userId) => {
       variantId: item.variantId,
       name,
       image,
+      // Meta/TikTok Pixel ke content_category ke liye zaroori hai. Ye field
+      // pehle missing thi, is liye checkout ke InitiateCheckout /
+      // AddPaymentInfo / PlaceAnOrder / Purchase events mein category HAMESHA
+      // undefined jati thi — matlab kaunsi category se sale hui, woh attribution
+      // data bilkul nahi aa raha tha.
+      category: item.Product.category,
       quantity: item.quantity,
       price: activePrice,
       originalPrice,

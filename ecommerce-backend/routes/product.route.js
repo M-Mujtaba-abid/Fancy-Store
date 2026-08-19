@@ -52,6 +52,9 @@ router.patch("/variants/:id", authMiddleware, adminMiddleware, uploadProductAndV
 router.delete("/variants/:id", authMiddleware, adminMiddleware, deleteVariant);
 
 // vector embedding
-router.post("/sync-embeddings", syncProductEmbeddings);
+// Admin-only: ye endpoint har product jiska embedding null hai uske liye ek
+// PAID Cohere API call karta hai (serially, bina timeout). Pehle ye bilkul
+// open tha — koi bhi hit kar ke API credits kharch kar sakta tha.
+router.post("/sync-embeddings", authMiddleware, adminMiddleware, syncProductEmbeddings);
 
 export default router;

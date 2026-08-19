@@ -64,7 +64,13 @@ const searchStoreTool = tool(
   },
   {
     name: "search_store",
-    description: "Search the Fancy Store database for ANY automotive accessory. Our available categories are: car top covers, bike top covers, scooty top covers, steering covers, seat covers, dashboard mats, cow floor mats, and car foot mats. ALWAYS use this tool to check inventory before answering and price return in Pak Rupees Currency(Rs.).",
+    // NOTE: yahan categories ki list jaan-boojh kar NAHI hai.
+    // Pehle ek hardcoded list thi ("scooty top covers", "cow floor mats") jo
+    // stale ho gayi thi — aur llama-3.1-8b temperature 0.1 pe usko inventory
+    // samajh leta tha, to nayi category ke baare mein poochne pe woh tool call
+    // kiye BINA hi refuse kar deta tha. Ab admin nayi category banaye to bot
+    // apne aap usko dhoondh lega (search vector-based hai, list-based nahi).
+    description: "Search the Fancy Store database for ANY automotive accessory or vehicle part (covers, mats, seat covers, steering covers, helmets, raincoats, accessories, and anything else the store may stock). The catalogue changes over time, so NEVER assume a product is unavailable — ALWAYS use this tool to check inventory before answering. Prices are returned in Pak Rupees Currency(Rs.).",
     schema: z.object({
       searchQuery: z.string().describe("The specific product to search for (e.g., 'Corolla top cover')"),
     }),
@@ -107,9 +113,15 @@ const getBestSellersTool = tool(
     name: "get_best_sellers",
     description: "Use this tool ONLY when the user explicitly asks for 'top selling', 'best', 'highest rated', or 'most popular' products.",
     schema: z.object({
-      category: z.enum(["All", "floor_mat", "trunk_tray", "dashboard_mat", "seat_cover", "steering_cover", "car_topCover", "bike_topCover"])
+      // Pehle z.enum tha jisme sirf 7 slugs the (rain_coat, helmet,
+      // bike_accessories, car_accessories missing). Model koi doosra slug bhejta
+      // to Zod throw karta -> tool "Error: ..." return karta -> agent loop 5
+      // iterations barbaad karta. SQL already `category ILIKE '%..%'` hai, to
+      // enum se koi safety nahi milti thi. Ab plain string, taake admin ki banai
+      // hui nayi categories bhi kaam karein.
+      category: z.string()
         .default("All")
-        .describe("The exact database category if mentioned, otherwise 'All'"),
+        .describe("The database category slug if mentioned (e.g. 'car_topCover', 'helmet'), otherwise 'All'"),
     }),
   }
 );

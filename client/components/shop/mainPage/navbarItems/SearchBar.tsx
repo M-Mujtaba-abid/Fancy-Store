@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchProducts } from "@/hooks/useProducts"; // 👈 Apna hook yahan import karein
 import { trackSearch } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackMetaSearch } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
 interface SearchBarProps {
   isOpen: boolean;
@@ -29,7 +30,6 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
   const { data, isLoading } = useSearchProducts(debouncedQuery);
 
   // 3. Track search when results arrive
-  // 3. Track search when results arrive
   useEffect(() => {
     // 🔍 DEBUG: Check state values whenever they change
     console.log("🔍 [SearchBar] Status Check:", { 
@@ -53,6 +53,8 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
 
       // 🎯 TIKTOK CONTENT CODE: User performed search
       trackSearch(debouncedQuery, mappedProducts);
+      // 🎯 META PIXEL CONTENT CODE: User performed search
+      trackMetaSearch(debouncedQuery, mappedProducts);
     }
   }, [debouncedQuery, data, isLoading]);
 

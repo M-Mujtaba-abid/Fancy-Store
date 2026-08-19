@@ -80,6 +80,15 @@ export const useCreateProduct = () => {
       toast.success("Product created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
+      // invalidate hi nahi hoti thin:
+      //   - ["shop-page-products", ...] -> /viewMore (footer/navbar ke
+      //     "New Arrivals" / "Deals" / "Best Sellers" links). Yehi woh click path
+      //     hai jisse owner verify karta hai ke product live hua, to stale list
+      //     "mera product save nahi hua" jaisi lagti thi.
+      //   - ["product", id] -> product detail page, edit ke baad purana data
+      queryClient.invalidateQueries({ queryKey: ["shop-page-products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to create product");
@@ -97,6 +106,15 @@ export const useUpdateProduct = () => {
       toast.success("Product updated successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
+      // invalidate hi nahi hoti thin:
+      //   - ["shop-page-products", ...] -> /viewMore (footer/navbar ke
+      //     "New Arrivals" / "Deals" / "Best Sellers" links). Yehi woh click path
+      //     hai jisse owner verify karta hai ke product live hua, to stale list
+      //     "mera product save nahi hua" jaisi lagti thi.
+      //   - ["product", id] -> product detail page, edit ke baad purana data
+      queryClient.invalidateQueries({ queryKey: ["shop-page-products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to update product");
@@ -113,6 +131,15 @@ export const useDeleteProduct = () => {
       toast.success("Product deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
+      // invalidate hi nahi hoti thin:
+      //   - ["shop-page-products", ...] -> /viewMore (footer/navbar ke
+      //     "New Arrivals" / "Deals" / "Best Sellers" links). Yehi woh click path
+      //     hai jisse owner verify karta hai ke product live hua, to stale list
+      //     "mera product save nahi hua" jaisi lagti thi.
+      //   - ["product", id] -> product detail page, edit ke baad purana data
+      queryClient.invalidateQueries({ queryKey: ["shop-page-products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to delete product");

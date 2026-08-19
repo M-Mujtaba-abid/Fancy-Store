@@ -1,6 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
-import { CATEGORIES } from "../constants/index.js";
+import { resolveCategoryForQuery } from "../services/category.service.js";
 import {
   addProductService,
   searchProductsService,
@@ -14,7 +14,6 @@ import {
   getTotalProductsService,
   getCarProductsService,
   getBikeProductsService,
-  getProductsByCategoryService,
   getProductsByFilterService,
   getRelatedProductsService,
   buildProductTextForAI,
@@ -120,18 +119,20 @@ export const getProductsByCategory = asyncHandler(async (req, res) => {
   const { category } = req.params;
   const { vehicleType, subCategory, page, limit } = req.query; // Query nikal li
 
-  const normalizedCategory = (category || "").trim().replace(/-/g, "_");
-
-  // Valid category check karo (case-insensitive & hyphen-friendly)
-  const validCategories = Object.values(CATEGORIES).map((c) => c.toLowerCase());
-  if (
-    !validCategories.includes(normalizedCategory.toLowerCase()) &&
-    !validCategories.includes(category.toLowerCase())
-  ) {
+  // Valid category check — pehle static CATEGORIES constant tha, ab Categories
+  // registry + us constant ka UNION hai (dekho services/category.service.js).
+  // Isi call se matchMode bhi mil jata hai, to do round-trip nahi lagte.
+  const resolved = await resolveCategoryForQuery(category);
+  if (!resolved.valid) {
     throw new ApiError(400, "Invalid category");
   }
 
-  const filters = { category: normalizedCategory, vehicleType, subCategory };
+  const filters = {
+    category: resolved.slug,
+    matchMode: resolved.matchMode,
+    vehicleType,
+    subCategory,
+  };
 
   const data = await getProductsByFilterService(filters, page, limit);
   res
@@ -142,8 +143,17 @@ export const getProductsByCategory = asyncHandler(async (req, res) => {
 // ✅ Advanced Filter — vehicleType + category + subCategory
 export const getProductsByFilter = asyncHandler(async (req, res) => {
   const { vehicleType, category, subCategory } = req.query;
+
+  // matchMode yahan bhi plumb karo, warna ye route aur /category/:category
+  // diverge kar jayenge (dono getProductsByFilterService hi call karte hain)
+  let matchMode = "exact";
+  if (category) {
+    const resolved = await resolveCategoryForQuery(category);
+    matchMode = resolved.matchMode;
+  }
+
   const data = await getProductsByFilterService(
-    { vehicleType, category, subCategory },
+    { vehicleType, category, subCategory, matchMode },
     req.query.page,
     req.query.limit,
   );

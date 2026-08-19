@@ -1,21 +1,37 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAllProductsInfinite } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { HOME_CATEGORIES } from "@/constants/categoriesData";
 import ProductCard from "../../share/ProductCard";
 import SmallLoader from "../../share/SmallLoader";
 
-const FILTER_TABS = [
+// "All" / "car" / "bike" reserved tab ids hain — backend inko category slug
+// banane se rokta hai (services/category.service.js RESERVED_SLUGS)
+const BASE_TABS = [
   { id: "All", label: "All" },
   { id: "car", label: "Cars" },
   { id: "bike", label: "Bikes" },
-  ...HOME_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.title })),
 ];
 
 const ProductGrid = () => {
   const [activeTab, setActiveTab] = useState("All");
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Live categories; static list offline fallback ke tor pe
+  const { data: fetchedCategories } = useCategories();
+
+  const FILTER_TABS = useMemo(() => {
+    const categoryTabs = fetchedCategories?.length
+      ? fetchedCategories
+          .filter((c) => c.showOnHome)
+          .map((c) => ({ id: c.slug, label: c.title }))
+      : HOME_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.title }));
+
+    return [...BASE_TABS, ...categoryTabs];
+  }, [fetchedCategories]);
 
   const {
     data,
@@ -28,15 +44,18 @@ const ProductGrid = () => {
 
   const allProducts = data?.pages?.flatMap((p: any) => p.products) || [];
 
-  const filteredProducts =
-    activeTab === "All"
-      ? allProducts
-      : allProducts.filter((p: any) => {
-          if (activeTab === "car" || activeTab === "bike") {
-            return p.vehicleType?.toLowerCase() === activeTab;
-          }
-          return p.category === activeTab;
-        });
+  const isFiltering = activeTab !== "All";
+
+  const filteredProducts = !isFiltering
+    ? allProducts
+    : allProducts.filter((p: any) => {
+        if (activeTab === "car" || activeTab === "bike") {
+          return p.vehicleType?.toLowerCase() === activeTab;
+        }
+        // ✅ case-insensitive, taake backend ki semantics se match kare
+        // (backend ILIKE use karta hai; "car_topCover" mixed case hai)
+        return p.category?.toLowerCase() === activeTab.toLowerCase();
+      });
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -126,11 +145,30 @@ const ProductGrid = () => {
             {filteredProducts.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                 <span className="text-4xl mb-4">🛒</span>
-                <p className="text-lg font-medium">No products available in this category.</p>
+                <p className="text-lg font-medium">
+                  Ye tab sirf pehle se loaded products mein filter karta hai.
+                </p>
+                {isFiltering && activeTab !== "car" && activeTab !== "bike" && (
+                  // Asli, server-side filtered page — poori category yahan milegi
+                  <Link
+                    href={`/category/${activeTab}`}
+                    className="mt-4 inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Browse this category →
+                  </Link>
+                )}
               </div>
             )}
 
-            <div ref={sentinelRef} />
+            {/* ✅ RUNAWAY FETCH FIX
+                Sentinel sirf "All" tab pe render hota hai.
+                Pehle kya hota tha: koi sparse category tab click karo -> grid
+                khali -> sentinel (jo khali grid ke neeche hai) viewport mein
+                aa jata -> fetchNextPage() -> phir bhi match nahi -> sentinel
+                phir visible -> poore product table ka serial crawl, 10 rows per
+                request, har request Express + Neon pe. Filtering client-side
+                hai, is liye scroll karne ka koi faida bhi nahi tha. */}
+            {!isFiltering && <div ref={sentinelRef} />}
             {isFetchingNextPage && <SmallLoader />}
           </>
         )}

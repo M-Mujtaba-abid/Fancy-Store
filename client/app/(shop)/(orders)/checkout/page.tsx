@@ -15,6 +15,10 @@ import {
   trackPlaceAnOrder,
   trackPurchase,
 } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import {
+  trackMetaInitiateCheckout,
+  trackMetaPurchase,
+} from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
 function CheckoutContent() {
   const router = useRouter();
@@ -46,24 +50,27 @@ function CheckoutContent() {
     paymentMethod: "COD", // Cash on Delivery default (lowercase rakhein)
   });
 
-  // 🎯 TIKTOK: Track checkout initiated on page load
+  // 🎯 TRACKING: Track checkout initiated on page load
   useEffect(() => {
     if (!isCartLoading && !checkoutTracked) {
       const displayItems =
         isBuyNow && buyNowItem ? [buyNowItem] : cartData?.items || [];
 
       if (displayItems.length > 0) {
+        const mappedItems = displayItems.map((item: any) => ({
+          id: item.productId || item.id,
+          name: item.name,
+          price: item.price || item.itemPrice,
+          quantity: item.quantity || 1,
+          category: item.category,
+        }));
+
         // 🎯 TIKTOK CONTENT CODE: Checkout initiated
         console.log("🎯 [Checkout] 1. InitiateCheckout trigger ho raha hai!", displayItems);
-        trackInitiateCheckout(
-          displayItems.map((item: any) => ({
-            id: item.productId || item.id,
-            name: item.name,
-            price: item.price || item.itemPrice,
-            quantity: item.quantity || 1,
-            category: item.category,
-          })),
-        );
+        trackInitiateCheckout(mappedItems);
+        // 🎯 META PIXEL CONTENT CODE: Checkout initiated
+        trackMetaInitiateCheckout(mappedItems);
+
         setCheckoutTracked(true);
         console.log("✅ [Checkout] InitiateCheckout Done!");
       }
@@ -128,18 +135,20 @@ console.log("✅ [Checkout] PlaceAnOrder Done!");
     placeOrder(finalPayload, {
       onSuccess: (res: any) => {
         if (isBuyNow) sessionStorage.removeItem("buyNowItem"); // Safai
+        const mappedItems = displayItems.map((item: any) => ({
+          id: item.productId || item.id,
+          name: item.name,
+          price: item.price || item.itemPrice,
+          quantity: item.quantity || 1,
+          category: item.category,
+        }));
+
 console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.orderId);
         // 🎯 TIKTOK CONTENT CODE: Purchase completed (MOST IMPORTANT!)
-        trackPurchase(
-          displayItems.map((item: any) => ({
-            id: item.productId || item.id,
-            name: item.name,
-            price: item.price || item.itemPrice,
-            quantity: item.quantity || 1,
-            category: item.category,
-          })),
-          res.orderId,
-        );
+        trackPurchase(mappedItems, res.orderId);
+        // 🎯 META PIXEL CONTENT CODE: Purchase completed (MOST IMPORTANT!)
+        trackMetaPurchase(mappedItems, res.orderId);
+
         console.log("✅ [Checkout] Purchase Event Successfully Fired! 🎉");
 
         router.push(`/order-success?orderId=${res.orderId}`);

@@ -9,6 +9,7 @@ import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import Loading from "@/app/loading";
 import { trackInitiateCheckout } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
+import { trackMetaInitiateCheckout } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
 export default function CartPage() {
   const { data: cartData, isLoading } = useGetCart();
@@ -20,19 +21,21 @@ export default function CartPage() {
   const shippingFee = cartData?.shippingFee ?? SHIPPING_FEE;
   const totalAmount = cartData?.totalAmount ?? subtotal + shippingFee;
 
-  // 🎯 TIKTOK: Handle checkout click
+  // 🎯 TRACKING: Handle checkout click
   const handleCheckoutClick = (e: React.MouseEvent) => {
     e.preventDefault();
 
+    const mappedItems = items.map((item) => ({
+      id: item.productId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
     // 🎯 TIKTOK CONTENT CODE: Checkout initiated from cart page
-    trackInitiateCheckout(
-      items.map((item) => ({
-        id: item.productId,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-      })),
-    );
+    trackInitiateCheckout(mappedItems);
+    // 🎯 META PIXEL CONTENT CODE: Checkout initiated from cart page
+    trackMetaInitiateCheckout(mappedItems);
 
     // Navigate to checkout
     window.location.href = "/checkout";

@@ -4,6 +4,7 @@ import React from "react";
 import { Heart } from "lucide-react";
 import { useGetWishlist, useToggleWishlist } from "@/hooks/useWishlist";
 import { trackAddToWishlist } from "@/utils/tiktokTracking";
+import { trackMetaAddToWishlist } from "@/utils/metaTracking";
 import { Product } from "@/types/product.type";
 
 interface WishlistButtonProps {
@@ -37,6 +38,12 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
         onSuccess: (res) => {
           if (product && res.added) {
             trackAddToWishlist({
+              id: product.id,
+              name: product.name,
+              price: product.discountPrice || product.price,
+              category: product.category,
+            });
+            trackMetaAddToWishlist({
               id: product.id,
               name: product.name,
               price: product.discountPrice || product.price,

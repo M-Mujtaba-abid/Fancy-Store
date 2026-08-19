@@ -7,6 +7,8 @@ import Category from "@/components/shop/mainPage/categories/Category";
 import ProductGrid from "@/components/shop/mainPage/categories/DynamicProductGrid";
 import ProductSection from "@/components/shop/mainPage/categories/ProductSection";
 import { productService } from "@/service/productservice/product.service";
+import { categoryService } from "@/service/categoryService/category.service";
+import { apiCategoryToTile, type HomeCategoryTile } from "@/types/category.type";
 
 // ==========================================
 // 🌟 1. SEO METADATA SECTION
@@ -66,18 +68,35 @@ const HomePage = async () => {
   let newArrivals: any[] = [];
   let saleProducts: any[] = [];
   let featuredProducts: any[] = [];
+  // undefined = fetch fail hui -> <Category /> apne static fallback pe chala jayega
+  let homeCategories: HomeCategoryTile[] | undefined;
 
   try {
-    const [newArrivalsResponse, saleProductsResponse, featuredProductsResponse] =
-      await Promise.all([
-        productService.getNewArrivals(1, 10).catch(() => null),
-        productService.getSaleProducts(1, 10).catch(() => null),
-        productService.getFeatured(1, 10).catch(() => null),
-      ]);
+    const [
+      newArrivalsResponse,
+      saleProductsResponse,
+      featuredProductsResponse,
+      categoriesResponse,
+    ] = await Promise.all([
+      productService.getNewArrivals(1, 10).catch(() => null),
+      productService.getSaleProducts(1, 10).catch(() => null),
+      productService.getFeatured(1, 10).catch(() => null),
+      // ⚠️ .catch() MANDATORY — unhandled rejection Vercel build ke prerender
+      // step ko fail kar deta hai. Baaki calls ki tarah axios hi use kar rahe
+      // hain (bare fetch mix karne se caching semantics unreviewable ho jati).
+      categoryService.getAll().catch(() => null),
+    ]);
 
     newArrivals = newArrivalsResponse?.products || [];
     saleProducts = saleProductsResponse?.products || [];
     featuredProducts = featuredProductsResponse?.products || [];
+
+    // Homepage tiles ke liye sirf showOnHome wali categories
+    if (categoriesResponse?.length) {
+      homeCategories = categoriesResponse
+        .filter((c) => c.showOnHome)
+        .map(apiCategoryToTile);
+    }
   } catch (error) {
     console.error("HomePage data fetching error:", error);
   }
@@ -106,7 +125,7 @@ const HomePage = async () => {
       />
 
       <Carosel />
-      <Category />
+      <Category categories={homeCategories} />
 
       {/* 1. New Arrivals Section */}
       <ProductSection
