@@ -134,6 +134,22 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
       >
         {/* ==========================================
+            🎯 GOOGLE ANALYTICS (gtag.js) CODE
+            ========================================== */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-LL9B8YSG7L"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LL9B8YSG7L');
+          `}
+        </Script>
+
+        {/* ==========================================
             🎯 META (FACEBOOK) PIXEL CODE
             ========================================== */}
         <Script id="meta-pixel" strategy="afterInteractive">
