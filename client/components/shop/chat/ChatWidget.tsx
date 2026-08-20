@@ -202,9 +202,9 @@ const ChatWidget = () => {
   if (!isOpen && isOtherChatOpen) return null;
 
   return (
-    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-6 right-6"}`}>
+    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "inset-0 h-[100dvh] w-full md:inset-auto md:bottom-8 md:right-8 md:h-auto md:w-auto" : "bottom-20 right-6 md:bottom-6"}`}>
       {isOpen ? (
-        <div className="w-full h-[85dvh] md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-t md:border border-border/50 rounded-t-2xl md:rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
+        <div className="w-full h-full md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-0 md:border border-border/50 rounded-none md:rounded-2xl shadow-none md:shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
             <div className="flex items-center gap-3">
               <div className="h-7 w-7 rounded-full bg-primary/10 p-1 flex items-center justify-center border border-primary/20 shadow-sm">
@@ -237,7 +237,7 @@ const ChatWidget = () => {
             </button>
           </div>
 
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 bg-background/30 scroll-smooth">
+          <div ref={messagesContainerRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-4 py-4 space-y-3.5 bg-background/30 scroll-smooth">
             {messages.map((message) => {
               const isUser = message.role === "user";
               return (
@@ -335,7 +335,7 @@ const ChatWidget = () => {
                 }}
                 placeholder="Ask about car covers..."
                 rows={1}
-                className="flex-1 min-h-11 max-h-28 resize-none px-3.5 py-3 rounded-xl border border-border/50 bg-background text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="flex-1 min-h-11 max-h-28 resize-none px-3.5 py-3 rounded-xl border border-border/50 bg-background text-base text-text-main placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <button
                 type="button"

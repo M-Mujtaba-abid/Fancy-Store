@@ -1,11 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const WhatsAppWidget = () => {
   const pathname = usePathname();
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+
+  useEffect(() => {
+    const handleChatState = (event: Event) => {
+      setIsSupportOpen((event as CustomEvent<{ isOpen: boolean }>).detail?.isOpen ?? false);
+    };
+
+    window.addEventListener("chatwidget-state", handleChatState);
+    window.addEventListener("livechat-state", handleChatState);
+    return () => {
+      window.removeEventListener("chatwidget-state", handleChatState);
+      window.removeEventListener("livechat-state", handleChatState);
+    };
+  }, []);
 
   // ✅ Apna WhatsApp Number yahan likhein (Country code 92 ke sath, bina + lagaye)
   const phoneNumber = "923414159747";
@@ -22,9 +36,10 @@ const WhatsAppWidget = () => {
     pathname.startsWith("/admin/");
 
   if (isAdminRoute) return null;
+  if (isSupportOpen) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-36 right-6 z-50 md:bottom-24">
       <Link
         href={whatsappUrl}
         target="_blank"
