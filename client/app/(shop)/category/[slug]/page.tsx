@@ -9,6 +9,12 @@
 // products server pe render hote hain. Purani URL next.config.ts se 301 redirect
 // ho jati hai, to koi purana link ya Google result nahi tootega.
 
+// ⚠️ Ye page generateStaticParams use karta hai, yani build time pe static HTML
+// ban jati hai. Iske BINA page hamesha wahi products dikhati rahegi jo build ke
+// waqt DB mein the — naya product add karne pe category page purani hi rehti thi.
+// (Value literal honi chahiye: Next isko statically analyze karta hai.)
+export const revalidate = 300;
+
 import { Metadata } from "next";
 import Link from "next/link";
 import { categoryService } from "@/service/categoryService/category.service";
@@ -54,7 +60,10 @@ export async function generateMetadata({
     : `${SITE_URL}${category?.image || "/steeringCover_compressed.jpg"}`;
 
   return {
-    title: `${title} | Fancy Store`,
+    // Sirf `title` — app/layout.tsx:81 ka template "%s | Fancy Store" khud
+    // suffix laga deta hai. Yahan poora likhne se "Towels | Fancy Store |
+    // Fancy Store" ban jata tha.
+    title,
     description,
     alternates: { canonical },
     openGraph: {

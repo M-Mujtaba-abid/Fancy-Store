@@ -3,6 +3,7 @@ import { productService } from "@/service/productservice/product.service";
 import { ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import { revalidateForCategory } from "@/utils/revalidate";
 // import { productService } from "../services/product.service";
 
 // Sare products fetch karne ka hook
@@ -76,8 +77,12 @@ export const useCreateProduct = () => {
 
   return useMutation({
     mutationFn: (payload: ProductMutationInput) => productService.createProduct(payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success("Product created successfully");
+      // Category page static hai (generateStaticParams) aur uska page-1 data
+      // server props se aata hai — cache clear kiye bina naya product wahan
+      // kabhi nahi dikhta.
+      void revalidateForCategory(variables?.category);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
@@ -102,8 +107,9 @@ export const useUpdateProduct = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ProductUpdateInput }) =>
       productService.updateProduct(id, payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success("Product updated successfully");
+      void revalidateForCategory(variables?.payload?.category);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
@@ -129,6 +135,10 @@ export const useDeleteProduct = () => {
     mutationFn: (id: string) => productService.deleteProduct(id),
     onSuccess: () => {
       toast.success("Product deleted successfully");
+      // Delete sirf id deta hai, category slug nahi — is liye yahan sirf
+      // homepage purge hoti hai. Us product ki category page apni
+      // `revalidate = 300` window pe khud refresh ho jayegi.
+      void revalidateForCategory();
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
