@@ -38,12 +38,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-background text-text-main transition-colors duration-300 perspective-1000 relative overflow-hidden">
+    <div className="h-screen min-h-[calc(100vh-80px)] flex flex-col items-center justify-center lg:flex-row bg-background text-text-main transition-colors duration-300 perspective-1000 relative overflow-hidden">
       {/* Background Glow Effect */}
       <div className="absolute  left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* LEFT SECTION - Brand / Logo */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 relative z-10 min-h-[30vh] lg:min-h-screen">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 lg:p-8 relative z-10">
         <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Link
             href="/"
@@ -54,7 +54,7 @@ export default function LoginPage() {
               alt="Fancy Store"
               width={500}
               height={200}
-              className="object-contain"
+              className="h-auto max-w-[240px] object-contain bg-transparent mix-blend-screen lg:max-w-[400px]"
               priority
             />
           </Link>
@@ -66,15 +66,15 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SECTION - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center  lg:p-12 relative z-10 pb-12 lg:pb-0">
-        <div className="max-w-md w-full space-y-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 relative z-10">
+        <div className="max-w-md w-full space-y-4">
           {/* 3D Card Container */}
           <div className="group relative">
             {/* Decorative Border Glow for 3D depth */}
             <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/50 to-transparent rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
 
-            <div className="relative bg-card p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all duration-500 hover:rotate-x-2 hover:rotate-y-2 hover:shadow-[0_30px_60px_rgba(0,0,0,0.2)] floating-card">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative bg-card p-6 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all duration-500 hover:rotate-x-2 hover:rotate-y-2 hover:shadow-[0_30px_60px_rgba(0,0,0,0.2)] floating-card">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email Input */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-1">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                       type="email"
                       required
                       placeholder="name@example.com"
-                      className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
@@ -117,7 +117,7 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       required
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-11 py-3.5 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
+                      className="w-full pl-10 pr-11 py-3 rounded-xl bg-background focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm shadow-inner"
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
@@ -149,7 +149,7 @@ export default function LoginPage() {
 
                 <button
                   disabled={isPending}
-                  className="group/btn w-full bg-primary text-white font-black py-4 rounded-xl flex justify-center items-center gap-3 transition-all hover:shadow-[0_10px_20px_rgba(var(--primary-rgb),0.3)] active:scale-95 disabled:opacity-70 relative overflow-hidden"
+                  className="group/btn w-full bg-primary text-white font-black py-3 rounded-xl flex justify-center items-center gap-3 transition-all hover:shadow-[0_10px_20px_rgba(var(--primary-rgb),0.3)] active:scale-95 disabled:opacity-70 relative overflow-hidden"
                 >
                   <span className="relative z-10 tracking-widest text-xs">
                     SIGN IN
@@ -167,7 +167,7 @@ export default function LoginPage() {
               </form>
 
               {/* Divider */}
-              <div className="relative my-8">
+              <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border-custom/40 opacity-50"></div>
                 </div>
