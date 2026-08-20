@@ -255,8 +255,7 @@ export const chatWithAgent = async (
   const safeUserMessage = userMessage.substring(0, 300);
   const llm = new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
-    model: "llama-3.1-8b-instant",
-    // model: "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
     temperature: 0.1,
     maxTokens: 1024,
     maxRetries: 2,
