@@ -405,7 +405,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
     if (!isOpen) return null;
 
     return (
-        <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-[102px] sm:bottom-[136px] md:bottom-[164px] right-4 md:right-8"}`}>
+        <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "inset-0 h-[100dvh] w-full md:inset-auto md:bottom-8 md:right-8 md:h-auto md:w-auto" : "bottom-20 right-6 md:bottom-6"}`}>
             {/* Toggle Button */}
             {!isOpen && (
                 <div className="relative">
@@ -427,7 +427,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
 
             {/* Chat Box */}
             {isOpen && (
-                <div className="w-full h-[85dvh] md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-t md:border border-border/50 rounded-t-2xl md:rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
+                <div className="w-full h-full md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-0 md:border border-border/50 rounded-none md:rounded-2xl shadow-none md:shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
 
                     {/* Header */}
                     <div className="px-4 py-3.5 border-b border-border/50 bg-background/90 flex justify-between items-center">
@@ -462,7 +462,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                     </div>
 
                     {/* Messages Container */}
-                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-background/30 scroll-smooth">
+                    <div className="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain touch-pan-y space-y-3 bg-background/30 scroll-smooth">
                         {messages.map((msg) => {
                             const isUser = msg.sender === "user";
                             return (
@@ -509,7 +509,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                             placeholder="Write a message..."
                             value={inputMessage}
                             onChange={handleInputChange}
-                            className="flex-1 bg-background text-text-main placeholder:text-text-muted border border-border/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
+                            className="flex-1 bg-background text-text-main placeholder:text-text-muted border border-border/50 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
                         />
                         <button
                             type="submit"
