@@ -57,6 +57,11 @@ const ChatWidget = () => {
     return () => window.removeEventListener("open-chatwidget", handleOpenChatWidget);
   }, []);
 
+  const openLiveAgent = () => {
+    setIsOpen(false);
+    window.dispatchEvent(new CustomEvent("open-livechat"));
+  };
+
   useEffect(() => {
     const handleLiveChatState = (e: Event) => {
       const customEvent = e as CustomEvent<{ isOpen: boolean }>;
@@ -197,7 +202,7 @@ const ChatWidget = () => {
   if (!isOpen && isOtherChatOpen) return null;
 
   return (
-    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-4 md:bottom-8 right-4 md:right-8"}`}>
+    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-6 right-6"}`}>
       {isOpen ? (
         <div className="w-full h-[85dvh] md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-t md:border border-border/50 rounded-t-2xl md:rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
@@ -220,6 +225,15 @@ const ChatWidget = () => {
               aria-label="Close chat"
             >
               <X size={18} className="text-text-main" />
+            </button>
+          </div>
+
+          <div className="flex gap-1 border-b border-border/50 bg-background/60 p-1.5">
+            <button type="button" className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white" aria-current="page">
+              AI Chatbot
+            </button>
+            <button type="button" onClick={openLiveAgent} className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:bg-background hover:text-text-main">
+              Live Agent
             </button>
           </div>
 
@@ -343,10 +357,10 @@ const ChatWidget = () => {
           <button
             type="button"
             onClick={openChat}
-            className="h-9 w-9 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full bg-card border-2 border-primary/30 p-1 sm:p-2 shadow-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 group"
-            aria-label="Open AI Chatbot support"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform duration-300 hover:scale-110 active:scale-95"
+            aria-label="Open support chat"
           >
-            <img src="/chatbot-icon.svg" alt="AI Chatbot" className="w-full h-full object-contain group-hover:rotate-6 transition-transform" />
+            <MessageCircle className="h-7 w-7" />
           </button>
 
           {unreadCount > 0 && (

@@ -190,6 +190,11 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         return () => window.removeEventListener("open-livechat", handleOpenLiveChat);
     }, []);
 
+    const openAiChat = () => {
+        setIsOpen(false);
+        window.dispatchEvent(new CustomEvent("open-chatwidget"));
+    };
+
     useEffect(() => {
         const handleChatWidgetState = (e: Event) => {
             const customEvent = e as CustomEvent<{ isOpen: boolean }>;
@@ -397,7 +402,7 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         pathname.startsWith("/admin/");
 
     if (isAdminRoute) return null;
-    if (!isOpen && isOtherChatOpen) return null;
+    if (!isOpen) return null;
 
     return (
         <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "bottom-0 right-0 w-full md:w-auto md:bottom-8 md:right-8" : "bottom-[102px] sm:bottom-[136px] md:bottom-[164px] right-4 md:right-8"}`}>
@@ -444,6 +449,15 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
                             aria-label="Close live chat"
                         >
                             <X className="w-5 h-5 text-text-main" />
+                        </button>
+                    </div>
+
+                    <div className="flex gap-1 border-b border-border/50 bg-background/60 p-1.5">
+                        <button type="button" onClick={openAiChat} className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:bg-background hover:text-text-main">
+                            AI Chatbot
+                        </button>
+                        <button type="button" className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white" aria-current="page">
+                            Live Agent
                         </button>
                     </div>
 
