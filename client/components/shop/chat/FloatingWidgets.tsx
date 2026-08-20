@@ -20,10 +20,10 @@ export default function FloatingWidgets() {
   }
 
   return (
-    <>
+    <div className="fixed bottom-20 right-3 z-50 flex flex-col items-center gap-2 md:bottom-6 md:right-6">
       <LiveChat />
       <WhatsAppWidget />
       <ChatWidget />
-    </>
+    </div>
   );
 }

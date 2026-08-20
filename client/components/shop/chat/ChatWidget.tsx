@@ -202,7 +202,7 @@ const ChatWidget = () => {
   if (!isOpen && isOtherChatOpen) return null;
 
   return (
-    <div className={`fixed z-50 transition-all duration-300 ${isOpen ? "inset-0 h-[100dvh] w-full md:inset-auto md:bottom-8 md:right-8 md:h-auto md:w-auto" : "bottom-20 right-6 md:bottom-6"}`}>
+    <div className={`transition-all duration-300 ${isOpen ? "fixed inset-0 z-50 h-[100dvh] w-full md:inset-auto md:bottom-8 md:right-8 md:h-auto md:w-auto" : "relative"}`}>
       {isOpen ? (
         <div className="w-full h-full md:w-[390px] md:h-[calc(100dvh-6rem)] md:max-h-[620px] bg-card border-0 md:border border-border/50 rounded-none md:rounded-2xl shadow-none md:shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300">
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/50 bg-background/90">
@@ -357,10 +357,10 @@ const ChatWidget = () => {
           <button
             type="button"
             onClick={openChat}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform duration-300 hover:scale-110 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 sm:h-14 sm:w-14"
             aria-label="Open support chat"
           >
-            <MessageCircle className="h-7 w-7" />
+            <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7" />
           </button>
 
           {unreadCount > 0 && (
