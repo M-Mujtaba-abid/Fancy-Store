@@ -25,7 +25,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <Footer />
     </>
   );

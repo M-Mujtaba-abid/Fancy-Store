@@ -35,6 +35,12 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleMobileSearch = () => setIsSearchOpen(true);
+    window.addEventListener("open-mobile-search", handleMobileSearch);
+    return () => window.removeEventListener("open-mobile-search", handleMobileSearch);
+  }, []);
+
   const navLinks = [
     
   { name: "Shop All", href: "/products" },
