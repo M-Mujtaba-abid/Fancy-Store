@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Store, Tag, Heart, Package, User, LogIn } from "lucide-react";
+import { Home, Store, Search, Heart, User, LogIn } from "lucide-react";
 import { isAuthenticated } from "@/utils/auth";
 
 const MobileBottomNav = () => {
@@ -11,10 +11,10 @@ const MobileBottomNav = () => {
   const loggedIn = isAuthenticated();
 
   const navItems = [
-    { name: "Products", href: "/products", icon: Store },
-    { name: "Sale", href: "/viewMore?filter=on-sale", icon: Tag },
+    { name: "Home", href: "/", icon: Home },
+    { name: "Shop", href: "/products", icon: Store },
+    { name: "Search", href: null, icon: Search },
     { name: "Wishlist", href: "/wishlist", icon: Heart },
-    { name: "Orders", href: loggedIn ? "/order" : "/login", icon: Package },
     {
       name: loggedIn ? "Profile" : "Login",
       href: loggedIn ? "/profile" : "/login",
@@ -23,34 +23,34 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    // md:hidden isko sirf mobile pe dikhayega, aur fixed bottom-0 isko neeche chipka dega
-    <div className="md:hidden fixed bottom-0 left-0 w-full bg-background border-t border-border/50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-[60] pb-safe">
-      <div className="flex justify-around items-center h-12 px-2">
+    <div className="block md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-zinc-900/90 backdrop-blur-md text-white rounded-full px-6 py-3 shadow-2xl flex items-center justify-between z-50 border border-zinc-800 pb-safe">
         {navItems.map((item) => {
           const Icon = item.icon;
-          // Active tab logic (Agar current page is link se match karta hai)
-          const isActive = pathname === item.href || pathname.startsWith(item.href.split("?")[0]) && item.href !== "/";
+          const isActive = item.href
+            ? pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+            : false;
+          const itemClassName = `p-2 rounded-full hover:bg-zinc-800 transition-colors ${isActive ? "bg-zinc-700/80" : ""}`;
+
+          if (!item.href) {
+            return (
+              <button
+                key={item.name}
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-mobile-search"))}
+                className={itemClassName}
+                aria-label="Search products"
+              >
+                <Icon size={22} strokeWidth={1.8} />
+              </button>
+            );
+          }
 
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? "text-primary" : "text-text-muted hover:text-text-main"
-              }`}
-            >
-              <Icon 
-                size={22} 
-                strokeWidth={isActive ? 2.5 : 1.5} 
-                className={isActive ? "scale-110 transition-transform" : ""}
-              />
-              <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
-                {item.name}
-              </span>
+            <Link key={item.name} href={item.href} className={itemClassName} aria-label={item.name}>
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
             </Link>
           );
         })}
-      </div>
     </div>
   );
 };
