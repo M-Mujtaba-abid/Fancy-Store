@@ -10,6 +10,7 @@
   --color-border-custom: var(--border);
   --color-error: var(--error);
   --color-success: var(--success);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -51,7 +52,7 @@ html, body {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: 5rem;
@@ -59,6 +60,13 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   scroll-behavior: smooth;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
 }
 
 /* Custom 3D & Utility Classes */

@@ -15,8 +15,8 @@ export default {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        sans: "var(--font-geist-sans), Arial, Helvetica, sans-serif",
-        mono: "var(--font-geist-mono), monospace",
+        sans: ["var(--font-poppins)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
     },
   },

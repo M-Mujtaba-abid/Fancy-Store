@@ -44,7 +44,7 @@
 // }
 
 import type { Metadata, Viewport } from "next"; // ✅ Viewport import kiya
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import Script from "next/script"; // ✅ TikTok Pixel ke liye
 import "./globals.css";
 import { Providers } from "@/context/Providers";
@@ -52,14 +52,11 @@ import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "react-hot-toast";
 import FloatingWidgets from "@/components/shop/chat/FloatingWidgets";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 // ==========================================
@@ -131,7 +128,7 @@ export default function RootLayout({
     >
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
+        className={`${poppins.variable} font-sans min-h-screen flex flex-col`}
       >
         {/* ==========================================
             🎯 GOOGLE ANALYTICS (gtag.js) CODE
