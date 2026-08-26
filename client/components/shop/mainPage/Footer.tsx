@@ -128,9 +128,33 @@ const Footer = () => {
                   key={s.name}
                   href={s.href}
                   target="_blank"
-                  className="p-2 bg-border-custom/30 rounded-full hover:bg-primary hover:text-white transition text-sm"
+                  rel="noopener noreferrer"
+                  aria-label={s.name}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-border-custom/30 text-text-muted transition-all hover:scale-110 hover:bg-primary hover:text-white"
                 >
-                  {s.name}
+                  {s.name === "Instagram" ? (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      className="h-5 w-5"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="5" />
+                      <circle cx="12" cy="12" r="4" />
+                      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                    </svg>
+                  ) : (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path d="M16.7 3c.3 1.8 1.3 3 3.3 3.2v3.1c-1.3 0-2.4-.3-3.3-.9v6.3c0 4-2.9 6.3-6.5 6.3A5.2 5.2 0 0 1 5 15.9c0-3 2.2-5.4 5.2-5.6v3.2c-1.1.1-2 .9-2 2 0 1.2.9 2.1 2.1 2.1 1.4 0 2.2-.9 2.2-2.5V3h4.2Z" />
+                    </svg>
+                  )}
                 </Link>
               ))}
             </div>
