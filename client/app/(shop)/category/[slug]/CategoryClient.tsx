@@ -59,7 +59,8 @@ const CategoryClient = ({
     return (
       <div className="text-center py-20">
         <p className="text-xl text-text-muted">
-          This Category is Coming soon...
+          This Category is Coming soon................
+
         </p>
         <Link
           href="/products"
