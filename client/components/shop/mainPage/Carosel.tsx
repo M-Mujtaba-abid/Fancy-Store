@@ -8,28 +8,28 @@ import Image from 'next/image';
 const slides = [
   {
     id: 1,
-    image: "/carosel/elentra.png",
+    image: "/carosel/elentra.webp",
     title: "Premium Vehicle Covers",
     para: "Protect your luxury assets with our high-grade materials.",
     align: "justify-start text-left",
   },
   {
     id: 2,
-    image: "/carosel/civic.png",
+    image: "/carosel/civic.webp",
     title: "The Silver Collection",
     para: "Elegance meets durability in every stitch.",
     align: "justify-start text-left md:pl-24 lg:pl-40", // Adjusted for better scaling
   },
   {
     id: 3,
-    image: "/carosel/sportage.png",
+    image: "/carosel/sportage.webp",
     title: "All-Weather Shield",
     para: "Rain, sun or snow—we've got you covered.",
     align: "justify-end text-right md:pr-24 lg:pr-40", // Adjusted for better scaling
   },
   {
     id: 4,
-    image: "/carosel/wagonR.png",
+    image: "/carosel/wagonR.webp",
     title: "Limited Edition Series",
     para: "Exclusive designs for the most passionate car owners.",
     align: "justify-end text-right",
@@ -38,6 +38,14 @@ const slides = [
 
 const Carousel = () => {
   const [current, setCurrent] = useState(0);
+  // First paint should show the hero image immediately, not fade in — an
+  // opacity animation delays when the browser considers the LCP image
+  // "fully rendered", which pushed LCP out further on top of the image's
+  // own load time. Slide-to-slide transitions after that still fade as before.
+  const isFirstRender = React.useRef(true);
+  useEffect(() => {
+    isFirstRender.current = false;
+  }, []);
 
   const nextSlide = () => setCurrent((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   const prevSlide = () => setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
@@ -53,7 +61,7 @@ const Carousel = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
-          initial={{ opacity: 0 }}
+          initial={isFirstRender.current ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
