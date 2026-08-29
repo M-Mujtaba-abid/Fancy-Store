@@ -21,6 +21,8 @@ import { notFound } from "next/navigation";
 import { categoryService } from "@/service/categoryService/category.service";
 import { productService } from "@/service/productservice/product.service";
 import CategoryClient from "./CategoryClient";
+import CategoryFaq from "@/components/shop/share/CategoryFaq";
+import RelatedGuides from "@/components/shop/share/RelatedGuides";
 
 const SITE_URL = "https://www.fancystore.store";
 const PAGE_SIZE = 12;
@@ -176,6 +178,9 @@ export default async function CategoryPage({
         initialTotalPages={totalPages}
         pageSize={PAGE_SIZE}
       />
+
+      <RelatedGuides categorySlug={slug} />
+      <CategoryFaq categorySlug={slug} />
     </div>
   );
 }
