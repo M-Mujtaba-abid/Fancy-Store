@@ -17,6 +17,7 @@ import wishlistRoutes from "./routes/wishlist.route.js";
 import chatRoutes from "./routes/chat.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import cronRoutes from "./routes/cron.route.js";
+import blogRoutes from "./routes/blog.route.js";
 
 import { stripeWebhook } from "./controllers/payment.controller.js";
 import errorHandler from "./middleware/error.middleware.js";
@@ -137,6 +138,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/cron", cronRoutes);
+app.use("/api/blog", blogRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

@@ -1,0 +1,24 @@
+/* Quill editor — same base rules as AddProduct.module.css's .quillEditor,
+   but taller: a buying guide is 1000+ words, not two paragraphs. */
+.quillEditor :global(.ql-toolbar) {
+  border-radius: 8px 8px 0 0;
+  border-color: #e2e8f0;
+  background: transparent;
+}
+
+.quillEditor :global(.ql-container) {
+  border-radius: 0 0 8px 8px;
+  border-color: #e2e8f0;
+  font-size: 14px;
+}
+
+.quillEditor :global(.ql-editor) {
+  min-height: 480px;
+  font-size: 14px;
+  color: inherit;
+}
+
+.quillEditor :global(.ql-editor.ql-blank::before) {
+  color: #94a3b8;
+  font-style: normal;
+}

@@ -29,6 +29,34 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Baseline security headers. No Content-Security-Policy here on purpose —
+  // this site loads Google Analytics, Meta Pixel, TikTok Pixel, Google
+  // Fonts, and Cloudinary images; a CSP would need every one of those
+  // origins allowlisted first, and getting that wrong on a live site breaks
+  // real functionality (broken images, broken analytics, broken payment
+  // flows). The headers below are safe defaults that don't depend on
+  // knowing every third-party origin in advance.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
+  },
+
   // Category URLs /category?category=<slug> se /category/<slug> pe move hui hain
   // (SEO: query-string page pe generateMetadata possible nahi tha).
   // Permanent redirects se koi purana link, bookmark ya Google result nahi tootega.

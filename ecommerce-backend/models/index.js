@@ -13,6 +13,7 @@ import ChatMessage from "./chatMessage.model.js";
 import ProductVariant from "./productVariant.model.js";
 import LiveChatMessage from "./liveChatMessage.model.js";
 import ChatRoom from "./chatRoom.model.js";
+import BlogPost from "./blogPost.model.js";
 
 const models = {
   User,
@@ -22,6 +23,9 @@ const models = {
   // NOTE: Category ka Product ke saath koi association NAHI hai — link sirf
   // `slug` string ke through hai. Yahan hasMany/belongsTo add na karein.
   Category,
+  // NOTE: BlogPost ka bhi Product/Category ke saath koi association NAHI —
+  // link sirf relatedProductSlugs/relatedCategorySlugs (slug strings) se hai.
+  BlogPost,
   Cart,
   CartItem,
   Order,
@@ -70,5 +74,6 @@ export {
   ChatMessage,
   ChatRoom,
   LiveChatMessage,
+  BlogPost,
 };
 export default models;

@@ -119,6 +119,28 @@ export const metadata: Metadata = {
   },
 };
 
+// Site-wide Organization schema — helps Google's trust/E-E-A-T signals and
+// Knowledge Panel eligibility. Distinct from the WebSite+SearchAction schema
+// on app/page.tsx, which only covers the sitelinks search box.
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Fancy Store",
+  url: "https://www.fancystore.store",
+  logo: "https://www.fancystore.store/logoB.png",
+  sameAs: [
+    "https://www.instagram.com/fancy.store62/",
+    "https://www.tiktok.com/@fancystore62",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+92-341-4159747",
+    contactType: "customer service",
+    email: "fancystore0078@gmail.com",
+    areaServed: "PK",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -133,6 +155,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         {/* ==========================================
             🎯 GOOGLE ANALYTICS (gtag.js) CODE
             ========================================== */}

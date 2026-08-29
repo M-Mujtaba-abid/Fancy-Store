@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Star,
   Tags,
+  Newspaper,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -250,6 +251,19 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
                 {unreadChatCount}
               </span>
             )}
+          </Link>
+
+          <Link
+            href="/dashboard/blog"
+            onClick={handleLinkClick}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+              isActive("/dashboard/blog")
+                ? "bg-primary text-white"
+                : "bg-background text-text-main hover:bg-background/80"
+            }`}
+          >
+            <Newspaper size={18} />
+            Blog
           </Link>
 
           <Link

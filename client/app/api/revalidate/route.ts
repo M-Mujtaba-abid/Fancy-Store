@@ -21,7 +21,7 @@ import { NextResponse } from "next/server";
  * homepage ka cache clear kara sakta hai, data leak nahi.
  */
 
-const ALLOWED_PATHS = new Set(["/", "/products", "/sitemap.xml"]);
+const ALLOWED_PATHS = new Set(["/", "/products", "/sitemap.xml", "/blog"]);
 
 export async function POST(request: Request) {
   const secret = process.env.REVALIDATE_SECRET;
@@ -54,7 +54,10 @@ export async function POST(request: Request) {
 
   for (const path of paths) {
     // Category slugs dynamic hain, to /category/* bhi allow karna hai
-    const isAllowed = ALLOWED_PATHS.has(path) || path.startsWith("/category/");
+    const isAllowed =
+      ALLOWED_PATHS.has(path) ||
+      path.startsWith("/category/") ||
+      path.startsWith("/blog/");
     if (!isAllowed) {
       skipped.push(path);
       continue;
