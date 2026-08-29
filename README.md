@@ -14,7 +14,7 @@ Secure Payments: Integrated payment gateway support (Stripe/PayPal) for seamless
 
 Middleware Security: Implementation of CORS, Helmet, and Rate-Limiting to protect against common web vulnerabilities.
 
-Tech Stack
+Tech Stack:
 Runtime Environment: Node.js
 
 Web Framework: Express.js
