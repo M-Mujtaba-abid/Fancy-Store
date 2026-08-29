@@ -2,7 +2,7 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import LiveChat from "@/components/LiveChat";
+import LiveChat from "@/components/shop/chat/DynamicLiveChat";
 import WhatsAppWidget from "@/components/shop/chat/WhatsAppWidget";
 import ChatWidget from "@/components/shop/chat/DynamicChatWidget";
 
