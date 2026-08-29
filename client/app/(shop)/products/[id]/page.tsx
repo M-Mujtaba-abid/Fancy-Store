@@ -109,6 +109,7 @@
 
 // app/products/[id]/page.tsx (Server Component)
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
+import RelatedGuides from "@/components/shop/share/RelatedGuides";
 import { productService } from "@/service/productservice/product.service";
 import { reviewService } from "@/service/review.service";
 import { Metadata } from "next";
@@ -290,6 +291,9 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ProductDetailsClient product={product} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RelatedGuides productSlug={product.slug} categorySlug={product.category} />
+      </div>
     </>
   );
 }
