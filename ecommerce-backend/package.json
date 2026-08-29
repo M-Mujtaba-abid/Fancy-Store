@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:reviews": "node seeders/seed-reviews.js"
+    "seed:reviews": "node seeders/seed-reviews.js",
+    "seed:auto-reviews": "node seeders/auto-seed-zero-products.js",
+    "backfill:product-slugs": "node seeders/backfill-product-slugs.js"
   },
   "keywords": [],
   "author": "",

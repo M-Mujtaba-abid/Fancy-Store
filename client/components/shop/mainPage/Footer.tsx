@@ -91,6 +91,7 @@ const Footer = () => {
     { label: "Car Covers", href: "/viewMore?filter=car-covers" },
     { label: "Bike Covers", href: "/viewMore?filter=bike-covers" },
     { label: "Sale", href: "/viewMore?filter=on-sale" },
+    { label: "Blog", href: "/blog" },
   ];
 
   const supportLinks = [

@@ -151,6 +151,7 @@ interface ProductCardProps extends Product {
 const ProductCard: React.FC<ProductCardProps> = (props) => {
   const {
     id,
+    slug,
     name,
     price,
     discountPrice,
@@ -169,6 +170,9 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     variant = "default",
   } = props;
 
+  // SEO: naye products ke paas slug hota hai (/products/honda-mat), purane
+  // ya abhi-abhi backfill se pehle wale products id pe fallback karte hain.
+  const productUrl = `/products/${slug || id}`;
   const displayImage =
     imageUrl || (images?.length ? images[0] : "/placeholder.png");
   const isOutOfStock = stock <= 0;
@@ -197,7 +201,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       <article className="group relative w-full aspect-square md:aspect-auto md:h-[320px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-white dark:bg-card">
         {/* ✅ Image Link separate to keep HTML valid */}
         <Link
-          href={`/products/${id}`}
+          href={productUrl}
           className="absolute inset-0 z-0 block"
           aria-label={`View details of ${name}`}
         >
@@ -246,7 +250,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           </p>
 
           <Link
-            href={`/products/${id}`}
+            href={productUrl}
             className="inline-block pointer-events-auto w-full"
           >
             <h3 className="text-xs sm:text-sm md:text-lg font-bold line-clamp-1  hover:underline leading-tight">
@@ -303,7 +307,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       <article className="group relative flex flex-col h-full bg-transparent">
         <div className="relative w-full aspect-[4/5] mb-3">
           <Link
-            href={`/products/${id}`}
+            href={productUrl}
             className="block w-full h-full bg-gray-100 rounded-lg overflow-hidden"
             aria-label={`View ${name}`}
           >
@@ -357,7 +361,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         </div>
 
         <Link
-          href={`/products/${id}`}
+          href={productUrl}
           className="flex flex-col flex-grow text-center"
         >
           <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
@@ -423,7 +427,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           )}
         </div>
         <Link
-          href={`/products/${id}`}
+          href={productUrl}
           className="block w-full h-full overflow-hidden"
           aria-label={`View ${name}`}
         >
@@ -444,7 +448,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       </div>
 
       <div className="p-4 flex flex-col grow">
-        <Link href={`/products/${id}`}>
+        <Link href={productUrl}>
           <h3 className="text-sm font-semibold line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
             {name}
           </h3>

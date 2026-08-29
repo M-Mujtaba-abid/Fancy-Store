@@ -14,6 +14,27 @@ import {
 } from "../constants/index.js"; // ✅ import
 import { generateEmbedding } from "../utils/ai.util.js"; // ✅ AI Utility Import Karein
 import { validateVariantsPayload } from "../validations/variant.validation.js";
+import { slugify } from "../utils/slugify.js";
+
+// ============================================================
+// SLUG GENERATION (SEO-friendly /products/<slug> URLs)
+// ============================================================
+// Naam se slug banata hai aur collision hone par "-2", "-3" append karta hai.
+// Sirf creation time pe call hota hai — update par slug kabhi nahi badalta,
+// warna already-indexed URLs 404 ho jayen.
+const generateUniqueSlug = async (name) => {
+  const base = slugify(name) || "product";
+  let candidate = base;
+  let counter = 2;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const existing = await Product.findOne({ where: { slug: candidate } });
+    if (!existing) return candidate;
+    candidate = `${base}-${counter}`;
+    counter++;
+  }
+};
 
 // ============================================================
 // LIKE / ILIKE ESCAPING
@@ -128,6 +149,7 @@ export const addProductService = async (body, files) => {
     discountPrice: Number.isNaN(normalizedDiscountPrice) ? 0 : normalizedDiscountPrice,
     imageUrl: uploadedImages[0],
     images: uploadedImages,
+    slug: await generateUniqueSlug(name),
   };
 
   let textToEmbed = buildProductTextForAI(newProductData);
@@ -317,11 +339,21 @@ export const getProductsService = async (queryPage, queryLimit) => {
   return formatPagingResponse(data, page, limit);
 };
 
-// 7. Get Single Product
-export const getProductByIdService = async (id) => {
-  const product = await Product.findByPk(id, {
-    include: [{ model: ProductVariant, as: 'variants' }]
-  });
+// 7. Get Single Product — numeric id (legacy links, admin) ya slug (public
+// SEO URLs) dono accept karta hai. Non-numeric string ko findByPk mein dena
+// Postgres INTEGER column pe type-cast error deta, isliye pehle detect karo.
+export const getProductByIdService = async (idOrSlug) => {
+  const isNumeric = /^\d+$/.test(String(idOrSlug));
+
+  const product = isNumeric
+    ? await Product.findByPk(idOrSlug, {
+        include: [{ model: ProductVariant, as: 'variants' }],
+      })
+    : await Product.findOne({
+        where: { slug: String(idOrSlug).toLowerCase() },
+        include: [{ model: ProductVariant, as: 'variants' }],
+      });
+
   if (!product) throw new ApiError(404, "Product not found");
   return product;
 };

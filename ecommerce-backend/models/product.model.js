@@ -9,6 +9,13 @@ Product.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // SEO-friendly public URL segment (/products/<slug>). Generated once at
+    // creation time (see services/product.service.js) aur phir kabhi change
+    // nahi hota — warna indexed URLs 404 ho jate.
+    slug: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     description: {
       type: DataTypes.TEXT,
     },

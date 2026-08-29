@@ -121,7 +121,7 @@ const SearchBar = ({ isOpen, onClose }: SearchBarProps) => {
               {data.products.map((product: any) => (
                 <Link
                   key={product.id}
-                  href={`/products/${product.id}`}
+                  href={`/products/${product.slug || product.id}`}
                   onClick={handleClose}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-card transition-colors"
                 >
