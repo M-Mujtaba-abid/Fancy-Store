@@ -17,6 +17,7 @@ export const revalidate = 300;
 
 import { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { categoryService } from "@/service/categoryService/category.service";
 import { productService } from "@/service/productservice/product.service";
 import CategoryClient from "./CategoryClient";
@@ -106,8 +107,12 @@ export default async function CategoryPage({
   const totalPages = firstPage?.totalPages ?? 1;
 
   // Registry mein bhi nahi mila aur products bhi nahi mile -> ye category
-  // asal mein exist nahi karti
-  const notFound = !category && !firstPage;
+  // asal mein exist nahi karti. Real 404 do — pehle yeh 200 status ke sath
+  // "category maujood nahi" div render karta tha, jo GSC "Soft 404" bana
+  // raha tha.
+  if (!category && !firstPage) {
+    notFound();
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -164,27 +169,13 @@ export default async function CategoryPage({
         <div className="h-1 w-20 bg-primary mt-4 rounded-full" />
       </header>
 
-      {notFound ? (
-        <div className="text-center py-20">
-          <p className="text-xl text-text-muted">
-            Ye category maujood nahi hai.
-          </p>
-          <Link
-            href="/products"
-            className="inline-block mt-6 bg-primary text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
-          >
-            Browse all products
-          </Link>
-        </div>
-      ) : (
-        // Page 1 server se render hui hai (SEO ke liye), aage ki pages client pe
-        <CategoryClient
-          slug={slug}
-          initialProducts={products}
-          initialTotalPages={totalPages}
-          pageSize={PAGE_SIZE}
-        />
-      )}
+      {/* Page 1 server se render hui hai (SEO ke liye), aage ki pages client pe */}
+      <CategoryClient
+        slug={slug}
+        initialProducts={products}
+        initialTotalPages={totalPages}
+        pageSize={PAGE_SIZE}
+      />
     </div>
   );
 }

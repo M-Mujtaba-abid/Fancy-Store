@@ -110,7 +110,9 @@
 // app/products/[id]/page.tsx (Server Component)
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
 import { productService } from "@/service/productservice/product.service";
+import { reviewService } from "@/service/review.service";
 import { Metadata } from "next";
+import { notFound, permanentRedirect } from "next/navigation";
 
 // ==========================================
 // 🌟 1. Dynamic Metadata for SEO
@@ -123,7 +125,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     if (!product) return { title: "Product Not Found | Fancy Store" };
 
-    const productUrl = `https://www.fancystore.store/products/${id}`;
+    // Canonical hamesha slug URL hona chahiye — numeric /products/46 wali
+    // request bhi yehi canonical dikhati hai (page khud niche permanentRedirect
+    // kar deta hai us URL pe).
+    const productUrl = `https://www.fancystore.store/products/${product.slug || id}`;
     // Description se HTML tags hata kar 160 characters nikalna
     const cleanDescription = product.description?.replace(/<[^>]+>/g, '').substring(0, 160) || "Buy premium car accessories at Fancy Store.";
     const ogImage = product.imageUrl || (product.images && product.images[0]) || "https://www.fancystore.store/placeholder.png";
@@ -168,11 +173,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   const { id } = await params;
 
   if (!id || id === "undefined") {
-    return (
-      <div className="text-center py-20 text-red-500 font-medium text-2xl">
-        Invalid Product ID.
-      </div>
-    );
+    notFound();
   }
 
   let product = null;
@@ -181,16 +182,35 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   try {
     const response = await productService.getProductById(id);
     product = (response as any)?.product || response;
-  } catch (error) {
+  } catch (error: any) {
+    // Backend ne explicitly "product exists nahi" bola — real 404.
+    if (error?.response?.status === 404) {
+      notFound();
+    }
+    // Network/server glitch — asal product hoga, sirf temporarily fetch
+    // nahi hua. Isko notFound() mat karo warna transient error se Google
+    // ek valid product ko deindex kar sakta hai.
     hasError = true;
   }
 
-  if (hasError || !product) {
-    return (
-      <div className="text-center py-20 text-red-500 font-medium text-2xl">
-        {hasError ? "Something went wrong while fetching the product." : "Product not found."}
-      </div>
-    );
+  if (!product) {
+    if (hasError) {
+      return (
+        <div className="text-center py-20 text-red-500 font-medium text-2xl">
+          Something went wrong while fetching the product.
+        </div>
+      );
+    }
+    notFound();
+  }
+
+  // Purani numeric URL (/products/46) hit hui aur product ka slug ban chuka
+  // hai -> permanently naye SEO URL (/products/<slug>) pe bhej do. Google ke
+  // pehle se indexed links aur purane bookmarks/cart/order links dono ke
+  // liye zaroori — warna wo hamesha numeric URL pe hi phanse rehte.
+  const idIsNumeric = /^\d+$/.test(id);
+  if (idIsNumeric && product.slug && product.slug !== id) {
+    permanentRedirect(`/products/${product.slug}`);
   }
 
   // --- JSON-LD Schema Object (Optimized with Review Stars) ---
@@ -207,7 +227,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     },
     "offers": {
       "@type": "Offer",
-      "url": `https://www.fancystore.store/products/${product.id}`,
+      "url": `https://www.fancystore.store/products/${product.slug || product.id}`,
       "priceCurrency": "PKR",
       "price": product.discountPrice || product.price,
       "itemCondition": "https://schema.org/NewCondition",
@@ -227,6 +247,39 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
       "ratingValue": product.averageRating || "5.0",
       "reviewCount": product.totalReviews
     };
+
+    // Individual reviews bhi JSON-LD mein daalte hain (sirf average nahi) —
+    // AI shopping results aur rich snippets mein attribute-rich Product
+    // schema zyada dikhta hai. Failure yahan poore page ko na toray,
+    // isliye best-effort — comment wale reviews ko priority (zyada useful
+    // rich-result content), phir rating-only se fill karte hain.
+    try {
+      const reviewsRes = await reviewService.getProductReviews(product.id);
+      const allReviews = reviewsRes?.data?.reviews || [];
+      const withComment = allReviews.filter((r) => r.comment);
+      const withoutComment = allReviews.filter((r) => !r.comment);
+      const topReviews = [...withComment, ...withoutComment].slice(0, 5);
+
+      if (topReviews.length > 0) {
+        jsonLd.review = topReviews.map((r) => ({
+          "@type": "Review",
+          reviewRating: {
+            "@type": "Rating",
+            ratingValue: r.rating,
+            bestRating: "5",
+            worstRating: "1",
+          },
+          author: {
+            "@type": "Person",
+            name: r.User?.name || "Verified Buyer",
+          },
+          reviewBody: r.comment || undefined,
+          datePublished: r.createdAt,
+        }));
+      }
+    } catch {
+      // Reviews fetch fail hui to bas aggregateRating pe hi rehne do.
+    }
   }
 
   return (

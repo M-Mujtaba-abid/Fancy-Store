@@ -7,16 +7,18 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:50
 
 const STATIC_ROUTES = [
   "/",
-  "/profile",
   "/products",
   "/contactus",
-  "/wishlist",
-  "/cart",
   // Hataye gaye:
   //   "/aboutus"      -> is route ka koi page file nahi hai (404 submit ho raha tha)
   //   "/category"     -> ab /products pe redirect hai; asli pages /category/<slug> hain
   //   "/carTopCover", "/bikeTopCover", "/truncTrayMat"
   //                   -> placeholder stubs the, ab delete + 301 redirect
+  //   "/profile", "/wishlist", "/cart"
+  //                   -> auth-gated, per-user pages hain, koi public unique
+  //                      content nahi — GSC "Crawled/Discovered - currently
+  //                      not indexed" laga raha tha. robots.ts mein disallow
+  //                      bhi kar diya.
 ];
 
 // 1. Products fetch karne ka function
@@ -60,9 +62,9 @@ export default async function sitemap() {
     getAllCategories(),
   ]);
 
-  // Dynamic Products (https://www.fancystore.store/products/46)
+  // Dynamic Products (https://www.fancystore.store/products/honda-mat)
   const productEntries = products.map((product) => ({
-    url: `${SITE_URL}/products/${product.id}`,
+    url: `${SITE_URL}/products/${product.slug || product.id}`,
     lastModified: product.updatedAt ? new Date(product.updatedAt) : now,
     changeFrequency: "daily",
     priority: 0.9,

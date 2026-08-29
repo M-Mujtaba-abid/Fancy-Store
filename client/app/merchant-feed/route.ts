@@ -51,7 +51,7 @@ export async function GET() {
       <g:id>${p.id || p._id}</g:id>
       <g:title>${escapeXml(p.name)}</g:title>
       <g:description>${p.description ? escapeXml(p.description).substring(0, 5000) : ''}</g:description>
-      <g:link>${SITE_URL}/products/${p.id || p._id}</g:link>
+      <g:link>${SITE_URL}/products/${p.slug || p.id || p._id}</g:link>
       <g:image_link>${imageLink}</g:image_link>
       <g:condition>new</g:condition>
       <g:availability>${p.stock > 0 ? 'in_stock' : 'out_of_stock'}</g:availability>

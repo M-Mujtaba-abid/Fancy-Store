@@ -48,6 +48,7 @@ export type MaterialName = (typeof MATERIAL_OPTIONS)[number];
 // --- Product Types ---
 export interface Product {
   id: string;
+  slug?: string;
   name: string;
   description: string;
   price: number;
