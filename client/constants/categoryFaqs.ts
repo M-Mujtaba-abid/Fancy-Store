@@ -118,9 +118,14 @@ export const CATEGORY_FAQS: Record<string, FaqItem[]> = {
   ],
   floor_mat: [
     {
-      question: "Rubber or carpet floor mats, which is better?",
+      question: "Do rubber mats really help cattle?",
       answer:
-        "Rubber is more waterproof and easier to clean, making it better for daily use, rain, and dusty roads. Carpet looks more premium but stains more easily.",
+        "Yes. They keep cattle off wet, muddy, or hard concrete ground, which protects their hooves and significantly lowers the risk of lameness and hoof disease.",
+    },
+    {
+      question: "Are these mats easy to clean?",
+      answer:
+        "Yes, a quick hose down and wipe is enough to keep them hygienic. They hold up to daily wear far longer than bare flooring alone.",
     },
   ],
 };
