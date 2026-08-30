@@ -153,7 +153,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         ],
         url: productUrl,
         siteName: "Fancy Store",
-        type: "website",
+        // `type` deliberately omitted here — Next's typed OpenGraphType
+        // union doesn't include "product", so og:type is rendered as a raw
+        // <meta property> tag in the page body instead (see below). Note:
+        // `other` was NOT used for this — it renders <meta name="..."> not
+        // <meta property="...">, and Open Graph parsers only read `property`.
       },
       twitter: {
         card: "summary_large_image",
@@ -285,6 +289,19 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
   return (
     <>
+      {/* Meta's Product Open Graph tags — read by Facebook/Instagram when
+          they crawl or preview this URL, and used as a signal for
+          Catalog/Dynamic Ads tooling. Must use `property`, not `name` (the
+          Next Metadata API's `other` field only emits `name`, which Open
+          Graph parsers ignore), so these are rendered directly as JSX —
+          React 19 hoists <meta>/<title>/<link> tags rendered anywhere in
+          the tree up into <head> automatically. */}
+      <meta property="og:type" content="product" />
+      <meta property="product:price:amount" content={String(product.discountPrice || product.price)} />
+      <meta property="product:price:currency" content="PKR" />
+      <meta property="product:availability" content={product.stock > 0 ? "in stock" : "out of stock"} />
+      <meta property="product:retailer_item_id" content={String(product.id)} />
+
       {/* Structured Data for Google Search Console Enhancements */}
       <script
         type="application/ld+json"
