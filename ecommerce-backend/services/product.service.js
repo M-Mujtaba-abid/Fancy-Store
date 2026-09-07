@@ -120,7 +120,7 @@ export const addProductService = async (body, files) => {
     throw new ApiError(400, "At least one product image file is required");
 
   const {
-    name, description, price, stock, category, subCategory,
+    name, description, price, costPrice, stock, stockQuantity, category, subCategory,
     carModel, color, material, isFeatured, isNewArrival,
     isOnSale, discountPrice, vehicleType,
     variants
@@ -129,14 +129,18 @@ export const addProductService = async (body, files) => {
   const uploadedImages = await uploadImagesToCloudinary(productFiles);
 
   const normalizedPrice = Number(price);
+  const normalizedCostPrice = Number(costPrice || 0);
   const normalizedStock = Number(stock);
+  const normalizedStockQuantity = Number(stockQuantity ?? stock ?? 0);
   const normalizedDiscountPrice = Number(discountPrice || 0);
 
   const newProductData = {
     name,
     description,
     price: Number.isNaN(normalizedPrice) ? 0 : normalizedPrice,
+    costPrice: Number.isNaN(normalizedCostPrice) ? 0 : normalizedCostPrice,
     stock: Number.isNaN(normalizedStock) ? 0 : normalizedStock,
+    stockQuantity: Number.isNaN(normalizedStockQuantity) ? 0 : normalizedStockQuantity,
     category,
     subCategory: subCategory || null,
     carModel,
@@ -368,7 +372,15 @@ export const updateProductService = async (id, body, files) => {
   delete updateData.variants;
 
   if (updateData.price !== undefined) updateData.price = Number(updateData.price);
+  if (updateData.costPrice !== undefined) updateData.costPrice = Number(updateData.costPrice);
   if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock);
+  if (updateData.stockQuantity !== undefined) updateData.stockQuantity = Number(updateData.stockQuantity);
+  if (updateData.stock !== undefined && updateData.stockQuantity === undefined) {
+    updateData.stockQuantity = updateData.stock;
+  }
+  if (updateData.stockQuantity !== undefined && updateData.stock === undefined) {
+    updateData.stock = updateData.stockQuantity;
+  }
   if (updateData.discountPrice !== undefined) updateData.discountPrice = Number(updateData.discountPrice);
 
   if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === "true" || updateData.isFeatured === true;

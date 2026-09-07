@@ -19,7 +19,7 @@ export interface Order {
   id: string;
   userId: string;
   totalAmount: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "returned";
   fullName: string;
   phoneNumber: string;
   email: string;

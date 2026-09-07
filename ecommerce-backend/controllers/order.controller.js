@@ -186,7 +186,11 @@ export const getOrders = async (req, res) => {
 // ================= ADMIN: GET ALL ORDERS =================
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await getAllOrdersService();
+    const status = req.query.status ? String(req.query.status).toLowerCase() : undefined;
+    if (status && !ORDER_STATUSES.includes(status)) {
+      return res.status(400).json({ message: "Invalid status filter" });
+    }
+    const orders = await getAllOrdersService(status);
     return res.status(200).json({ orders });
   } catch (err) {
     console.error(err);

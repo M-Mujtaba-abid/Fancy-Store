@@ -8,7 +8,8 @@ import OrderDetails from "./OrderDetails"; // ✅ Naya component import kiya
 import { Package, Calendar, User } from "lucide-react";
 
 const ShowOrders = () => {
-  const { data, isLoading, isError } = useAllOrders();
+  const [statusFilter, setStatusFilter] = useState("all");
+  const { data, isLoading, isError } = useAllOrders(statusFilter);
   
   // ✅ Modal kholne ke liye state
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -39,6 +40,17 @@ const orders = Array.isArray(safeData) ? safeData : safeData?.orders || safeData
             Manage customer orders and update shipping statuses. Total: {orders.length} orders
           </p>
         </div>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="bg-background border border-border rounded-lg px-3 py-2 text-sm font-semibold text-text-main"
+          aria-label="Filter orders by status"
+        >
+          <option value="all">All statuses</option>
+          {['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'].map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
       </div>
 
       {/* --- ORDERS TABLE --- */}

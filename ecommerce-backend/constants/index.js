@@ -1,11 +1,11 @@
 // ============== ORDER ==============
 export const ORDER_STATUSES = [
   "pending",
-  "accepted",
-  "cancelled",
-  "ready_to_ship",
+  "processing",
   "shipped",
   "delivered",
+  "cancelled",
+  "returned",
 ];
 
 // ============== PAYMENT ==============

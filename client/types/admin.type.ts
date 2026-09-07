@@ -4,7 +4,30 @@ export interface DashboardStatsData {
   totalUsers: number;
   totalProducts: number;
   totalOrders: number;
+  cancelledOrders: number;
+  cancellationRate: number;
   totalReviews: number;
+}
+
+export interface DashboardProfitSummary {
+  totalRevenue: number;
+  totalCost: number;
+  netProfit: number;
+  profitMargin: number;
+}
+
+export interface SalesChartPoint {
+  date: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface LowStockProduct {
+  id: number;
+  name: string;
+  imageUrl?: string | null;
+  stock: number;
+  stockQuantity: number;
 }
 
 export interface DashboardStatsResponse {

@@ -38,10 +38,10 @@ export const useMyOrders = (params?: { phone?: string; orderId?: string }) => {
 // ================= ADMIN HOOKS =================
 
 // 3. Get all orders (Admin)
-export const useAllOrders = () => {
+export const useAllOrders = (status = "all") => {
   return useQuery({
-    queryKey: ["adminOrders"],
-    queryFn: orderService.getAllOrders,
+    queryKey: ["adminOrders", status],
+    queryFn: () => orderService.getAllOrders(status),
   });
 };
 
