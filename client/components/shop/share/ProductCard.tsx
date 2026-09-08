@@ -218,7 +218,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
 
         {onSale && (
           <span className="absolute left-3 top-3 z-10 rounded-md bg-red-500 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm">
-            40% OFF
+            FLAT 40% OFF
           </span>
         )}
 
@@ -323,7 +323,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
             {onSale && (
               <span className="bg-orange-500 text-white text-[10px] uppercase font-extrabold px-2 py-0.5 rounded tracking-wide shadow-sm">
-                40% OFF
+                FLAT 40% OFF
               </span>
             )}
             {isNewArrival && (
@@ -413,7 +413,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
           {onSale && (
             <span className="bg-red-500 text-white text-[10px] uppercase font-extrabold px-2 py-1 rounded shadow-sm">
-              40% OFF
+              FLAT 40% OFF
             </span>
           )}
           {isNewArrival && (

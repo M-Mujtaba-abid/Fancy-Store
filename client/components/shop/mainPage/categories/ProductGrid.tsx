@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAllProductsInfinite } from "@/hooks/useProducts";
@@ -7,6 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { HOME_CATEGORIES } from "@/constants/categoriesData";
 import ProductCard from "../../share/ProductCard";
 import SmallLoader from "../../share/SmallLoader";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 // "All" / "car" / "bike" reserved tab ids hain — backend inko category slug
 // banane se rokta hai (services/category.service.js RESERVED_SLUGS)
@@ -18,7 +19,6 @@ const BASE_TABS = [
 
 const ProductGrid = () => {
   const [activeTab, setActiveTab] = useState("All");
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Live categories; static list offline fallback ke tor pe
   const { data: fetchedCategories } = useCategories();
@@ -57,27 +57,14 @@ const ProductGrid = () => {
         return p.category?.toLowerCase() === activeTab.toLowerCase();
       });
 
-  useEffect(() => {
-    if (!sentinelRef.current) return;
-    const node = sentinelRef.current;
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        });
-      },
-      { rootMargin: "200px" }
-    );
-
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const sentinelRef = useInfiniteScroll({
+    hasMore: Boolean(hasNextPage),
+    isLoading: isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+  });
 
   return (
-    <section className="py-20 bg-background text-text-main transition-colors duration-300 min-h-[800px]">
+    <section className="min-h-200 bg-background py-20 text-text-main transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col mb-12 space-y-6">
           <div className="text-center md:text-left">
@@ -107,7 +94,7 @@ const ProductGrid = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center py-20 min-h-[400px]">
+          <div className="flex min-h-100 items-center justify-center py-20">
             <SmallLoader />
           </div>
         ) : isError ? (

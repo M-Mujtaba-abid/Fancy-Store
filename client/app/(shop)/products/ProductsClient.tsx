@@ -1,13 +1,13 @@
 // app/(shop)/products/ProductsClient.tsx
 "use client";
 
-import React, { useRef, useEffect, Suspense } from "react";
+import React, { Suspense } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { productService } from "@/service/productservice/product.service";
 import ProductCard from "@/components/shop/share/ProductCard"; 
 import Loading from "@/app/loading"; 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import SmallLoader from "@/components/shop/share/SmallLoader";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 function ProductsContent() {
   const limit = 12;
@@ -19,6 +19,7 @@ function ProductsContent() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
   } = useInfiniteQuery({
     queryKey: ["products", "all"],
     queryFn: ({ pageParam = 1 }: any) => productService.getAllProducts(pageParam, limit),
@@ -32,25 +33,12 @@ function ProductsContent() {
   });
 
   const products = data?.pages?.flatMap((p: any) => p.products) || [];
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!sentinelRef.current) return;
-    const node = sentinelRef.current;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        });
-      },
-      { rootMargin: "200px" },
-    );
-
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const retryNextPage = () => void fetchNextPage();
+  const sentinelRef = useInfiniteScroll({
+    hasMore: Boolean(hasNextPage) && !isFetchNextPageError,
+    isLoading: isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+  });
 
   if (isLoading) return <Loading />;
   if (isError)
@@ -84,11 +72,16 @@ function ProductsContent() {
         )}
       </div>
 
-      {/* Infinite scroll sentinel */}
-      <div ref={sentinelRef} />
-
-      {/* Fetching next page spinner */}
-       {isFetchingNextPage && <SmallLoader />}
+      <div ref={sentinelRef} aria-hidden="true" className="h-2" />
+      {isFetchingNextPage && <SmallLoader />}
+      {isFetchNextPageError && (
+        <div className="mt-4 flex flex-col items-center gap-2 text-sm text-red-500">
+          <span>More products could not be loaded.</span>
+          <button type="button" onClick={retryNextPage} className="min-h-11 rounded-lg border border-red-200 px-4 py-2 font-semibold hover:bg-red-50">
+            Retry
+          </button>
+        </div>
+      )}
     </div>
   );
 }
