@@ -23,7 +23,6 @@ import { productService } from "@/service/productservice/product.service";
 import CategoryClient from "./CategoryClient";
 import CategoryFaq from "@/components/shop/share/CategoryFaq";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
-import PromoStrip from "@/components/shop/mainPage/PromoStrip";
 
 const SITE_URL = "https://www.fancystore.store";
 const PAGE_SIZE = 12;
@@ -143,7 +142,6 @@ export default async function CategoryPage({
 
   return (
     <div className="mx-auto min-h-screen max-w-7xl px-4 pb-12">
-      {slug.toLowerCase() === "car_topcover" && <PromoStrip />}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

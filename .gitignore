@@ -1,0 +1,39 @@
+# ---------------------------------------------------------------
+# Local-only files. Ye kabhi commit / production par nahi jaane.
+# ---------------------------------------------------------------
+
+# Python scratch pipelines (repo root par jitni bhi .py files hain)
+/*.py
+__pycache__/
+*.py[cod]
+
+# Local data dumps
+/*.csv
+
+# Locally generated / downloaded images
+# (production images Cloudinary se aati hain, repo se nahi)
+/assets/
+/client/public/uploads/
+
+# One-off local seeder scripts
+/ecommerce-backend/seeders/seed.js
+/ecommerce-backend/seeders/check-cover-duplicates.js
+/ecommerce-backend/seeders/delete-seeded-covers.js
+/ecommerce-backend/seeders/upload-covers-to-cloudinary.js
+
+# Secrets (safety net - sub-folders me pehle se ignored hain)
+.env
+.env.*
+!.env.example
+
+# Dependencies / build output (safety net)
+node_modules/
+/client/.next/
+/client/out/
+/client/build/
+
+# Editor & OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
