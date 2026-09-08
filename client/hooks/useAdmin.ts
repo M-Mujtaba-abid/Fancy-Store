@@ -38,3 +38,18 @@ export const useDeleteChatRoom = () => {
     },
   });
 };
+
+export const useGetProfitSummary = () => useQuery({
+  queryKey: ["dashboardProfitSummary"],
+  queryFn: adminService.getProfitSummary,
+});
+
+export const useGetSalesChart = () => useQuery({
+  queryKey: ["dashboardSalesChart"],
+  queryFn: adminService.getSalesChart,
+});
+
+export const useGetLowStockProducts = () => useQuery({
+  queryKey: ["dashboardLowStock"],
+  queryFn: adminService.getLowStockProducts,
+});

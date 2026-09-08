@@ -65,6 +65,7 @@ export const placeOrderService = async (userId, orderData) => {
             ? product.discountPrice
             : product.price;
         product.stock -= quantity;
+        product.stockQuantity = product.stock;
         product.sold = (product.sold || 0) + quantity;
         await product.save({ transaction: t });
       }
@@ -238,8 +239,10 @@ export const getOrdersService = async (userId, guestData = null) => {
 };
 
 // ================= ADMIN: GET ALL ORDERS =================
-export const getAllOrdersService = async () => {
+export const getAllOrdersService = async (status) => {
+  const where = status ? { status } : undefined;
   return await Order.findAll({
+    where,
     include: [
       { model: User, attributes: ["id", "name", "email", "role"] },
       { 
@@ -270,8 +273,9 @@ export const updateOrderStatusService = async (id, status) => {
   order.status = status;
   await order.save();
 
-  // Restore inventory if status changed to cancelled
-  if (status.toLowerCase() === "cancelled" && previousStatus.toLowerCase() !== "cancelled") {
+  // Restore inventory when an order is cancelled or returned.
+  const restockingStatuses = ["cancelled", "returned"];
+  if (restockingStatuses.includes(status.toLowerCase()) && !restockingStatuses.includes(previousStatus.toLowerCase())) {
     try {
       const orderItems = await OrderItem.findAll({ where: { orderId: order.id } });
       for (const item of orderItems) {
@@ -286,6 +290,7 @@ export const updateOrderStatusService = async (id, status) => {
         if (product) {
           if (!item.variantId) {
             product.stock += item.quantity;
+            product.stockQuantity = product.stock;
           }
           product.sold = Math.max(0, (product.sold || 0) - item.quantity);
           await product.save();

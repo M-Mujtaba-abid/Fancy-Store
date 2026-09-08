@@ -52,7 +52,9 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  costPrice: number;
   stock: number;
+  stockQuantity?: number;
   category: string;
   subCategory?: string | null; 
   vehicleType: "car" | "bike" | string;
@@ -75,7 +77,9 @@ export interface ProductMutationInput {
   name: string;
   description: string;
   price: number;
+  costPrice: number;
   stock: number;
+  stockQuantity?: number;
   category: string;
   subCategory?: string | null; 
   vehicleType: "car" | "bike";

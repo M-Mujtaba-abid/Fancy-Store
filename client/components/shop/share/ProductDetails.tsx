@@ -205,6 +205,11 @@ export default function ProductDetailsClient({ product }: Props) {
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
+            {isProductOnSale && (
+              <span className="absolute left-3 top-3 z-10 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-white shadow-md sm:left-4 sm:top-4 sm:text-sm">
+                40% OFF
+              </span>
+            )}
           </div>
 
           {/* Thumbnails (Sub Images) */}
@@ -235,8 +240,8 @@ export default function ProductDetailsClient({ product }: Props) {
           {/* Categories / Badges */}
           <div className="flex flex-wrap gap-2 mb-3">
             {isProductOnSale && (
-              <span className="bg-red-100 text-red-600 text-[10px] uppercase font-bold px-2 py-1 rounded">
-                Sale
+              <span className="bg-red-100 text-red-600 text-[10px] uppercase font-extrabold px-2 py-1 rounded">
+                40% OFF
               </span>
             )}
             {product.isNewArrival && (

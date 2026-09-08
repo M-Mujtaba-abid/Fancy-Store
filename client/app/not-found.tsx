@@ -6,14 +6,14 @@ import { Home, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
   return (
-    <div className="min-h-[85vh] flex items-center justify-center bg-background dark:bg-slate-950 px-4 transition-colors duration-300">
-      <div className="text-center">
+    <div className="flex min-h-[85vh] items-center justify-center bg-background px-4 py-12 transition-colors duration-300 dark:bg-slate-950 sm:py-16">
+      <div className="w-full max-w-lg text-center">
         {/* Minimalist 404 with Red Animation */}
-        <div className="relative inline-block">
+        <div className="relative mx-auto flex min-h-36 items-center justify-center sm:min-h-56">
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-[120px] md:text-[200px] font-black text-border-custom/40 dark:text-slate-700 leading-none select-none"
+            className="select-none text-[clamp(6rem,28vw,12.5rem)] font-black leading-none text-border-custom/40 dark:text-slate-700"
           >
             404
           </motion.h1>
@@ -27,7 +27,7 @@ const NotFound = () => {
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute bottum-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-error text-white px-6 py-2 rounded-full shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-error px-4 py-2 text-white shadow-[0_0_30px_rgba(239,68,68,0.5)] sm:px-6"
           >
             <span className="text-sm font-black uppercase tracking-widest">
               Lost in Space
@@ -55,11 +55,11 @@ const NotFound = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4"
         >
           <Link
             href="/"
-            className="flex items-center justify-center w-full sm:w-auto px-10 py-4 bg-error hover:bg-error/90 text-white rounded-full font-bold transition-all active:scale-95 shadow-lg shadow-error/20 dark:shadow-error/10"
+            className="flex min-h-11 w-full items-center justify-center rounded-full bg-error px-10 py-3.5 font-bold text-white shadow-lg shadow-error/20 transition-all hover:bg-error/90 active:scale-95 dark:shadow-error/10 sm:w-auto"
           >
             <Home size={18} className="mr-2" />
             Home
@@ -67,7 +67,7 @@ const NotFound = () => {
 
           <button
             onClick={() => window.history.back()}
-            className="flex items-center justify-center w-full sm:w-auto px-10 py-4 border border-border-custom dark:border-slate-600 text-text-main dark:text-white rounded-full font-bold hover:bg-error hover:text-white hover:border-error dark:hover:border-error transition-all active:scale-95"
+            className="flex min-h-11 w-full items-center justify-center rounded-full border border-border-custom px-10 py-3.5 font-bold text-text-main transition-all hover:border-error hover:bg-error hover:text-white active:scale-95 dark:border-slate-600 dark:text-white dark:hover:border-error sm:w-auto"
           >
             <ArrowLeft size={18} className="mr-2" />
             Go Back

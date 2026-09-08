@@ -2,7 +2,7 @@
 export const revalidate = 3600;
 
 import { Metadata } from "next"; // ✅ Next.js Metadata import kiya
-import Carosel from "@/components/shop/mainPage/Carosel";
+import CarouselBanner from "@/components/shop/mainPage/CarouselBanner";
 import Category from "@/components/shop/mainPage/categories/Category";
 import ProductGrid from "@/components/shop/mainPage/categories/DynamicProductGrid";
 import ProductSection from "@/components/shop/mainPage/categories/ProductSection";
@@ -124,7 +124,7 @@ const HomePage = async () => {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Carosel />
+      <CarouselBanner />
       <Category categories={homeCategories} />
 
       {/* 1. New Arrivals Section */}

@@ -216,6 +216,12 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
         </Link>
 
+        {onSale && (
+          <span className="absolute left-3 top-3 z-10 rounded-md bg-red-500 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm">
+            40% OFF
+          </span>
+        )}
+
         {/* Buttons are now separate siblings, positioned with z-index */}
         <WishlistButton
           productId={id as string}
@@ -227,11 +233,6 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
         {/* Content Box */}
         <div className="absolute bottom-0 left-0 w-full p-3 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 pointer-events-none">
           <div className="flex flex-wrap gap-1.5 mb-1">
-            {onSale && (
-              <span className="bg-red-500 text-white text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">
-                Sale
-              </span>
-            )}
             {isNewArrival && (
               <span className="bg-green-500 text-white text-[9px] uppercase font-bold px-1.5 py-0.5 rounded shadow-sm">
                 New
@@ -321,8 +322,8 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
           </Link>
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
             {onSale && (
-              <span className="bg-black text-white text-[10px] uppercase font-bold px-2 py-0.5 tracking-widest shadow-sm">
-                Sale
+              <span className="bg-orange-500 text-white text-[10px] uppercase font-extrabold px-2 py-0.5 rounded tracking-wide shadow-sm">
+                40% OFF
               </span>
             )}
             {isNewArrival && (
@@ -411,8 +412,8 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       <div className="relative w-full aspect-square bg-gray-50">
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 pointer-events-none">
           {onSale && (
-            <span className="bg-red-500 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-sm">
-              Sale
+            <span className="bg-red-500 text-white text-[10px] uppercase font-extrabold px-2 py-1 rounded shadow-sm">
+              40% OFF
             </span>
           )}
           {isNewArrival && (

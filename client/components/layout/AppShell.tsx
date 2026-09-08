@@ -4,6 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/shop/mainPage/navbarItems/Navbar";
 import Footer from "@/components/shop/mainPage/Footer";
+import PromoStrip from "@/components/shop/mainPage/PromoStrip";
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -25,6 +26,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
+      <PromoStrip />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <Footer />
     </>

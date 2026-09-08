@@ -23,7 +23,16 @@ Product.init(
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    costPrice: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0,
+    },
     stock: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    stockQuantity: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },

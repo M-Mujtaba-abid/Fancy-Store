@@ -20,7 +20,9 @@ const defaultFormState: ProductMutationInput = {
   name: "",
   description: "",
   price: 0,
+  costPrice: 0,
   stock: 10,
+  stockQuantity: 10,
   category: "",
   vehicleType: "car",
   carModel: "",
@@ -121,7 +123,9 @@ const AddProduct = ({
         name: initialData.name || "",
         description: initialData.description || "",
         price: Number(initialData.price) || 0,
+        costPrice: Number(initialData.costPrice) || 0,
         stock: Number(initialData.stock) || 0,
+        stockQuantity: Number(initialData.stockQuantity ?? initialData.stock) || 0,
         category: initialData.category || "",
         subCategory: initialData.subCategory || "",
         vehicleType: initialData.vehicleType === "bike" ? "bike" : "car",
@@ -417,6 +421,7 @@ const AddProduct = ({
       const totalStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
       finalForm.price = minPrice;
       finalForm.stock = totalStock;
+      finalForm.stockQuantity = totalStock;
       finalVariants = variants.map((v) => ({
         ...v,
         variantType: v.variantType || selectedVariantType,
@@ -824,6 +829,20 @@ const AddProduct = ({
                     required={!hasVariants}
                     min={0}
                     placeholder="e.g. 50"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-text-muted uppercase">
+                    Cost Price (Rs) *
+                  </label>
+                  <input
+                    className="bg-card border border-border rounded-lg px-4 py-3 text-sm outline-none focus:border-primary"
+                    type="number"
+                    value={form.costPrice || ""}
+                    onChange={onFieldChange("costPrice")}
+                    required={!hasVariants}
+                    min={0}
+                    placeholder="e.g. 2500"
                   />
                 </div>
                 <div

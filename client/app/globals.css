@@ -188,3 +188,23 @@ body {
   border-radius: 0.75rem;
   margin: 1.5rem 0;
 }
+
+@keyframes promo-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.promo-marquee {
+  animation: promo-marquee 22s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-marquee {
+    animation: none;
+  }
+}

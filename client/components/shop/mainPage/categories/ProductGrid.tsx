@@ -94,7 +94,7 @@ const ProductGrid = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all border border-border/50 floating-card ${
+                className={`min-h-11 px-6 py-2 rounded-full text-sm font-bold transition-all border border-border/50 floating-card ${
                   activeTab === tab.id
                     ? "bg-primary text-white shadow-lg"
                     : "bg-card text-text-muted hover:text-text-main hover:bg-background"
@@ -118,7 +118,7 @@ const ProductGrid = () => {
           <>
             <motion.div
               layout
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
+              className="grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
             >
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product: any) => (

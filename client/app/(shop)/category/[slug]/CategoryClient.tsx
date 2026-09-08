@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/shop/share/ProductCard";
 import { useFilteredProducts } from "@/hooks/useProducts";
@@ -27,6 +27,7 @@ const CategoryClient = ({
   pageSize,
 }: CategoryClientProps) => {
   const [page, setPage] = useState(1);
+  const [loadedProducts, setLoadedProducts] = useState<Product[]>(initialProducts);
 
   // page === 1 pe server data hi use karo — koi redundant fetch nahi
   const { data, isFetching, isError } = useFilteredProducts(
@@ -35,8 +36,16 @@ const CategoryClient = ({
     pageSize
   );
 
-  const products: Product[] =
-    page === 1 ? initialProducts : (data?.products as Product[]) || [];
+  useEffect(() => {
+    if (page > 1 && data?.products) {
+      setLoadedProducts((current) => {
+        const existingIds = new Set(current.map((product) => product.id));
+        return [...current, ...(data.products as Product[]).filter((product) => !existingIds.has(product.id))];
+      });
+    }
+  }, [data, page]);
+
+  const products = loadedProducts;
   const totalPages = page === 1 ? initialTotalPages : data?.totalPages ?? 1;
 
   const showSkeleton = page !== 1 && isFetching && products.length === 0;
@@ -79,7 +88,7 @@ const CategoryClient = ({
         </div>
       ) : (
         <div
-          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"
+          className={`grid grid-cols-2 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"
             }`}
         >
           {products.map((product) => (
@@ -88,26 +97,14 @@ const CategoryClient = ({
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-12">
+      {page < totalPages && (
+        <div className="mt-10 flex justify-center">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1 || isFetching}
-            className="px-4 py-2 rounded-lg border border-border text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-colors"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={isFetching}
+            className="min-h-11 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Previous
-          </button>
-
-          <span className="text-sm text-text-muted">
-            Page {page} of {totalPages}
-          </span>
-
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages || isFetching}
-            className="px-4 py-2 rounded-lg border border-border text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-colors"
-          >
-            Next
+            {isFetching ? "Loading..." : "Load More Products"}
           </button>
         </div>
       )}

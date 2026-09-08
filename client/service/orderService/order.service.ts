@@ -25,8 +25,8 @@ getMyOrders: async (params?: { phone?: string; orderId?: string }): Promise<Orde
   return res.data.orders;
 },
 
-  getAllOrders: async (): Promise<Order[]> => {
-    const res = await api.get("/orders/all");
+  getAllOrders: async (status?: string): Promise<Order[]> => {
+    const res = await api.get("/orders/all", { params: status && status !== "all" ? { status } : undefined });
     return res.data.orders;
   },
 
