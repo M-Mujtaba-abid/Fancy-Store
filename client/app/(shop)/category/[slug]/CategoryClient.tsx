@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/shop/share/ProductCard";
 import { useFilteredProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product.type";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 interface CategoryClientProps {
   slug: string;
@@ -30,7 +31,7 @@ const CategoryClient = ({
   const [loadedProducts, setLoadedProducts] = useState<Product[]>(initialProducts);
 
   // page === 1 pe server data hi use karo — koi redundant fetch nahi
-  const { data, isFetching, isError } = useFilteredProducts(
+  const { data, isFetching, isError, refetch } = useFilteredProducts(
     { category: slug },
     page,
     pageSize
@@ -47,22 +48,14 @@ const CategoryClient = ({
 
   const products = loadedProducts;
   const totalPages = page === 1 ? initialTotalPages : data?.totalPages ?? 1;
+  const loadNextPage = useCallback(() => setPage((currentPage) => currentPage + 1), []);
+  const sentinelRef = useInfiniteScroll({
+    hasMore: page < totalPages && !isError,
+    isLoading: isFetching,
+    onLoadMore: loadNextPage,
+  });
 
   const showSkeleton = page !== 1 && isFetching && products.length === 0;
-
-  if (isError && page !== 1) {
-    return (
-      <div className="text-center text-red-500 py-10">
-        Products load nahi ho sake.{" "}
-        <button
-          onClick={() => setPage(1)}
-          className="underline hover:no-underline"
-        >
-          Page 1 pe wapis jayein
-        </button>
-      </div>
-    );
-  }
 
   if (!showSkeleton && products.length === 0) {
     return (
@@ -83,7 +76,7 @@ const CategoryClient = ({
   return (
     <>
       {showSkeleton ? (
-        <div className="flex justify-center items-center min-h-[300px]">
+        <div className="flex min-h-75 items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
         </div>
       ) : (
@@ -97,17 +90,16 @@ const CategoryClient = ({
         </div>
       )}
 
-      {page < totalPages && (
-        <div className="mt-10 flex justify-center">
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={isFetching}
-            className="min-h-11 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isFetching ? "Loading..." : "Load More Products"}
+      {isFetching && page > 1 && <div className="mt-6 flex justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Loading more products" /></div>}
+      {isError && page > 1 && (
+        <div className="mt-4 flex flex-col items-center gap-2 text-sm text-red-500">
+          <span>More products could not be loaded.</span>
+          <button type="button" onClick={() => void refetch()} className="min-h-11 rounded-lg border border-red-200 px-4 py-2 font-semibold hover:bg-red-50">
+            Retry
           </button>
         </div>
       )}
+      <div ref={sentinelRef} aria-hidden="true" className="h-2" />
     </>
   );
 };

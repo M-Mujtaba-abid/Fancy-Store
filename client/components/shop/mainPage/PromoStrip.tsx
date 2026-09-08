@@ -6,7 +6,7 @@ export default function PromoStrip() {
   return (
     <Link
       href="/category/car_topCover"
-      className="group block h-9 w-full overflow-hidden bg-slate-950 text-amber-300 transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-inset sm:h-10"
+      className="group relative left-1/2 block h-9 w-screen -translate-x-1/2 overflow-hidden bg-slate-950 text-amber-300 transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-inset sm:h-10"
       aria-label="Shop car covers with 40 percent off"
     >
       <div className="flex h-full w-max items-center whitespace-nowrap will-change-transform promo-marquee motion-reduce:animate-none">
