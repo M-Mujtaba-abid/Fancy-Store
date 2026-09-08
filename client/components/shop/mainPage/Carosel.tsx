@@ -87,7 +87,7 @@ const Carousel = () => {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="w-full max-w-[280px] sm:max-w-md md:max-w-xl text-white space-y-4 md:space-y-6"
+              className="w-full max-w-70 space-y-4 text-white sm:max-w-md md:max-w-xl md:space-y-6"
             >
               {/* Heading - SCALED DOWN FOR MOBILE */}
               <h1 className="text-3xl sm:text-xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
@@ -113,13 +113,13 @@ const Carousel = () => {
       {/* Navigation Arrows - RESPONSIVE SIZES ADDED */}
       <button 
         onClick={prevSlide}
-        className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 p-2 md:p-3 rounded-full border border-white/30 bg-black/20 hover:bg-white text-white hover:text-black backdrop-blur-sm transition-all z-20"
+        className="absolute left-2 top-1/2 z-20 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 p-2 text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black md:left-6 md:p-3"
       >
         <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
       </button>
       <button 
         onClick={nextSlide}
-        className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 p-2 md:p-3 rounded-full border border-white/30 bg-black/20 hover:bg-white text-white hover:text-black backdrop-blur-sm transition-all z-20"
+        className="absolute right-2 top-1/2 z-20 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/20 p-2 text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black md:right-6 md:p-3"
       >
         <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
       </button>
