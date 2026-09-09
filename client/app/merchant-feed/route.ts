@@ -40,6 +40,14 @@ export async function GET() {
       .filter((p: any) => Boolean(p.imageUrl || p.images?.[0]))
       .map((p: any) => {
         const imageLink = p.imageUrl || p.images?.[0];
+        // g:price regular price hai aur g:sale_price discount wali. DB mein
+        // `price` kati hui price rakhi jati hai aur `discountPrice` asli
+        // selling price (dekho scripts/applyTopCoverFlatSale.js). Sirf
+        // g:price bhejne se catalog ads 3500 dikhate the jab customer se
+        // asal mein 2099 liye ja rahe hain - yani feed sale ko chupa deta tha.
+        const regularPrice = Number(p.price);
+        const salePrice = Number(p.discountPrice);
+        const hasSale = salePrice > 0 && salePrice < regularPrice;
         // g:product_type = merchant ki apni taxonomy. Yehi field Google Shopping
         // campaign subdivisions aur reporting mein segment hoti hai. Iske bina
         // koi bhi nayi category Google/Meta catalog mein invisible rehti hai,
@@ -55,7 +63,12 @@ export async function GET() {
       <g:image_link>${imageLink}</g:image_link>
       <g:condition>new</g:condition>
       <g:availability>${p.stock > 0 ? 'in_stock' : 'out_of_stock'}</g:availability>
-      <g:price>${p.price} PKR</g:price>
+      <g:price>${regularPrice} PKR</g:price>${
+        hasSale
+          ? `
+      <g:sale_price>${salePrice} PKR</g:sale_price>`
+          : ''
+      }
       <g:brand>Fancy Store</g:brand>
       <g:google_product_category>6010</g:google_product_category>${
         productType
