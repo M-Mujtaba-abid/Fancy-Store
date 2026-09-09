@@ -13,7 +13,8 @@ import { Metadata } from "next";
 import ViewMoreClient from "./ViewMoreClient";
 
 export const metadata: Metadata = {
-  title: "Browse Products | Fancy Store",
+  // Sirf title — layout ka template " | Fancy Store" khud jorta hai.
+  title: "Browse Products",
   robots: {
     index: false,
     follow: true,

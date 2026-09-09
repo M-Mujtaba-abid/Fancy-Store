@@ -114,6 +114,7 @@ import { productService } from "@/service/productservice/product.service";
 import { reviewService } from "@/service/review.service";
 import { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import { buildProductTitle, cleanMetaDescription } from "@/utils/seo";
 
 // ==========================================
 // 🌟 1. Dynamic Metadata for SEO
@@ -124,24 +125,33 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const response = await productService.getProductById(id);
     const product = (response as any)?.product || response;
 
-    if (!product) return { title: "Product Not Found | Fancy Store" };
+    // Sirf naam — app/layout.tsx:81 ka template " | Fancy Store" khud jorta
+    // hai. Poora likhne se "Product Not Found | Fancy Store | Fancy Store"
+    // ban jata tha.
+    if (!product) return { title: "Product Not Found" };
 
     // Canonical hamesha slug URL hona chahiye — numeric /products/46 wali
     // request bhi yehi canonical dikhati hai (page khud niche permanentRedirect
     // kar deta hai us URL pe).
     const productUrl = `https://www.fancystore.store/products/${product.slug || id}`;
-    // Description se HTML tags hata kar 160 characters nikalna
-    const cleanDescription = product.description?.replace(/<[^>]+>/g, '').substring(0, 160) || "Buy premium car accessories at Fancy Store.";
+    const cleanDescription = cleanMetaDescription(product.description);
     const ogImage = product.imageUrl || (product.images && product.images[0]) || "https://www.fancystore.store/placeholder.png";
 
+    // Brand suffix yahan NAHI lagta — template lagata hai. Pehle dono lagate
+    // the, jis se title 72 characters ka ho jata tha aur Google use kaat deta
+    // tha. Dekho utils/seo.ts.
+    const seoTitle = buildProductTitle(product.name);
+
     return {
-      title: `${product.name} | Fancy Store`,
+      title: seoTitle,
       description: cleanDescription,
       alternates: {
         canonical: productUrl,
       },
       openGraph: {
-        title: `${product.name} | Fancy Store`,
+        // openGraph/twitter par template NAHI lagta, is liye brand yahan
+        // khud jorna parta hai.
+        title: `${seoTitle} | Fancy Store`,
         description: cleanDescription,
         images: [
           {
@@ -161,13 +171,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
       twitter: {
         card: "summary_large_image",
-        title: `${product.name} | Fancy Store`,
+        title: `${seoTitle} | Fancy Store`,
         description: cleanDescription,
         images: [ogImage],
       },
     };
   } catch {
-    return { title: "Fancy Store" };
+    // Koi title na dene par layout ka `title.default` lag jata hai.
+    // Pehle yahan "Fancy Store" tha, jo template ke sath "Fancy Store |
+    // Fancy Store" ban jata tha.
+    return {};
   }
 }
 
