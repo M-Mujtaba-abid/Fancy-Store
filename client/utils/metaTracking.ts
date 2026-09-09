@@ -27,23 +27,102 @@ const isMetaAvailable = (): boolean => {
 };
 
 /**
+ * ⏳ PIXEL READY HONE KA INTEZAR
+ *
+ * Pixel `strategy="lazyOnload"` se load hota hai (app/layout.tsx), yani window
+ * load ke baad. Lekin ViewContent jaisa event component ke mount par, hydration
+ * ke foran baad fire hota hai — us waqt `window.fbq` mojood hi nahi hota.
+ *
+ * Pehle aise event sirf `if (!isMetaAvailable()) return;` se chup-chaap gir
+ * jate the, bilkul khamoshi se. Nateeja: Meta ko product views milte hi nahi
+ * the, aur Commerce Manager catalogue match rate 0% ("Product views: Missing")
+ * dikhata tha.
+ *
+ * Ab event ko queue kar dete hain aur fbq aate hi usi tarteeb se bhej dete
+ * hain. WAIT_LIMIT_MS ke baad chhor dete hain — agar pixel block ho (ad
+ * blocker, consent tool) to hamesha poll karte rehna faltu hai.
+ */
+const WAIT_LIMIT_MS = 15000;
+const POLL_MS = 250;
+
+let pendingEvents: Array<() => void> = [];
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let waitedMs = 0;
+
+const flushPendingEvents = (): void => {
+  const queued = pendingEvents;
+  pendingEvents = [];
+  for (const run of queued) {
+    try {
+      run();
+    } catch (error) {
+      console.error("❌ [Meta Pixel] queued event error:", error);
+    }
+  }
+};
+
+const stopPolling = (): void => {
+  if (pollTimer !== null) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+};
+
+const startPolling = (): void => {
+  if (pollTimer !== null) return;
+
+  waitedMs = 0;
+  pollTimer = setInterval(() => {
+    waitedMs += POLL_MS;
+
+    if (isMetaAvailable()) {
+      stopPolling();
+      flushPendingEvents();
+      return;
+    }
+
+    if (waitedMs >= WAIT_LIMIT_MS) {
+      stopPolling();
+      // Pixel aaya hi nahi — queue chhor do, warna memory mein pari rahegi.
+      pendingEvents = [];
+    }
+  }, POLL_MS);
+};
+
+/**
+ * Event ko foran bhejta hai agar pixel tayyar hai, warna tayyar hone tak
+ * queue kar deta hai. Har track function isi ke through jata hai.
+ */
+const sendWhenReady = (send: () => void): void => {
+  if (typeof window === "undefined") return;
+
+  if (isMetaAvailable()) {
+    try {
+      send();
+    } catch (error) {
+      console.error("❌ [Meta Pixel] event error:", error);
+    }
+    return;
+  }
+
+  pendingEvents.push(send);
+  startPolling();
+};
+
+/**
  * 1️⃣ PAGE VIEW
  */
 export const trackMetaPageView = (): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("track", "PageView");
-  } catch (error) {
-    console.error("❌ [Meta Pixel] PageView error:", error);
-  }
+  });
 };
 
 /**
  * 2️⃣ VIEW CONTENT (Product view)
  */
 export const trackMetaViewContent = (product: ProductData): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("track", "ViewContent", {
       content_name: product.name,
       // Conditional spread — pehle unconditional tha, to category missing hone
@@ -54,9 +133,7 @@ export const trackMetaViewContent = (product: ProductData): void => {
       value: product.price,
       currency: "PKR",
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] ViewContent error:", error);
-  }
+  });
 };
 
 /**
@@ -66,8 +143,7 @@ export const trackMetaAddToCart = (
   product: ProductData,
   quantity: number = 1
 ): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("track", "AddToCart", {
       content_name: product.name,
       // Conditional spread — pehle unconditional tha, to category missing hone
@@ -85,17 +161,14 @@ export const trackMetaAddToCart = (
         },
       ],
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] AddToCart error:", error);
-  }
+  });
 };
 
 /**
  * 4️⃣ ADD TO WISHLIST
  */
 export const trackMetaAddToWishlist = (product: ProductData): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("track", "AddToWishlist", {
       content_name: product.name,
       // Conditional spread — pehle unconditional tha, to category missing hone
@@ -106,9 +179,7 @@ export const trackMetaAddToWishlist = (product: ProductData): void => {
       value: product.price,
       currency: "PKR",
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] AddToWishlist error:", error);
-  }
+  });
 };
 
 /**
@@ -118,26 +189,22 @@ export const trackMetaSearch = (
   searchQuery: string,
   results?: ProductData[]
 ): void => {
-  if (!isMetaAvailable()) return;
-  try {
-    const contentIds = results ? results.slice(0, 5).map((p) => String(p.id)) : [];
+  const contentIds = results ? results.slice(0, 5).map((p) => String(p.id)) : [];
+  sendWhenReady(() => {
     window.fbq("track", "Search", {
       search_string: searchQuery,
       content_ids: contentIds,
       content_type: "product",
       currency: "PKR",
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] Search error:", error);
-  }
+  });
 };
 
 /**
  * 6️⃣ INITIATE CHECKOUT
  */
 export const trackMetaInitiateCheckout = (cartItems: CartItem[]): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     const contentIds = cartItems.map((item) => String(item.id));
     const totalValue = cartItems.reduce(
       (sum, item) => sum + item.price * (item.quantity || 1),
@@ -169,9 +236,7 @@ export const trackMetaInitiateCheckout = (cartItems: CartItem[]): void => {
         ...(item.category && { item_category: item.category }),
       })),
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] InitiateCheckout error:", error);
-  }
+  });
 };
 
 /**
@@ -181,8 +246,7 @@ export const trackMetaPurchase = (
   cartItems: CartItem[],
   orderId?: string
 ): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     const contentIds = cartItems.map((item) => String(item.id));
     const totalValue = cartItems.reduce(
       (sum, item) => sum + item.price * (item.quantity || 1),
@@ -220,9 +284,7 @@ export const trackMetaPurchase = (
     }
 
     window.fbq("track", "Purchase", eventPayload);
-  } catch (error) {
-    console.error("❌ [Meta Pixel] Purchase error:", error);
-  }
+  });
 };
 
 /**
@@ -232,15 +294,12 @@ export const trackMetaCompleteRegistration = (userData?: {
   userId?: string;
   email?: string;
 }): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("track", "CompleteRegistration", {
       currency: "PKR",
       status: "completed",
     });
-  } catch (error) {
-    console.error("❌ [Meta Pixel] CompleteRegistration error:", error);
-  }
+  });
 };
 
 /**
@@ -250,10 +309,7 @@ export const trackMetaCustomEvent = (
   eventName: string,
   eventData: Record<string, any> = {}
 ): void => {
-  if (!isMetaAvailable()) return;
-  try {
+  sendWhenReady(() => {
     window.fbq("trackCustom", eventName, eventData);
-  } catch (error) {
-    console.error(`❌ [Meta Pixel] Custom event (${eventName}) error:`, error);
-  }
+  });
 };
