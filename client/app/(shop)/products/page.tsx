@@ -7,7 +7,9 @@ import ProductsClient from "./ProductsClient";
 // 🌟 SEO METADATA FOR ALL PRODUCTS PAGE
 // ==========================================
 export const metadata: Metadata = {
-  title: "All Products | Fancy Store",
+  // Sirf title — app/layout.tsx:81 ka template " | Fancy Store" khud jorta
+  // hai. Poora likhne se "All Products | Fancy Store | Fancy Store" banta tha.
+  title: "All Car & Bike Accessories",
   description: "Browse our huge collection of premium car accessories, top covers, and dashboard mats at Fancy Store. Find exactly what you need with fast shipping.",
   alternates: {
     canonical: "https://www.fancystore.store/products",
