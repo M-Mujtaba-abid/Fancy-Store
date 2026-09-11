@@ -13,6 +13,22 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:500
 // has to happen here, before rendering starts, to give search engines a
 // real permanent redirect.
 export async function proxy(request: NextRequest) {
+  // /category/<slug>/page/1 -> /category/<slug>
+  //
+  // Page 1 ka canonical URL hamesha /category/<slug> hai. /page/1 wahi content
+  // doosre URL par dikhata (duplicate content), aur page component ka
+  // notFound() us par 200 status hi deta hai — soft 404. Yahan middleware mein
+  // handle karne se asli 308 milta hai, kyunke ye rendering shuru hone se
+  // pehle chalta hai. Koi backend call nahi, sirf regex.
+  const paginationMatch = request.nextUrl.pathname.match(
+    /^\/category\/([^/]+)\/page\/1$/
+  );
+  if (paginationMatch) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/category/${paginationMatch[1]}`;
+    return NextResponse.redirect(url, 308);
+  }
+
   const match = request.nextUrl.pathname.match(/^\/products\/(\d+)$/);
   if (!match) return NextResponse.next();
 
@@ -38,5 +54,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/products/:id",
+  matcher: ["/products/:id", "/category/:slug/page/:page"],
 };

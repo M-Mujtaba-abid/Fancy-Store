@@ -10,27 +10,37 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 interface CategoryClientProps {
   slug: string;
   initialProducts: Product[];
+  /**
+   * Server se kaun si page aayi hai. /category/<slug> par 1, aur
+   * /category/<slug>/page/<n> par n. Infinite scroll isi ke AAGE se chalta hai
+   * — hardcoded 1 rakhne se page 3 khol kar scroll karne par dobara page 2
+   * fetch hoti thi.
+   */
+  initialPage: number;
   initialTotalPages: number;
   pageSize: number;
 }
 
 /**
- * Page 1 server se aati hai (props mein), taake HTML mein products maujood hon
- * aur Google unko dekh sake. Page 2+ client pe fetch hoti hai.
+ * Jo page server se aayi hai wo props mein aati hai, taake HTML mein products
+ * maujood hon aur Google unko dekh sake. Uske baad ki pages client pe fetch
+ * hoti hain.
  *
  * Purana /category page 12 products pe hard cap tha (useFilteredProducts ka
- * default limit, aur koi pagination UI nahi). Ab pagination hai.
+ * default limit, aur koi pagination UI nahi). Ab infinite scroll users ke liye
+ * hai aur crawlable pagination links categoryView.tsx mein.
  */
 const CategoryClient = ({
   slug,
   initialProducts,
+  initialPage,
   initialTotalPages,
   pageSize,
 }: CategoryClientProps) => {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [loadedProducts, setLoadedProducts] = useState<Product[]>(initialProducts);
 
-  // page === 1 pe server data hi use karo — koi redundant fetch nahi
+  // Jo page server se aa chuki hai uska data props mein hai
   const { data, isFetching, isError, refetch } = useFilteredProducts(
     { category: slug },
     page,
@@ -38,16 +48,16 @@ const CategoryClient = ({
   );
 
   useEffect(() => {
-    if (page > 1 && data?.products) {
+    if (page > initialPage && data?.products) {
       setLoadedProducts((current) => {
         const existingIds = new Set(current.map((product) => product.id));
         return [...current, ...(data.products as Product[]).filter((product) => !existingIds.has(product.id))];
       });
     }
-  }, [data, page]);
+  }, [data, page, initialPage]);
 
   const products = loadedProducts;
-  const totalPages = page === 1 ? initialTotalPages : data?.totalPages ?? 1;
+  const totalPages = page === initialPage ? initialTotalPages : data?.totalPages ?? 1;
   const loadNextPage = useCallback(() => setPage((currentPage) => currentPage + 1), []);
   const sentinelRef = useInfiniteScroll({
     hasMore: page < totalPages && !isError,
@@ -55,7 +65,7 @@ const CategoryClient = ({
     onLoadMore: loadNextPage,
   });
 
-  const showSkeleton = page !== 1 && isFetching && products.length === 0;
+  const showSkeleton = page !== initialPage && isFetching && products.length === 0;
 
   if (!showSkeleton && products.length === 0) {
     return (
@@ -90,8 +100,8 @@ const CategoryClient = ({
         </div>
       )}
 
-      {isFetching && page > 1 && <div className="mt-6 flex justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Loading more products" /></div>}
-      {isError && page > 1 && (
+      {isFetching && page > initialPage && <div className="mt-6 flex justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-label="Loading more products" /></div>}
+      {isError && page > initialPage && (
         <div className="mt-4 flex flex-col items-center gap-2 text-sm text-red-500">
           <span>More products could not be loaded.</span>
           <button type="button" onClick={() => void refetch()} className="min-h-11 rounded-lg border border-red-200 px-4 py-2 font-semibold hover:bg-red-50">

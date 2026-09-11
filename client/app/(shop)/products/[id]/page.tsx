@@ -231,6 +231,17 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     permanentRedirect(`/products/${product.slug}`);
   }
 
+  // Related products SERVER pe fetch karte hain. Pehle ye sirf client pe
+  // (useRelatedProducts) aate the, is liye server HTML mein doosre products ka
+  // ek bhi <a href> nahi hota tha — har product page Googlebot ke liye dead
+  // end thi. Catalog ke andar crawl phailane ka yehi sab se sasta raasta hai.
+  //
+  // Promise abhi start kar ke await neeche karte hain, taake ye reviews wali
+  // fetch ke SATH chale, uske baad nahi (warna page ka TTFB barh jata).
+  const relatedProductsPromise = productService
+    .getRelatedProducts(String(product.id))
+    .catch(() => []);
+
   // --- JSON-LD Schema Object (Optimized with Review Stars) ---
   const jsonLd: any = {
     "@context": "https://schema.org",
@@ -300,6 +311,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     }
   }
 
+  const relatedProducts = await relatedProductsPromise;
+
   return (
     <>
       {/* Meta's Product Open Graph tags — read by Facebook/Instagram when
@@ -320,7 +333,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductDetailsClient product={product} />
+      <ProductDetailsClient product={product} relatedProducts={relatedProducts} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RelatedGuides productSlug={product.slug} categorySlug={product.category} />
       </div>
