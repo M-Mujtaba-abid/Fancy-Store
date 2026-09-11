@@ -4,14 +4,25 @@ import React from "react";
 import { useRelatedProducts } from "@/hooks/useProducts";
 import ProductCarousel from "../../share/ProductCarousel"; // Path check kar lein
 import { Loader2 } from "lucide-react";
+import type { Product } from "@/types/product.type";
 
 interface RelatedProductsProps {
   productId: string;
+  /**
+   * Server component (app/(shop)/products/[id]/page.tsx) se aane wale related
+   * products. Ye SEO ke liye zaroori hain: inke bagair pehla paint sirf ek
+   * spinner hota tha aur server HTML mein doosre products ka ek bhi link nahi
+   * jata tha.
+   */
+  initialProducts?: Product[];
 }
 
-const RelatedProducts: React.FC<RelatedProductsProps> = ({ productId }) => {
+const RelatedProducts: React.FC<RelatedProductsProps> = ({
+  productId,
+  initialProducts,
+}) => {
   // ✅ 1. Yahan humne data ko rename nahi kiya, bas data rakha hai
-  const { data, isLoading, isError } = useRelatedProducts(productId);
+  const { data, isLoading, isError } = useRelatedProducts(productId, initialProducts);
 
   if (isLoading) {
     return (

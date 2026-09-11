@@ -1,6 +1,6 @@
 // import { productService } from "@/service/product.service";
 import { productService } from "@/service/productservice/product.service";
-import { ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
+import { Product, ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { revalidateForCategory } from "@/utils/revalidate";
@@ -232,11 +232,20 @@ export const useSearchProducts = (query: string, page = 1, limit = 5) => {
 };
 
 // Related Products ka Hook
-export const useRelatedProducts = (id: string) => {
+//
+// `initialData` server component se aata hai (products/[id]/page.tsx). Iske
+// bagair related products sirf client pe fetch hote the, yani server HTML mein
+// "You May Also Like" ke 6 links hote hi NAHI the. Nateeja: har product page
+// Googlebot ke liye dead end thi aur catalog ke andar koi crawl path nahi
+// banta tha. Ab ye 6 links SSR HTML mein aate hain.
+export const useRelatedProducts = (id: string, initialData?: Product[]) => {
   return useQuery({
     queryKey: ["products", "related", id],
     queryFn: () => productService.getRelatedProducts(id),
     enabled: !!id, // Jab tak ID na ho tab tak hit nahi karna
+    // Khali array ko initialData mat banao — warna query "success with empty
+    // data" samajh kar section hamesha chhupa dega.
+    initialData: initialData && initialData.length > 0 ? initialData : undefined,
   });
 };
 

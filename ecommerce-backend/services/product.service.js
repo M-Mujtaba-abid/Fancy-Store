@@ -49,6 +49,25 @@ const escapeLikePattern = (value) =>
 // ============================================================
 // PAGINATION HELPERS
 // ============================================================
+
+// ⚠️ `id` wala tiebreaker HATANA nahi hai.
+//
+// Sirf ["createdAt","DESC"] se order karna LIMIT/OFFSET pagination ke liye
+// kaafi nahi. Script se bulk add hue products ka createdAt bilkul same hota hai
+// (car_topCover ke 84 mein se 63 products ka ek hi timestamp tha), aur Postgres
+// barabar sort keys wali rows ka order har query mein badal sakta hai. Nateeja:
+// 7 pages ghoom kar 84 rows milti thin magar unique products sirf 63 — 19
+// products do do pages par repeat ho rahe the aur ~21 products KISI page par
+// aate hi nahi the. Yani wo products site ke andar se pohanch se bahir the
+// (aur isi liye Google unhe crawl nahi kar pa raha tha).
+//
+// `id` unique hai, is liye ye har page ke liye ek stable, deterministic order
+// bana deta hai.
+const STABLE_NEWEST_FIRST = [
+  ["createdAt", "DESC"],
+  ["id", "DESC"],
+];
+
 export const getPaginationData = (queryPage, queryLimit, defaultLimit = 10) => {
   const page = parseInt(queryPage) || 1;
   const limit = parseInt(queryLimit) || defaultLimit;
@@ -245,7 +264,7 @@ export const searchProductsService = async (q, queryPage, queryLimit) => {
     },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -268,7 +287,7 @@ export const getFeaturedProductsService = async (queryPage, queryLimit) => {
     where: { isFeatured: true },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -291,7 +310,7 @@ export const getNewArrivalsService = async (queryPage, queryLimit) => {
     where: { isNewArrival: true },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -314,7 +333,7 @@ export const getOnSaleProductsService = async (queryPage, queryLimit) => {
     where: { isOnSale: true },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -336,7 +355,7 @@ export const getProductsService = async (queryPage, queryLimit) => {
     distinct: true,
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -583,7 +602,7 @@ export const getCarProductsService = async (queryPage, queryLimit) => {
     where: { vehicleType: VEHICLE_TYPES.CAR },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -606,7 +625,7 @@ export const getBikeProductsService = async (queryPage, queryLimit) => {
     where: { vehicleType: VEHICLE_TYPES.BIKE },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -668,7 +687,7 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -689,7 +708,7 @@ export const getRelatedProductsService = async (productId) => {
       id: { [Op.ne]: productId },
     },
     limit: limit,
-    order: [["createdAt", "DESC"]],
+    order: STABLE_NEWEST_FIRST,
     include: [{ model: ProductVariant, as: 'variants' }]
   });
 
@@ -703,7 +722,7 @@ export const getRelatedProductsService = async (productId) => {
         id: { [Op.notIn]: fetchedIds },
       },
       limit: limit - related.length,
-      order: [["createdAt", "DESC"]],
+      order: STABLE_NEWEST_FIRST,
       include: [{ model: ProductVariant, as: 'variants' }]
     });
 
@@ -722,6 +741,7 @@ export const getRelatedProductsService = async (productId) => {
       order: [
         ["isFeatured", "DESC"],
         ["createdAt", "DESC"],
+        ["id", "DESC"],
       ],
       include: [{ model: ProductVariant, as: 'variants' }]
     });

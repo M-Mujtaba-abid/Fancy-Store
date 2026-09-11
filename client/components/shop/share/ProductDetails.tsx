@@ -24,9 +24,14 @@ import { trackMetaViewContent } from "@/utils/metaTracking"; // 🎯 META PIXEL 
 
 interface Props {
   product: Product;
+  /**
+   * Server pe fetch hue related products. Sirf `RelatedProducts` tak pass
+   * hote hain taake wo 6 internal links SSR HTML ka hissa banen.
+   */
+  relatedProducts?: Product[];
 }
 
-export default function ProductDetailsClient({ product }: Props) {
+export default function ProductDetailsClient({ product, relatedProducts }: Props) {
   const router = useRouter();
   // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
@@ -589,7 +594,7 @@ export default function ProductDetailsClient({ product }: Props) {
           You May Also Like
         </h1> */}
         {/* <div className="">{product.id}</div> */}
-        <RelatedProducts productId={product.id} />
+        <RelatedProducts productId={product.id} initialProducts={relatedProducts} />
       </div>
     </div>
   );
