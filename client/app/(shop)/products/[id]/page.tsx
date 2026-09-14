@@ -108,6 +108,21 @@
 
 
 // app/products/[id]/page.tsx (Server Component)
+
+// ⚠️ Literal value honi chahiye — Next isko statically analyze karta hai.
+//
+// Iske BAGAIR ye route poori tarah dynamic thi: site ki har doosri route
+// (/, /products, /blog, /blog/[slug], /category/[slug] aur uski paginated
+// pages) prerender-manifest mein maujood hai, magar /products/[id] kahin
+// nahi tha — matlab Googlebot ki HAR request par poora page scratch se
+// render hota tha, teen backend calls ke sath (getProductById +
+// getRelatedProducts + getProductReviews).
+//
+// Site ki ziada tar URLs product pages hain, aur Google slow responses dekh
+// kar apna crawl rate khud gira deta hai — isi liye ye "Discovered -
+// currently not indexed (Last crawled: N/A)" par atki hui thin.
+export const revalidate = 300;
+
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
 import { productService } from "@/service/productservice/product.service";
@@ -115,6 +130,27 @@ import { reviewService } from "@/service/review.service";
 import { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { buildProductTitle, cleanMetaDescription } from "@/utils/seo";
+
+// ==========================================
+// 🌟 0. Build time par saare product pages prerender karo
+// ==========================================
+// `revalidate` akela kaafi nahi — uske bina bhi ye route on-demand render ho
+// kar cache ho jati, magar HAR product ka PEHLA visitor (aksar Googlebot khud)
+// poora cold render bhugatta. Build par prerender karne se crawler ko hamesha
+// cached HTML milta hai.
+//
+// Slug hi param hai — numeric IDs jaan bujh kar shamil nahi, wo proxy.ts se
+// 308 le kar slug URL par chali jati hain. dynamicParams default true hai, to
+// build ke baad add hone wale products bhi on-demand ban jate hain.
+export async function generateStaticParams() {
+  const firstPage = await productService.getAllProducts(1, 500).catch(() => null);
+  const products = firstPage?.products || [];
+
+  return products
+    .map((product: any) => product?.slug)
+    .filter(Boolean)
+    .map((slug: string) => ({ id: slug }));
+}
 
 // ==========================================
 // 🌟 1. Dynamic Metadata for SEO
@@ -128,7 +164,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // Sirf naam — app/layout.tsx:81 ka template " | Fancy Store" khud jorta
     // hai. Poora likhne se "Product Not Found | Fancy Store | Fancy Store"
     // ban jata tha.
-    if (!product) return { title: "Product Not Found" };
+    //
+    // noindex zaroori hai: is app ke root par app/loading.tsx hai, is liye
+    // response pehle hi stream ho chuka hota hai jab neeche page component
+    // notFound() call karta hai — 404 wali UI HTTP 200 ke sath jati hai (soft
+    // 404). Metadata streaming se PEHLE resolve hoti hai, to noindex yahan se
+    // lagana kaam karta hai. Wahi treatment jo category pages par hai
+    // (categoryView.tsx:47-55, page/[page]/page.tsx:48-52).
+    if (!product) return { title: "Product Not Found", robots: { index: false, follow: false } };
 
     // Canonical hamesha slug URL hona chahiye — numeric /products/46 wali
     // request bhi yehi canonical dikhati hai (page khud niche permanentRedirect
@@ -176,10 +219,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         images: [ogImage],
       },
     };
-  } catch {
-    // Koi title na dene par layout ka `title.default` lag jata hai.
-    // Pehle yahan "Fancy Store" tha, jo template ke sath "Fancy Store |
-    // Fancy Store" ban jata tha.
+  } catch (error: any) {
+    // Backend ne explicitly "ye product hai hi nahi" bola — asli 404. Page
+    // component neeche notFound() karega, magar streaming ki wajah se status
+    // 200 hi rahega, is liye noindex yahan se lagana parta hai.
+    if (error?.response?.status === 404) {
+      return { title: "Product Not Found", robots: { index: false, follow: false } };
+    }
+
+    // Network/server glitch — product asli hoga, sirf abhi fetch nahi hua.
+    // Yahan noindex JAAN BUJH KAR nahi lagate, warna ek transient error se
+    // Google ek valid product ko index se nikal sakta hai.
+    //
+    // Koi title na dene par layout ka `title.default` lag jata hai. Pehle
+    // yahan "Fancy Store" tha, jo template ke sath "Fancy Store | Fancy
+    // Store" ban jata tha.
     return {};
   }
 }
@@ -195,7 +249,6 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   }
 
   let product = null;
-  let hasError = false;
 
   try {
     const response = await productService.getProductById(id);
@@ -205,20 +258,23 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     if (error?.response?.status === 404) {
       notFound();
     }
-    // Network/server glitch — asal product hoga, sirf temporarily fetch
-    // nahi hua. Isko notFound() mat karo warna transient error se Google
-    // ek valid product ko deindex kar sakta hai.
-    hasError = true;
+
+    // Network/server glitch — asal product hoga, sirf temporarily fetch nahi
+    // hua. Isko notFound() mat karo warna transient error se Google ek valid
+    // product ko deindex kar sakta hai.
+    //
+    // ⚠️ Yahan error UI return KARNA mana hai. Is route par ab ISR hai
+    // (`revalidate` upar), aur Next jo bhi page kaamyabi se render hota hai
+    // usay cache kar deta hai — yani ek lamhe ka backend glitch "Something
+    // went wrong" wali HTML ko poore 5 minute ke liye cache kara deta, har
+    // aane wale user aur Googlebot ke liye. throw karne par Next kuch cache
+    // nahi karta, request 500 deti hai (Google ke liye "baad mein dobara
+    // koshish karo", deindex nahi), aur error.tsx user ko retry ka option
+    // dikha deta hai.
+    throw error;
   }
 
   if (!product) {
-    if (hasError) {
-      return (
-        <div className="text-center py-20 text-red-500 font-medium text-2xl">
-          Something went wrong while fetching the product.
-        </div>
-      );
-    }
     notFound();
   }
 

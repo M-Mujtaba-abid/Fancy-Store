@@ -12,17 +12,25 @@ import type { Product } from "@/types/product.type";
 
 interface ProductsClientProps {
   /**
-   * Page 1 ke products, server component (page.tsx) se. Inke bagair pehla
+   * Server se aayi page ke products (productsView.tsx se). Inke bagair pehla
    * paint sirf ek spinner hota tha aur server HTML mein product ka ek bhi
    * link nahi jata tha.
    */
   initialProducts: Product[];
+  /**
+   * Server se kaun si page aayi hai. /products par 1, aur /products/page/<n>
+   * par n. Infinite scroll isi ke AAGE se chalta hai — hardcoded 1 rakhne se
+   * page 3 khol kar scroll karne par dobara page 2 fetch hoti.
+   * (Wahi bug CategoryClient mein pehle theek ho chuka hai.)
+   */
+  initialPage: number;
   initialTotalPages: number;
   pageSize: number;
 }
 
 function ProductsContent({
   initialProducts,
+  initialPage,
   initialTotalPages,
   pageSize,
 }: ProductsClientProps) {
@@ -35,16 +43,20 @@ function ProductsContent({
     isFetchingNextPage,
     isFetchNextPageError,
   } = useInfiniteQuery({
-    queryKey: ["products", "all", pageSize],
-    queryFn: ({ pageParam = 1 }: any) => productService.getAllProducts(pageParam, pageSize),
+    // initialPage queryKey ka hissa hai: /products aur /products/page/3 ki
+    // cached lists alag honi chahiye, warna page 3 kholne par react-query
+    // page 1 ka cached data dikha deta.
+    queryKey: ["products", "all", pageSize, initialPage],
+    queryFn: ({ pageParam = initialPage }: any) =>
+      productService.getAllProducts(pageParam, pageSize),
     getNextPageParam: (lastPage: any) => {
       if (!lastPage) return undefined;
       return lastPage.currentPage < (lastPage.totalPages || 0)
         ? lastPage.currentPage + 1
         : undefined;
     },
-    initialPageParam: 1,
-    // Server wali page 1 ko seed kar do — koi redundant refetch nahi aur
+    initialPageParam: initialPage,
+    // Server wali page ko seed kar do — koi redundant refetch nahi aur
     // hydration ke waqt grid khali nahi hoti. Khali array seed karne ka koi
     // faida nahi (server fetch fail hui hogi), us soorat mein normal client
     // fetch chalne do.
@@ -54,12 +66,12 @@ function ProductsContent({
             pages: [
               {
                 products: initialProducts,
-                currentPage: 1,
+                currentPage: initialPage,
                 totalPages: initialTotalPages,
                 totalItems: initialProducts.length,
               },
             ],
-            pageParams: [1],
+            pageParams: [initialPage],
           }
         : undefined,
   });

@@ -159,15 +159,50 @@ export const runCategoryWrite = async (fn) => {
   }
 };
 
+/**
+ * Har category ke against products ka count, ek hi GROUP BY query mein.
+ * Slug lowercase key par rakha jata hai — Products.category ka casing
+ * Categories.slug se match karne ki guarantee nahi (dekho getCategoryBySlugService).
+ */
+const getProductCountsBySlug = async () => {
+  const grouped = await Product.findAll({
+    attributes: ["category", [fn("COUNT", col("id")), "count"]],
+    group: ["category"],
+    raw: true,
+  });
+
+  return new Map(
+    grouped.map((row) => [String(row.category).toLowerCase(), Number(row.count)])
+  );
+};
+
 export const listCategoriesService = async ({ includeInactive = false } = {}) => {
   try {
-    return await Category.findAll({
+    const categories = await Category.findAll({
       where: includeInactive ? {} : { isActive: true },
       order: [
         ["sortOrder", "ASC"],
         ["id", "ASC"],
       ],
     });
+
+    // `productCount` public response ka hissa is liye hai ke storefront ko
+    // khali categories link karne se bachna hota hai. Khali category ka page
+    // sirf "This Category is Coming soon..." dikhata hai, wo bhi HTTP 200 ke
+    // sath — yani Google ke liye soft 404. Sitemap ye pehle se filter karta
+    // hai (client/app/sitemap.js), magar site-wide footer links ko bhi wahi
+    // information chahiye thi.
+    //
+    // Count fail ho jaye to categories phir bhi wapas jati hain (productCount
+    // undefined) — ye list storefront ka core hai, ise ek analytics query ki
+    // wajah se torna theek nahi.
+    const counts = await getProductCountsBySlug().catch(() => null);
+    if (!counts) return categories;
+
+    return categories.map((c) => ({
+      ...c.toJSON(),
+      productCount: counts.get(c.slug.toLowerCase()) || 0,
+    }));
   } catch (err) {
     // 500 dene ke bajaye khali array bhejte hain — frontend apne static fallback
     // pe chala jayega (categoriesData.ts) aur site bilkul aaj jaisi chalti rahegi.
@@ -209,8 +244,12 @@ export const getCategoryCountsService = async () => {
     grouped.map((row) => [String(row.category).toLowerCase(), Number(row.count)])
   );
 
+  // ⚠️ `c.toJSON?.() ?? c` — listCategoriesService ab do mein se ek shape deta
+  // hai: normal soorat mein plain objects (productCount ke sath), aur count
+  // query fail hone par asli Sequelize instances. Seedha c.toJSON() call karna
+  // pehli soorat mein throw karta hai.
   const withCounts = categories.map((c) => ({
-    ...c.toJSON(),
+    ...(typeof c.toJSON === "function" ? c.toJSON() : c),
     productCount: counts.get(c.slug.toLowerCase()) || 0,
   }));
 

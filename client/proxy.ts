@@ -29,6 +29,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
+  // /products/page/1 -> /products  (wahi wajah jo upar category ke liye hai)
+  if (request.nextUrl.pathname === "/products/page/1") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/products";
+    return NextResponse.redirect(url, 308);
+  }
+
   const match = request.nextUrl.pathname.match(/^\/products\/(\d+)$/);
   if (!match) return NextResponse.next();
 
@@ -54,5 +61,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/products/:id", "/category/:slug/page/:page"],
+  matcher: [
+    "/products/:id",
+    "/products/page/:page",
+    "/category/:slug/page/:page",
+  ],
 };

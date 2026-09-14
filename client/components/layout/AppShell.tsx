@@ -6,8 +6,21 @@ import Navbar from "@/components/shop/mainPage/navbarItems/Navbar";
 import Footer from "@/components/shop/mainPage/Footer";
 import PromoStrip from "@/components/shop/mainPage/PromoStrip";
 import SalePopup from "@/components/shop/mainPage/SalePopup";
+import type { HomeCategoryTile } from "@/types/category.type";
 
-const AppShell = ({ children }: { children: React.ReactNode }) => {
+/**
+ * `footerCategories` app/layout.tsx (Server Component) se aati hain. Footer
+ * khud client component hai, is liye wo khud fetch nahi kar sakta — aur
+ * useEffect se fetch karna SEO ke liye bekaar hota (links server HTML mein
+ * nahi jate, jabke unka maqsad hi yehi hai).
+ */
+const AppShell = ({
+  children,
+  footerCategories,
+}: {
+  children: React.ReactNode;
+  footerCategories?: HomeCategoryTile[];
+}) => {
   const pathname = usePathname();
   const isAdminRoute =
     pathname === "/dashboard" ||
@@ -32,7 +45,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           dhakelna parta hai. Height PromoStrip se match rakhein (h-10 sm:h-12). */}
       <div aria-hidden="true" className="h-10 sm:h-12" />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
-      <Footer />
+      <Footer categories={footerCategories} />
       <SalePopup />
     </>
   );
