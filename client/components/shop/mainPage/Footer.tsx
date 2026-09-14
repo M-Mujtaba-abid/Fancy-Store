@@ -11,6 +11,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { HOME_CATEGORIES } from "@/constants/categoriesData";
+import { staticCategoryToTile, type HomeCategoryTile } from "@/types/category.type";
 
 /* ───────── MOBILE ACCORDION COMPONENT ───────── */
 const FooterSection = ({
@@ -65,7 +67,16 @@ const FooterSection = ({
 };
 
 /* ───────── MAIN FOOTER ───────── */
-const Footer = () => {
+interface FooterProps {
+  /**
+   * Live categories, app/layout.tsx se server par fetch ho kar AppShell ke
+   * zariye yahan aati hain. Na milein to neeche static fallback chalta hai —
+   * wahi pattern jo homepage ke Category.tsx par hai.
+   */
+  categories?: HomeCategoryTile[];
+}
+
+const Footer = ({ categories }: FooterProps) => {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -94,6 +105,34 @@ const Footer = () => {
     { label: "Blog", href: "/blog" },
   ];
 
+  /**
+   * Har page ke footer mein category links.
+   *
+   * Pehle site-wide navigation mein category ka EK bhi link nahi tha: Navbar
+   * aur footer ke Quick Links ke ziada tar entries /viewMore?filter=... par
+   * jati hain, jo jaan bujh kar noindex hain (viewMore/page.tsx). Category
+   * pages tak raasta sirf homepage tiles (wo bhi sirf showOnHome=true wali)
+   * aur /products se tha — aur yehi 11 URLs GSC mein "Discovered - currently
+   * not indexed" par atki hui thin.
+   *
+   * Footer har page par hai, is liye yahan se har category do hop mein
+   * crawlable ho jati hai.
+   */
+  // Khali categories yahan se nikal jati hain. Jis category mein ek bhi product
+  // nahi, uska page sirf "This Category is Coming soon..." dikhata hai — wo bhi
+  // 200 status ke sath, yani Google ke liye soft 404. Aise pages ko HAR page ke
+  // footer se link karna crawl budget zaya karta hai aur site-wide thin content
+  // ka signal deta hai. (Sitemap bhi inhe isi wajah se skip karta hai.)
+  //
+  // `productCount === undefined` wale rehne dete hain: matlab backend ka count
+  // nahi aaya, aur aise mein link chhupa dena us se bura hai jo hum bacha rahe
+  // hain.
+  const liveCategories = categories?.filter((c) => c.productCount !== 0);
+
+  const categoryLinks: HomeCategoryTile[] = liveCategories?.length
+    ? liveCategories
+    : HOME_CATEGORIES.map(staticCategoryToTile);
+
   const supportLinks = [
     { label: "Track Order", href: "/order" },
     { label: "Shipping Policy", href: "/shipping-policy" },
@@ -107,7 +146,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* GRID LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 md:gap-12 pt-10 md:pt-16 pb-10 md:pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-0 md:gap-8 lg:gap-10 pt-10 md:pt-16 pb-10 md:pb-16">
 
           {/* COLUMN 1: BRAND */}
           <div className="space-y-5 py-8 md:py-0 border-b md:border-none border-border-custom">
@@ -178,7 +217,27 @@ const Footer = () => {
             </ul>
           </FooterSection>
 
-          {/* COLUMN 3: SUPPORT */}
+          {/* COLUMN 3: SHOP BY CATEGORY — SEO ke liye sab se ahem column.
+              Ye links har page ke server HTML ka hissa hain, is liye Googlebot
+              site ke kisi bhi safhe se seedha har category tak pohanch jata
+              hai (aur wahan se PaginationNav ke zariye har product tak). */}
+          <FooterSection title="Shop by Category">
+            <ul className="space-y-3">
+              {categoryLinks.map((category) => (
+                <li key={category.slug}>
+                  <Link
+                    href={`/category/${category.slug}`}
+                    className="text-text-muted hover:text-primary flex items-center gap-2 text-sm"
+                  >
+                    <ArrowUpRight size={12} />
+                    {category.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </FooterSection>
+
+          {/* COLUMN 4: SUPPORT */}
           <FooterSection title="Support">
             <ul className="space-y-3">
               {supportLinks.map((item) => (
@@ -195,7 +254,7 @@ const Footer = () => {
             </ul>
           </FooterSection>
 
-          {/* COLUMN 4: GET IN TOUCH */}
+          {/* COLUMN 5: GET IN TOUCH */}
           <FooterSection title="Get In Touch">
             <div className="space-y-4 text-sm text-text-muted">
               <div className="flex gap-2 items-center">

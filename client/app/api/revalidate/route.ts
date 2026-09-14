@@ -53,10 +53,14 @@ export async function POST(request: Request) {
   const skipped: string[] = [];
 
   for (const path of paths) {
-    // Category slugs dynamic hain, to /category/* bhi allow karna hai
+    // Category/product/blog slugs dynamic hain, to prefix se allow karte hain.
+    // /products/* ab isliye zaroori hai ke us route par bhi ISR lag chuki hai
+    // (app/(shop)/products/[id]/page.tsx) — uske bagair edit kiya hua product
+    // apni 5-minute window khatam hone tak purana hi dikhta rehta.
     const isAllowed =
       ALLOWED_PATHS.has(path) ||
       path.startsWith("/category/") ||
+      path.startsWith("/products/") ||
       path.startsWith("/blog/");
     if (!isAllowed) {
       skipped.push(path);

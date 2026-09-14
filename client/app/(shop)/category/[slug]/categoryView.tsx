@@ -10,7 +10,6 @@
 // tak jati. Alag segment se page 1 static rehti hai aur pages 2+ ISR se cache
 // hoti hain.
 
-import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,6 +18,7 @@ import { productService } from "@/service/productservice/product.service";
 import CategoryClient from "./CategoryClient";
 import CategoryFaq from "@/components/shop/share/CategoryFaq";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
+import PaginationNav from "@/components/shop/share/PaginationNav";
 
 export const SITE_URL = "https://www.fancystore.store";
 export const PAGE_SIZE = 12;
@@ -104,83 +104,6 @@ export async function buildCategoryMetadata(
     },
   };
 }
-
-// ============================================================
-// PAGINATION NAV
-// ============================================================
-// Asli <a href> links jo JavaScript ke bagair chalte hain. Infinite scroll
-// sirf users ke liye hai — Googlebot scroll nahi karta, is liye har page ka
-// crawlable link hona zaroori hai warna page 1 ke 12 products ke ilawa poori
-// category orphan reh jati hai.
-const PaginationNav = ({
-  slug,
-  page,
-  totalPages,
-}: {
-  slug: string;
-  page: number;
-  totalPages: number;
-}) => {
-  if (totalPages <= 1) return null;
-
-  // Saare page numbers dikhane ki bajaye ek window — 50 pages par 50 links
-  // bhadde lagte hain. Pehla aur aakhri hamesha shamil rehte hain taake
-  // crawler do hop mein kisi bhi page tak pohanch jaye.
-  const windowed = new Set<number>([1, totalPages, page - 1, page, page + 1]);
-  const pages = [...windowed]
-    .filter((n) => n >= 1 && n <= totalPages)
-    .sort((a, b) => a - b);
-
-  const linkClass =
-    "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium transition-colors hover:border-primary hover:text-primary";
-
-  return (
-    <nav
-      aria-label="Category pagination"
-      className="mt-12 flex flex-wrap items-center justify-center gap-2"
-    >
-      {page > 1 && (
-        <Link href={categoryPath(slug, page - 1)} rel="prev" className={linkClass}>
-          Previous
-        </Link>
-      )}
-
-      {pages.map((n, index) => {
-        // Window mein gap ho to "..." dikhate hain (e.g. 1 ... 7 8 9 ... 20)
-        const previous = pages[index - 1];
-        const gap = previous !== undefined && n - previous > 1;
-
-        return (
-          <React.Fragment key={n}>
-            {gap && (
-              <span className="px-1 text-sm text-text-muted" aria-hidden="true">
-                ...
-              </span>
-            )}
-            {n === page ? (
-              <span
-                aria-current="page"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-3 text-sm font-semibold text-white"
-              >
-                {n}
-              </span>
-            ) : (
-              <Link href={categoryPath(slug, n)} className={linkClass}>
-                {n}
-              </Link>
-            )}
-          </React.Fragment>
-        );
-      })}
-
-      {page < totalPages && (
-        <Link href={categoryPath(slug, page + 1)} rel="next" className={linkClass}>
-          Next
-        </Link>
-      )}
-    </nav>
-  );
-};
 
 // ============================================================
 // PAGE VIEW
@@ -302,7 +225,12 @@ export default async function CategoryView({
         pageSize={PAGE_SIZE}
       />
 
-      <PaginationNav slug={slug} page={page} totalPages={totalPages} />
+      <PaginationNav
+        page={page}
+        totalPages={totalPages}
+        href={(n) => categoryPath(slug, n)}
+        label="Category pagination"
+      />
 
       <RelatedGuides categorySlug={slug} />
       <CategoryFaq categorySlug={slug} />

@@ -10,6 +10,16 @@ export interface Category {
   showOnHome: boolean;
   isActive: boolean;
   sortOrder: number;
+  /**
+   * Is category mein kitne products hain. Optional is liye hai ke backend count
+   * query fail hone par categories phir bhi bhejta hai, bas ye field chhor deta
+   * hai (services/category.service.js:listCategoriesService).
+   *
+   * Storefront ise khali categories link na karne ke liye use karta hai — khali
+   * category ka page sirf "This Category is Coming soon..." dikhata hai, wo bhi
+   * HTTP 200 ke sath, yani Google ke liye soft 404.
+   */
+  productCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -37,6 +47,8 @@ export interface HomeCategoryTile {
   title: string;
   subtitle: string | null;
   image: string | null;
+  /** Dekho Category.productCount. Static fallback par hamesha undefined. */
+  productCount?: number;
 }
 
 /**
@@ -48,6 +60,7 @@ export const apiCategoryToTile = (c: Category): HomeCategoryTile => ({
   title: c.title,
   subtitle: c.subtitle,
   image: c.image,
+  productCount: c.productCount,
 });
 
 /** Shape of the static HOME_CATEGORIES fallback entries. */

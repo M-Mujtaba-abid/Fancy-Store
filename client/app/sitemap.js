@@ -5,6 +5,21 @@
 const SITE_URL = "https://www.fancystore.store";
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
+// ⚠️ Ye route build par prerender NAHI hona chahiye.
+//
+// Do wajuhat:
+//
+// 1. Neeche wala empty-guard throw karta hai. Build ke waqt agar backend
+//    reachable na ho (deploy aksar backend restart ke sath hota hai), to
+//    prerender step fail ho jata hai aur POORA deploy ruk jata hai — sirf
+//    sitemap ki wajah se. Runtime par wahi throw bilkul theek hai: Google ko
+//    500 milta hai, wo purana sitemap rakh kar baad mein dobara try karta hai.
+//
+// 2. Neeche ki fetches `cache: "no-store"` hain, yani iradah hamesha se taza
+//    data ka tha. Build par freeze ho jane se sitemap agle deploy tak purana
+//    rehta — naye products/blog posts us mein aate hi nahi.
+export const dynamic = "force-dynamic";
+
 const STATIC_ROUTES = [
   "/",
   "/products",
@@ -22,12 +37,24 @@ const STATIC_ROUTES = [
   //                      bhi kar diya.
 ];
 
+// Har fetch ki apni time limit. Bina timeout ke ek slow backend poori
+// /sitemap.xml request ko hosting ke function timeout tak latka deta hai, aur
+// Google ko sitemap ke bajaye error milta hai.
+const FETCH_TIMEOUT_MS = 8000;
+
+const fetchJson = async (url) => {
+  const response = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
+  if (!response.ok) return null;
+  return response.json();
+};
+
 // 1. Products fetch karne ka function
 async function getAllProductPages() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/products?page=1&limit=500`, { cache: "no-store" });
-    if (!response.ok) return [];
-    const payload = await response.json();
+    const payload = await fetchJson(`${API_BASE_URL}/api/products?page=1&limit=500`);
     return payload?.data?.products || [];
   } catch { return []; }
 }
@@ -38,9 +65,7 @@ async function getAllProductPages() {
 // Ab /api/categories mount ho chuka hai (backend app.js).
 async function getAllCategories() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/categories`, { cache: "no-store" });
-    if (!response.ok) return [];
-    const payload = await response.json();
+    const payload = await fetchJson(`${API_BASE_URL}/api/categories`);
     // Backend bare array bhejta hai. Array.isArray guard zaroori hai — shape
     // badal jaye to .map() throw karega aur /sitemap.xml 500 de dega.
     return Array.isArray(payload?.data) ? payload.data : [];
@@ -50,11 +75,12 @@ async function getAllCategories() {
 // 3. Fetch blog posts. The endpoint only returns published posts
 // (services/blog.service.js listPublishedPostsService), so drafts never
 // leak into the sitemap.
+// NOTE: limit=100 hai, 500 nahi — services/blog.service.js:102 khud
+// Math.min(100, ...) lagata hai. 500 maangna sirf ye ghalat-fehmi deta ke
+// saari posts aa gayi hain. 100 se ooper jane par yahan paging chahiye hogi.
 async function getAllBlogPosts() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/blog?page=1&limit=500`, { cache: "no-store" });
-    if (!response.ok) return [];
-    const payload = await response.json();
+    const payload = await fetchJson(`${API_BASE_URL}/api/blog?page=1&limit=100`);
     return Array.isArray(payload?.data?.posts) ? payload.data.posts : [];
   } catch { return []; }
 }
@@ -82,6 +108,23 @@ export default async function sitemap() {
     getAllCategories(),
     getAllBlogPosts(),
   ]);
+
+  // ⚠️ Adhoora sitemap dene se behtar hai bilkul na dena.
+  //
+  // Upar wale teeno functions fail hone par [] return karte hain. Un ke bagair
+  // ye function chup chaap ek "valid" sitemap bana deta jis mein 62 ke bajaye
+  // sirf 4 static URLs hotin — aur Google us ko naya sach maan leta: baaki
+  // saari URLs sitemap se ghayab. Kharabi jitni der rehti, utni der ye ghalat
+  // sitemap serve hota rehta, bina kisi error ke.
+  //
+  // throw karne se /sitemap.xml 500 deta hai. Google 5xx ko "abhi kharabi hai,
+  // purana sitemap hi rakho aur baad mein dobara try karo" samajhta hai — yani
+  // theek wohi jo hum chahte hain.
+  if (products.length === 0 && categories.length === 0 && blogPosts.length === 0) {
+    throw new Error(
+      `sitemap: backend se koi data nahi mila (${API_BASE_URL}) — adhoora sitemap serve karne ke bajaye fail kar rahe hain`
+    );
+  }
 
   // ⚠️ lastmod par `now` mat lagana.
   //
