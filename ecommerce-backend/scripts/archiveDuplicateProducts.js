@@ -102,13 +102,17 @@ const GROUPS = [
     label: "Honda CD 70 bike cover",
     keep: 106,
     archive: [50, 64],
-    // #64 par "PVC + Cotton" ka asli material option hai jo keeper #106 par
-    // bilkul nahi. Baqi chhorte hue variants (#50 ka "Parachute") keeper ke
-    // apne base product jaise hi hain, sirf price thora alag hai.
-    copyVariants: [
-      { fromProductId: 64, variantValue: "PVC + Cotton" },
-      { fromProductId: 64, variantValue: "Black Coated" },
-    ],
+    // Sirf "PVC + Cotton": ye #64 ka asli material option hai jo keeper #106
+    // par bilkul nahi.
+    //
+    // #64 ki "Black Coated" jaan bujh kar copy NAHI karte. Keeper #106 par
+    // pehle se "Material: Black coated" (Rs 1500) mojood hai, bas casing alag
+    // hai. Pehli baar ye case-sensitive compare ki wajah se copy ho gayi thi
+    // aur product par do black options aa gaye the.
+    //
+    // #50 ka "Parachute" bhi chhor rahe hain, wo keeper ke base product jaisa
+    // hi hai, sirf price thora alag.
+    copyVariants: [{ fromProductId: 64, variantValue: "PVC + Cotton" }],
     note: "#106: 259 sold, 43 reviews, 100 stock. #50: 96 sold. #64: sirf 9 stock. #64 ka PVC + Cotton option keeper par copy ho raha hai.",
   },
   {
@@ -118,6 +122,13 @@ const GROUPS = [
     note: "#52: 131 sold, 29 reviews, description 1708 chars. #61 ki description sirf 35 characters ki hai.",
   },
 ];
+
+// Variant values ka muqabla case aur spacing ke bagair. DB mein ek hi option
+// alag alag likha hua hai, jaise "Material: Black coated" aur "material: Black
+// Coated". Exact match par ye do alag cheezein lagti hain, aur isi wajah se
+// pehli baar keeper #106 par ek hi black option ki DO copies chali gayi thin.
+const normalizeVariant = (value) =>
+  String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
 const ARCHIVE_IDS = GROUPS.flatMap((g) => g.archive);
 const KEEP_IDS = GROUPS.map((g) => g.keep);
@@ -162,9 +173,61 @@ const run = async () => {
       const p = byId.get(id);
       console.log(`   #${id}  isArchived ${p.isArchived} -> false   ${p.name.slice(0, 50)}`);
     }
+    // Archive ke waqt jo variants keeper par copy hui thin, wo bhi wapas leni
+    // parti hain. Warna restore ke baad keeper par wahi option DO baar hota
+    // hai: ek copy shuda, aur ek asal (ab un-archived) product par.
+    //
+    // OrderItems.variantId par ON DELETE SET NULL hai, cascade nahi, to delete
+    // se koi order item nahi marti. Phir bhi jo variant kisi order mein use ho
+    // chuki ho use chhor dete hain, warna us order ka record bhool jata hai ke
+    // customer ne kaun sa option khareeda tha.
+    const removable = [];
+    const keptBecauseOrdered = [];
+
+    for (const group of GROUPS) {
+      const keeper = byId.get(group.keep);
+      for (const copy of group.copyVariants || []) {
+        const onKeeper = keeper.variants.find(
+          (v) => normalizeVariant(v.variantValue) === normalizeVariant(copy.variantValue)
+        );
+        if (!onKeeper) continue;
+
+        const [[row]] = await sequelize.query(
+          `SELECT COUNT(*)::int AS count FROM "OrderItems" WHERE "variantId" = ${onKeeper.id}`
+        );
+        if (row.count > 0) keptBecauseOrdered.push({ keeper, onKeeper, count: row.count });
+        else removable.push({ keeper, onKeeper });
+      }
+    }
+
+    for (const r of removable) {
+      console.log(
+        `   variant hatega : #${r.keeper.id} par "${r.onKeeper.variantType}: ${r.onKeeper.variantValue}"`
+      );
+    }
+    for (const k of keptBecauseOrdered) {
+      console.log(
+        `   NAHI hatega    : #${k.keeper.id} ka "${k.onKeeper.variantValue}", ` +
+          `${k.count} order items is par lagi hain. Haath se dekh lena.`
+      );
+    }
+
     if (APPLY) {
-      await Product.update({ isArchived: false }, { where: { id: ARCHIVE_IDS } });
-      console.log("\n  ✅ Restore ho gaya. productRedirects.json khud hataana parega.");
+      await sequelize.transaction(async (transaction) => {
+        await Product.update(
+          { isArchived: false },
+          { where: { id: ARCHIVE_IDS }, transaction }
+        );
+        for (const r of removable) {
+          await ProductVariant.destroy({ where: { id: r.onKeeper.id }, transaction });
+        }
+      });
+      console.log(
+        `\n  ✅ Restore ho gaya (${removable.length} copied variants bhi hata diye).`
+      );
+      console.log(
+        "  productRedirects.json khud khali karna parega: client/config/productRedirects.json mein [] likh do"
+      );
     } else {
       console.log("\n  Dry run tha. Asal mein chalane ke liye: --restore --apply");
     }
@@ -200,11 +263,15 @@ const run = async () => {
       const copying = new Set(
         (group.copyVariants || [])
           .filter((c) => c.fromProductId === p.id)
-          .map((c) => c.variantValue)
+          .map((c) => normalizeVariant(c.variantValue))
       );
-      const keeperValues = new Set(keeper.variants.map((v) => v.variantValue));
+      const keeperValues = new Set(
+        keeper.variants.map((v) => normalizeVariant(v.variantValue))
+      );
       const lost = p.variants.filter(
-        (v) => !copying.has(v.variantValue) && !keeperValues.has(v.variantValue)
+        (v) =>
+          !copying.has(normalizeVariant(v.variantValue)) &&
+          !keeperValues.has(normalizeVariant(v.variantValue))
       );
       for (const v of lost) {
         warnings.push(
@@ -217,7 +284,9 @@ const run = async () => {
     }
     for (const copy of group.copyVariants || []) {
       const source = byId.get(copy.fromProductId);
-      const variant = source?.variants.find((v) => v.variantValue === copy.variantValue);
+      const variant = source?.variants.find(
+        (v) => normalizeVariant(v.variantValue) === normalizeVariant(copy.variantValue)
+      );
       if (!variant) {
         throw new Error(
           `#${copy.fromProductId} par "${copy.variantValue}" naam ka variant nahi mila. ` +
@@ -247,13 +316,17 @@ const run = async () => {
       // jata.
       for (const group of GROUPS) {
         const keeper = byId.get(group.keep);
-        const keeperValues = new Set(keeper.variants.map((v) => v.variantValue));
+        const keeperValues = new Set(
+          keeper.variants.map((v) => normalizeVariant(v.variantValue))
+        );
 
         for (const copy of group.copyVariants || []) {
-          if (keeperValues.has(copy.variantValue)) continue; // pehle se hai
+          if (keeperValues.has(normalizeVariant(copy.variantValue))) continue; // pehle se hai
           const source = byId
             .get(copy.fromProductId)
-            .variants.find((v) => v.variantValue === copy.variantValue);
+            .variants.find(
+              (v) => normalizeVariant(v.variantValue) === normalizeVariant(copy.variantValue)
+            );
 
           await ProductVariant.create(
             {
