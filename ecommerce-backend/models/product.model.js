@@ -81,6 +81,19 @@ Product.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    // Duplicate products ko site se hatane ke liye. DELETE nahi karte kyunke
+    // Products par lagi saari FKs (OrderItems, Reviews, CartItems, Wishlists)
+    // ON DELETE CASCADE hain — ek duplicate hatane se customer ke orders ki
+    // items aur uske reviews bhi mit jate. Archived product kisi public
+    // listing mein nahi aata (dekho services/product.service.js ka
+    // PUBLIC_VISIBLE), is liye sitemap se bhi khud nikal jata hai, aur uski
+    // purani URL client/config/productRedirects.json se keeper par 301 hoti
+    // hai.
+    isArchived: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     discountPrice: {
       type: DataTypes.FLOAT,
       defaultValue: 0,

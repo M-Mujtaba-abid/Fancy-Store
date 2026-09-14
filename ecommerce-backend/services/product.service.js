@@ -68,6 +68,22 @@ const STABLE_NEWEST_FIRST = [
   ["id", "DESC"],
 ];
 
+// ⚠️ Har PUBLIC listing query mein ye lagna zaroori hai.
+//
+// Archived products wo duplicates hain jo hum ne site se hata diye (dekho
+// scripts/archiveDuplicateProducts.js). Inhe DELETE nahi kiya ja sakta kyunke
+// Products par lagi saari FKs ON DELETE CASCADE hain — delete karne se customer
+// ke orders ki items aur reviews bhi mit jate. Is liye row DB mein rehti hai
+// aur bas listings se bahir rehti hai.
+//
+// Sitemap /api/products se banti hai, to yahan filter lagate hi archived URLs
+// sitemap se bhi apne aap nikal jati hain. Unki purani URL
+// client/config/productRedirects.json ke zariye keeper par 301 hoti hai.
+//
+// getProductByIdService par ye filter jaan bujh kar NAHI hai: purane orders aur
+// admin ko archived product ka data phir bhi resolve hona chahiye.
+const PUBLIC_VISIBLE = { isArchived: false };
+
 export const getPaginationData = (queryPage, queryLimit, defaultLimit = 10) => {
   const page = parseInt(queryPage) || 1;
   const limit = parseInt(queryLimit) || defaultLimit;
@@ -266,6 +282,7 @@ export const searchProductsService = async (q, queryPage, queryLimit) => {
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
     where: {
+      ...PUBLIC_VISIBLE,
       [Op.or]: [
         { name: { [Op.iLike]: term } },
         { description: { [Op.iLike]: term } },
@@ -296,7 +313,7 @@ export const getFeaturedProductsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
-    where: { isFeatured: true },
+    where: { ...PUBLIC_VISIBLE, isFeatured: true },
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -319,7 +336,7 @@ export const getNewArrivalsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
-    where: { isNewArrival: true },
+    where: { ...PUBLIC_VISIBLE, isNewArrival: true },
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -342,7 +359,7 @@ export const getOnSaleProductsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
-    where: { isOnSale: true },
+    where: { ...PUBLIC_VISIBLE, isOnSale: true },
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -365,6 +382,7 @@ export const getProductsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
+    where: PUBLIC_VISIBLE,
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -647,7 +665,7 @@ export const getCarProductsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
-    where: { vehicleType: VEHICLE_TYPES.CAR },
+    where: { ...PUBLIC_VISIBLE, vehicleType: VEHICLE_TYPES.CAR },
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -670,7 +688,7 @@ export const getBikeProductsService = async (queryPage, queryLimit) => {
     // ROWS ginta hai products nahi — yani jis product ke variants hon woh
     // totalItems ko badha deta tha (e.g. car_topCover: 21 products -> 28).
     distinct: true,
-    where: { vehicleType: VEHICLE_TYPES.BIKE },
+    where: { ...PUBLIC_VISIBLE, vehicleType: VEHICLE_TYPES.BIKE },
     limit,
     offset,
     order: STABLE_NEWEST_FIRST,
@@ -694,7 +712,7 @@ export const getProductsByFilterService = async (filters, queryPage, queryLimit)
     DEFAULT_LIMITS.PRODUCTS,
   );
 
-  const where = {};
+  const where = { ...PUBLIC_VISIBLE };
   if (filters.vehicleType) where.vehicleType = filters.vehicleType;
   if (filters.category) {
     const cleanCategory = filters.category.trim();
@@ -751,6 +769,7 @@ export const getRelatedProductsService = async (productId) => {
 
   let related = await Product.findAll({
     where: {
+      ...PUBLIC_VISIBLE,
       category: product.category,
       vehicleType: product.vehicleType,
       id: { [Op.ne]: productId },
@@ -766,6 +785,7 @@ export const getRelatedProductsService = async (productId) => {
 
     const categoryMatches = await Product.findAll({
       where: {
+        ...PUBLIC_VISIBLE,
         category: product.category,
         id: { [Op.notIn]: fetchedIds },
       },
@@ -783,6 +803,7 @@ export const getRelatedProductsService = async (productId) => {
 
     const genericMatches = await Product.findAll({
       where: {
+        ...PUBLIC_VISIBLE,
         id: { [Op.notIn]: finalIds },
       },
       limit: limit - related.length,
