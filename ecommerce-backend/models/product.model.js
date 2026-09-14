@@ -51,6 +51,11 @@ Product.init(
       type: DataTypes.JSON, // Multiple Images Array
       allowNull: true,
     },
+    // ✅ Product video support (optional)
+    videoUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     carModel: {
       type: DataTypes.STRING,
       allowNull: true,

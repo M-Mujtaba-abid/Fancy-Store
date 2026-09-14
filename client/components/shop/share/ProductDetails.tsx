@@ -238,6 +238,26 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
               ))}
             </div>
           )}
+
+          {/* ✅ Product Video Section */}
+          {product.videoUrl && (
+            <div className="mt-6 rounded-2xl overflow-hidden border border-border/50 bg-black/5">
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                <video
+                  controls
+                  controlsList="nodownload"
+                  className="w-full h-full object-contain"
+                  poster={product.imageUrl}
+                >
+                  <source src={product.videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              <p className="text-xs text-text-muted font-semibold p-3 bg-background/50">
+                📹 Product Demo Video
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Right: Content */}

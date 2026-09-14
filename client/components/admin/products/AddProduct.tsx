@@ -80,6 +80,11 @@ const AddProduct = ({
   const [imageError, setImageError] = useState("");
   const [isPreparingImages, setIsPreparingImages] = useState(false);
 
+  // ✅ Video Upload State
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null);
+
   // --- Variants Toggle & State ---
   const [hasVariants, setHasVariants] = useState<boolean>(false);
   const [selectedVariantType, setSelectedVariantType] = useState<string>("Material");
@@ -139,6 +144,11 @@ const AddProduct = ({
         images: [],
       });
       setExistingImages(initialData.images || []);
+      
+      // ✅ Load existing video in edit mode
+      setExistingVideoUrl(initialData.videoUrl || null);
+      setVideoFile(null);
+      setVideoPreview(null);
 
       if (initialHasVariants) {
         const loadedVariants = initialData.variants!.map((v) => ({
@@ -162,6 +172,10 @@ const AddProduct = ({
     } else {
       setForm(defaultFormState);
       setExistingImages([]);
+      // ✅ Reset video states for new product
+      setVideoFile(null);
+      setVideoPreview(null);
+      setExistingVideoUrl(null);
       setVariants([]);
       setHasVariants(false);
     }
@@ -335,6 +349,41 @@ const AddProduct = ({
     }));
   };
 
+  // ✅ Video Upload Handler
+  const onVideoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const video = files[0];
+    
+    // Validate video file size (max 50MB)
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+    if (video.size > MAX_VIDEO_SIZE) {
+      setImageError("Video file size must be less than 50MB");
+      return;
+    }
+
+    // Set video file and preview
+    setVideoFile(video);
+    const videoUrl = URL.createObjectURL(video);
+    setVideoPreview(videoUrl);
+    setImageError(""); // Clear any previous errors
+  };
+
+  // ✅ Remove video handler
+  const removeVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoFile(null);
+    setVideoPreview(null);
+  };
+
+  // ✅ Remove existing video (in edit mode)
+  const removeExistingVideo = () => {
+    setExistingVideoUrl(null);
+  };
+
   // --- Variant Handlers ---
   const addVariant = () => {
     setVariants((prev) => [
@@ -434,6 +483,10 @@ const AddProduct = ({
       ...finalForm,
       existingImages: existingImages,
       variants: hasVariants ? finalVariants : [],
+      // ✅ Add video file to payload
+      video: videoFile || undefined,
+      // ✅ Signal video removal if in edit mode and video was removed
+      removeVideo: existingVideoUrl && !videoFile ? "true" : undefined,
     };
 
     onSubmit(payload);
@@ -756,6 +809,107 @@ const AddProduct = ({
                   accept="image/*"
                   multiple
                   onChange={onImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+        </div>
+
+        {/* --- SECTION 2.5: Product Video (Optional) --- */}
+        <div className="border-t border-border/50 pt-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-border/40 pb-2">
+            <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+              2.5
+            </span>
+            <h3 className="text-lg font-semibold text-text-main">
+              Product Video (Optional)
+            </h3>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-background/50 border border-border/60 space-y-4">
+            {/* Existing Video (Edit Mode) */}
+            {existingVideoUrl && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-text-muted uppercase">Current Video</p>
+                <div className="relative group rounded-xl overflow-hidden bg-black/80 p-4">
+                  <video
+                    controls
+                    src={existingVideoUrl}
+                    className="w-full max-h-64 rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeExistingVideo}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* New Video Preview */}
+            {videoPreview && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-text-muted uppercase">
+                  {existingVideoUrl ? "Replacement Video" : "New Video"}
+                </p>
+                <div className="relative group rounded-xl overflow-hidden bg-black/80 p-4">
+                  <video
+                    controls
+                    src={videoPreview}
+                    className="w-full max-h-64 rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Video Upload Input */}
+            {!videoPreview && !existingVideoUrl && (
+              <label className="w-full h-40 border-2 border-dashed border-border hover:border-primary rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-colors bg-background/50 hover:bg-primary/5 group">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-text-muted group-hover:text-primary mb-2 transition-colors"
+                >
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                <span className="text-[11px] font-bold text-text-muted group-hover:text-primary transition-colors">
+                  Add Product Video
+                </span>
+                <span className="text-[9px] text-text-muted mt-0.5 font-mono">
+                  (MP4, WebM, MOV - Max 50MB)
+                </span>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={onVideoChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {/* Upload/Replace Button */}
+            {(videoPreview || existingVideoUrl) && (
+              <label className="inline-block px-4 py-2 bg-primary/10 border border-primary text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors cursor-pointer">
+                Replace Video
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={onVideoChange}
                   className="hidden"
                 />
               </label>

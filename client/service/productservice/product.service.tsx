@@ -12,7 +12,7 @@ const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
   const formData = new FormData();
 
   Object.entries(data).forEach(([key, value]) => {
-    if (value === undefined || value === null || key === "images" || key === "variants") return;
+    if (value === undefined || value === null || key === "images" || key === "variants" || key === "video") return;
 
     if (typeof value === "boolean") {
       formData.append(key, value ? "true" : "false");
@@ -23,6 +23,16 @@ const toProductFormData = (data: ProductMutationInput | ProductUpdateInput) => {
 
   if ("images" in data && data.images?.length) {
     data.images.forEach((file) => formData.append("images", file));
+  }
+
+  // ✅ Handle video file
+  if ("video" in data && data.video instanceof File) {
+    formData.append("video", data.video);
+  }
+
+  // ✅ Handle explicit video removal
+  if ("removeVideo" in data && data.removeVideo) {
+    formData.append("removeVideo", "true");
   }
 
   // ✅ Variants ko JSON stringify karke FormData mein bhejo

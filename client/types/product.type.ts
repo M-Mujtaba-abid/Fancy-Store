@@ -63,6 +63,8 @@ export interface Product {
   material: string;
   imageUrl: string;
   images: string[];
+  // ✅ Video support
+  videoUrl?: string | null;
   isFeatured: boolean;
   isNewArrival: boolean;
   isOnSale: boolean;
@@ -91,6 +93,9 @@ export interface ProductMutationInput {
   isOnSale: boolean;
   discountPrice: number;
   images?: File[];
+  // ✅ Video support
+  video?: File;
+  removeVideo?: string;
   variants?: VariantInput[];
 }
 
