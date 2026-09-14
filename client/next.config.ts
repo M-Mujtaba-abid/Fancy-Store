@@ -1,4 +1,40 @@
 import type { NextConfig } from "next";
+import fs from "node:fs";
+import path from "node:path";
+
+/**
+ * Archive kiye gaye duplicate products ki purani URLs -> keeper product.
+ *
+ * Ye file backend ki scripts/archiveDuplicateProducts.js likhti hai. Hum isko
+ * JSON import ki bajaye fs se parhte hain taake file na hone par bhi build na
+ * toote (fresh clone, ya script abhi tak chali hi na ho).
+ *
+ * Redirects yahan (next.config) mein hain, middleware mein NAHI: yahan ye edge
+ * par handle hote hain, har request par koi function nahi chalta, aur status
+ * asli permanent (308) hota hai. Middleware mein daalne ka koi faida nahi tha.
+ */
+type ProductRedirect = { from: string; to: string };
+
+const loadProductRedirects = (): ProductRedirect[] => {
+  try {
+    const file = path.join(process.cwd(), "config", "productRedirects.json");
+    const parsed = JSON.parse(fs.readFileSync(file, "utf-8"));
+    if (!Array.isArray(parsed)) return [];
+    // Sirf poori tarah valid entries. Aadhi entry se `source`/`destination`
+    // undefined ho jata hai aur `next build` waheen fail ho jati hai.
+    return parsed.filter(
+      (entry): entry is ProductRedirect =>
+        Boolean(entry) &&
+        typeof entry.from === "string" &&
+        typeof entry.to === "string" &&
+        entry.from.length > 0 &&
+        entry.to.length > 0 &&
+        entry.from !== entry.to
+    );
+  } catch {
+    return [];
+  }
+};
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -62,6 +98,14 @@ const nextConfig: NextConfig = {
   // Permanent redirects se koi purana link, bookmark ya Google result nahi tootega.
   async redirects() {
     return [
+      // Archive kiye gaye duplicate products. Purani URL par aane wala har
+      // customer aur crawler keeper product par chala jata hai, aur Google
+      // dono URLs ke signals keeper par jama kar deta hai.
+      ...loadProductRedirects().map((entry) => ({
+        source: `/products/${entry.from}`,
+        destination: `/products/${entry.to}`,
+        permanent: true,
+      })),
       {
         source: "/category",
         has: [{ type: "query", key: "category", value: "(?<slug>.*)" }],
