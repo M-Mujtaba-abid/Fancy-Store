@@ -42,8 +42,20 @@ router.get("/:id/related", getRelatedProducts); // ✅ /:id se pehle rakho
 router.get("/:id", getProductById);                        // hamesha sabse neeche
 
 // --- Protected Routes (Admin) ---
-router.post("/", authMiddleware, adminMiddleware, uploadProductAndVariants.any(), addProduct);
-router.patch("/:id", authMiddleware, adminMiddleware, uploadProductAndVariants.any(), updateProduct);
+// ✅ Use upload.fields() to handle multiple field types: images (array) + video (single file)
+const uploadFields = uploadProductAndVariants.fields([
+  { name: "images", maxCount: 5 },
+  { name: "video", maxCount: 1 },
+  { name: "variantImage_0", maxCount: 1 },
+  { name: "variantImage_1", maxCount: 1 },
+  { name: "variantImage_2", maxCount: 1 },
+  { name: "variantImage_3", maxCount: 1 },
+  { name: "variantImage_4", maxCount: 1 },
+  { name: "variantImage_5", maxCount: 1 },
+]);
+
+router.post("/", authMiddleware, adminMiddleware, uploadFields, addProduct);
+router.patch("/:id", authMiddleware, adminMiddleware, uploadFields, updateProduct);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteProduct);
 
 // --- Standalone Variant Routes (Admin) ---

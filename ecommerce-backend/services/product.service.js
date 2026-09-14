@@ -88,6 +88,13 @@ export const uploadImagesToCloudinary = (files) => {
   return uploadManyBuffers({ files, folder: "products" });
 };
 
+// ✅ Upload video to Cloudinary with resource_type: "video"
+export const uploadVideoToCloudinary = async (file) => {
+  if (!file) return null;
+  const videoUrl = await uploadBuffer({ buffer: file.buffer, folder: "products", resource_type: "video" });
+  return videoUrl;
+};
+
 // ============================================================
 // AI EMBEDDING TEXT FORMATTER (Naya Helper)
 // ============================================================
@@ -134,7 +141,7 @@ export const buildProductTextForAI = (product) => {
 
 // 1. Add Product
 export const addProductService = async (body, files) => {
-  const productFiles = (files || []).filter((f) => f.fieldname === "images");
+  const productFiles = files?.images || [];
   if (productFiles.length === 0)
     throw new ApiError(400, "At least one product image file is required");
 
@@ -146,6 +153,10 @@ export const addProductService = async (body, files) => {
   } = body;
 
   const uploadedImages = await uploadImagesToCloudinary(productFiles);
+
+  // ✅ Extract and upload video file (optional)
+  const videoFile = files?.video?.[0] || null;
+  const videoUrl = await uploadVideoToCloudinary(videoFile);
 
   const normalizedPrice = Number(price);
   const normalizedCostPrice = Number(costPrice || 0);
@@ -172,6 +183,7 @@ export const addProductService = async (body, files) => {
     discountPrice: Number.isNaN(normalizedDiscountPrice) ? 0 : normalizedDiscountPrice,
     imageUrl: uploadedImages[0],
     images: uploadedImages,
+    videoUrl: videoUrl || null, // ✅ Add video URL
     slug: await generateUniqueSlug(name),
   };
 
@@ -187,7 +199,7 @@ export const addProductService = async (body, files) => {
     // Upload variant-specific images
     for (let i = 0; i < parsedVariants.length; i++) {
       const v = parsedVariants[i];
-      const variantFile = (files || []).find((f) => f.fieldname === `variantImage_${i}`);
+      const variantFile = files?.[`variantImage_${i}`]?.[0] || null;
       if (variantFile) {
         const variantImageUrl = await uploadBuffer({ buffer: variantFile.buffer, folder: "products" });
         v.imageUrl = variantImageUrl;
@@ -433,7 +445,7 @@ export const updateProductService = async (id, body, files) => {
     }
   }
 
-  const productFiles = (files || []).filter((f) => f.fieldname === "images");
+  const productFiles = files?.images || [];
   let uploadedImages = [];
   if (productFiles.length > 0) {
     uploadedImages = await uploadImagesToCloudinary(productFiles);
@@ -442,6 +454,32 @@ export const updateProductService = async (id, body, files) => {
   updateData.images = [...parsedExistingImages, ...uploadedImages];
   updateData.imageUrl = updateData.images.length > 0 ? updateData.images[0] : null;
   delete updateData.existingImages;
+
+  // ✅ Handle video file updates
+  const videoFile = files?.video?.[0] || null;
+  if (videoFile) {
+    // If there's an existing video, delete it from Cloudinary
+    if (product.videoUrl) {
+      try {
+        await destroyByUrl({ url: product.videoUrl, folder: "products", resource_type: "video" });
+      } catch (cloudErr) {
+        console.error("⚠️ Cloudinary video deletion failed (non-fatal):", cloudErr.message);
+      }
+    }
+    // Upload new video
+    const newVideoUrl = await uploadVideoToCloudinary(videoFile);
+    updateData.videoUrl = newVideoUrl;
+  } else if (body.removeVideo === "true") {
+    // Allow explicit video removal
+    if (product.videoUrl) {
+      try {
+        await destroyByUrl({ url: product.videoUrl, folder: "products", resource_type: "video" });
+      } catch (cloudErr) {
+        console.error("⚠️ Cloudinary video deletion failed (non-fatal):", cloudErr.message);
+      }
+    }
+    updateData.videoUrl = null;
+  }
 
   let parsedVariants = null;
   if (variants !== undefined) {
@@ -509,7 +547,7 @@ export const updateProductService = async (id, body, files) => {
         `${(e.variantType || "material").trim().toLowerCase()}:${(e.variantValue || e.materialName || "").trim().toLowerCase()}` === vKey
       );
 
-      const variantFile = (files || []).find((f) => f.fieldname === `variantImage_${i}`);
+      const variantFile = files?.[`variantImage_${i}`]?.[0] || null;
       let variantImageUrl = v.imageUrl || null;
 
       if (variantFile) {
@@ -578,6 +616,16 @@ export const deleteProductService = async (id) => {
   });
 
   await destroyManyByUrls({ urls: imageList, folder: "products" });
+
+  // ✅ Video bhi Cloudinary se delete karo (resource_type: "video" zaroori hai)
+  if (product.videoUrl) {
+    try {
+      await destroyByUrl({ url: product.videoUrl, folder: "products", resource_type: "video" });
+    } catch (cloudErr) {
+      console.error("⚠️ Cloudinary video deletion failed (non-fatal):", cloudErr.message);
+    }
+  }
+
   await product.destroy();
 };
 
