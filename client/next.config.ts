@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 import fs from "node:fs";
 import path from "node:path";
@@ -37,6 +38,9 @@ const loadProductRedirects = (): ProductRedirect[] => {
 };
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   /* config options here */
   images: {
     formats: ['image/avif', 'image/webp'],

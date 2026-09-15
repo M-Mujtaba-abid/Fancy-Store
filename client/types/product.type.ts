@@ -70,6 +70,8 @@ export interface Product {
   isOnSale: boolean;
   discountPrice: number;
   sold?: number;
+  averageRating?: number;
+  totalReviews?: number;
   createdAt: string;
   updatedAt: string;
   variants?: ProductVariant[];

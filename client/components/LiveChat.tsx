@@ -31,6 +31,7 @@ interface LiveChatProps {
 }
 
 let socket: Socket;
+let hasLoggedConnError = false;
 
 
 const addOrReplaceMessage = (prev: Message[], newMsg: Message): Message[] => {
@@ -229,10 +230,12 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
         try {
             socket = io(BACKEND_URL, {
                 withCredentials: true,
-                transports: ["polling", "websocket"],
+                transports: ["websocket", "polling"],
+                reconnectionAttempts: 5,
             });
 
             socket.on("connect", () => {
+                hasLoggedConnError = false;
                 console.log("🟢 [CLIENT] Socket Connected Successfully! ID:", socket.id);
                 socket.emit("join_room", {
                     userId,
@@ -242,7 +245,10 @@ export default function LiveChat({ user: userProp }: LiveChatProps = {}) {
             });
 
             socket.on("connect_error", (err) => {
-                console.error("🔴 [CLIENT] Connection Error:", err.message);
+                if (!hasLoggedConnError) {
+                    console.warn("🔴 [CLIENT] Chat connection offline (backend socket unavailable)");
+                    hasLoggedConnError = true;
+                }
             });
 
             socket.on("room_joined", ({ chatRoomId: assignedRoomId, room: roomData, messages: serverMessages }: any) => {

@@ -61,7 +61,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   }
 
   return (
-    <div className="mt-12 lg:mt-16 pt-10 border-t border-border/50" ref={reviewsContainerRef}>
+    <div id="reviews-section" className="mt-12 lg:mt-16 pt-10 border-t border-border/50" ref={reviewsContainerRef}>
 
       {/* ================= HEADER SECTION ================= */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10">
