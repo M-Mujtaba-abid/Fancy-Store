@@ -1,4 +1,3 @@
-import path from "node:path";
 import type { NextConfig } from "next";
 import fs from "node:fs";
 import path from "node:path";
