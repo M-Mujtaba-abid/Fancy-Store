@@ -37,7 +37,13 @@ const ExpandableDescription = ({
     }
   };
 
-  const cleanDescription = description.replace(/&nbsp;/g, ' ');
+  // Strip out any duplicate embedded <video> or <iframe> tags and demo video headers
+  const cleanDescription = description
+    .replace(/<video[^>]*>[\s\S]*?<\/video>/gi, "")
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<h[1-6][^>]*>[^<]*?(?:video|demo)[^<]*?<\/h[1-6]>/gi, "")
+    .replace(/<p[^>]*>[^<]*?(?:Product Demo Video|Demo Video)[^<]*?<\/p>/gi, "")
+    .replace(/&nbsp;/g, ' ');
   return (
     
     <div className="mb-8 w-full" ref={containerRef}>
