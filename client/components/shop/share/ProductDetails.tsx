@@ -251,7 +251,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-28 md:pb-12">
       {/* Auto Back Button */}
       <button
         onClick={() => router.back()}
@@ -269,7 +269,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="aspect-square relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm floating-card group select-none"
+            className="aspect-square relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm floating-card group select-none max-h-[70vh] md:max-h-none"
           >
             {mediaItems[activeIndex]?.type === "video" ? (
               <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
