@@ -78,6 +78,149 @@ export function parseSocialVideoUrl(url?: string | null): SocialVideoEmbed | nul
   return null;
 }
 
+// Official Instagram & TikTok Embed Viewer Component
+function SocialEmbedViewer({ embed, name }: { embed: SocialVideoEmbed; name: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+
+    if (embed.platform === "instagram") {
+      const scriptId = "instagram-embed-script";
+      let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+      const processInsta = () => {
+        if ((window as any).instgrm?.Embeds?.process) {
+          (window as any).instgrm.Embeds.process();
+        }
+      };
+
+      if (!script) {
+        script = document.createElement("script");
+        script.id = scriptId;
+        script.src = "https://www.instagram.com/embed.js";
+        script.async = true;
+        script.onload = processInsta;
+        script.onerror = () => setHasError(true);
+        document.body.appendChild(script);
+      } else {
+        processInsta();
+        const timer = setTimeout(processInsta, 300);
+        return () => clearTimeout(timer);
+      }
+    } else if (embed.platform === "tiktok") {
+      const scriptId = "tiktok-embed-script";
+      let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+      const processTikTok = () => {
+        if ((window as any).tiktokEmbed?.process) {
+          (window as any).tiktokEmbed.process();
+        }
+      };
+
+      if (!script) {
+        script = document.createElement("script");
+        script.id = scriptId;
+        script.src = "https://www.tiktok.com/embed.js";
+        script.async = true;
+        script.onload = processTikTok;
+        script.onerror = () => setHasError(true);
+        document.body.appendChild(script);
+      } else {
+        processTikTok();
+        const timer = setTimeout(processTikTok, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [embed]);
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 text-center text-white/80 space-y-3">
+        <Video size={36} className="text-red-400 opacity-80" />
+        <p className="text-xs sm:text-sm font-semibold">Video Unavailable</p>
+        <a
+          href={embed.originalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-primary underline hover:opacity-80 font-bold"
+        >
+          Watch on {embed.platform === "instagram" ? "Instagram" : "TikTok"}
+        </a>
+      </div>
+    );
+  }
+
+  if (embed.platform === "instagram") {
+    return (
+      <div className="w-full h-full overflow-y-auto flex items-center justify-center p-2 bg-black/90 no-scrollbar">
+        <blockquote
+          className="instagram-media"
+          data-instgrm-permalink={embed.originalUrl}
+          data-instgrm-version="14"
+          style={{
+            background: "#FFF",
+            border: 0,
+            borderRadius: "12px",
+            boxShadow: "0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15)",
+            margin: "1px",
+            maxWidth: "540px",
+            minWidth: "280px",
+            padding: 0,
+            width: "99%",
+          }}
+        >
+          <div style={{ padding: "16px" }}>
+            <a
+              href={embed.originalUrl}
+              style={{
+                background: "#FFFFFF",
+                lineHeight: 0,
+                padding: "0 0",
+                textAlign: "center",
+                textDecoration: "none",
+                width: "100%",
+              }}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="text-xs font-semibold text-gray-500 py-4 text-center">
+                Loading Instagram Reel...
+              </div>
+            </a>
+          </div>
+        </blockquote>
+      </div>
+    );
+  }
+
+  // TikTok embed
+  const videoIdMatch = embed.originalUrl.match(/video\/(\d+)/i) || embed.embedUrl.match(/v2\/(\d+)/i);
+  const videoId = videoIdMatch ? videoIdMatch[1] : "";
+
+  return (
+    <div className="w-full h-full overflow-y-auto flex items-center justify-center p-2 bg-black/90 no-scrollbar">
+      <blockquote
+        className="tiktok-embed"
+        cite={embed.originalUrl}
+        data-video-id={videoId}
+        style={{ maxWidth: "605px", minWidth: "280px", width: "100%" }}
+      >
+        <section>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href={embed.originalUrl}
+            className="text-xs font-semibold text-gray-400 text-center block py-4"
+          >
+            Loading TikTok Video...
+          </a>
+        </section>
+      </blockquote>
+    </div>
+  );
+}
+
 interface Props {
   product: Product;
   relatedProducts?: Product[];
@@ -306,30 +449,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
           >
             {mediaItems[activeIndex]?.type === "socialVideo" ? (
               <div className="relative w-full h-full bg-black flex flex-col items-center justify-center overflow-hidden">
-                {socialEmbedError ? (
-                  <div className="flex flex-col items-center justify-center p-6 text-center text-white/80 space-y-3">
-                    <Video size={36} className="text-red-400 opacity-80" />
-                    <p className="text-xs sm:text-sm font-semibold">Video Unavailable</p>
-                    <a
-                      href={mediaItems[activeIndex].embed.originalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary underline hover:opacity-80 font-bold"
-                    >
-                      Watch on {mediaItems[activeIndex].embed.platform === "instagram" ? "Instagram" : "TikTok"}
-                    </a>
-                  </div>
-                ) : (
-                  <iframe
-                    key={mediaItems[activeIndex].embed.embedUrl}
-                    src={mediaItems[activeIndex].embed.embedUrl}
-                    title={`${product.name} Social Video`}
-                    className="w-full h-full border-none"
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                    allowFullScreen
-                    onError={() => setSocialEmbedError(true)}
-                  />
-                )}
+                <SocialEmbedViewer
+                  embed={mediaItems[activeIndex].embed}
+                  name={product.name}
+                />
               </div>
             ) : mediaItems[activeIndex]?.type === "video" ? (
               <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
