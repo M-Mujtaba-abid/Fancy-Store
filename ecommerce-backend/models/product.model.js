@@ -56,6 +56,11 @@ Product.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    // ✅ Social Media Video Link (Instagram/TikTok URL, optional)
+    socialVideoUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     carModel: {
       type: DataTypes.STRING,
       allowNull: true,

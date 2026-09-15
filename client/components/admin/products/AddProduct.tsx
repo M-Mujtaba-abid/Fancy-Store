@@ -33,6 +33,7 @@ const defaultFormState: ProductMutationInput = {
   isOnSale: false,
   discountPrice: 0,
   images: [],
+  socialVideoUrl: "",
   subCategory: "",
   variants: [],
 };
@@ -141,6 +142,7 @@ const AddProduct = ({
         isNewArrival: Boolean(initialData.isNewArrival),
         isOnSale: Boolean(initialData.isOnSale),
         discountPrice: Number(initialData.discountPrice || 0),
+        socialVideoUrl: initialData.socialVideoUrl || "",
         images: [],
       });
       setExistingImages(initialData.images || []);
@@ -914,6 +916,24 @@ const AddProduct = ({
                 />
               </label>
             )}
+
+            {/* Social Media Video Link (Instagram / TikTok) */}
+            <div className="pt-4 border-t border-border/40 space-y-1.5">
+              <label className="block text-xs font-bold text-text-muted uppercase">
+                Or Paste Instagram / TikTok Video Link
+              </label>
+              <input
+                type="url"
+                name="socialVideoUrl"
+                value={form.socialVideoUrl || ""}
+                onChange={(e) => setForm((prev) => ({ ...prev, socialVideoUrl: e.target.value }))}
+                placeholder="https://www.instagram.com/reel/... or https://www.tiktok.com/@user/video/..."
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border focus:border-primary text-text-main text-sm focus:outline-none transition-colors"
+              />
+              <p className="text-[10px] text-text-muted">
+                Paste an Instagram Reel/Post or TikTok video link. It will embed automatically in the product gallery.
+              </p>
+            </div>
           </div>
         </div>
 

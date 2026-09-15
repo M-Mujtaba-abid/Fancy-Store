@@ -65,6 +65,7 @@ export interface Product {
   images: string[];
   // ✅ Video support
   videoUrl?: string | null;
+  socialVideoUrl?: string | null;
   isFeatured: boolean;
   isNewArrival: boolean;
   isOnSale: boolean;
@@ -97,6 +98,7 @@ export interface ProductMutationInput {
   images?: File[];
   // ✅ Video support
   video?: File;
+  socialVideoUrl?: string;
   removeVideo?: string;
   variants?: VariantInput[];
 }

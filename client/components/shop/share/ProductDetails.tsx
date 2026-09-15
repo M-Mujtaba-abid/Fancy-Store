@@ -28,18 +28,63 @@ import ProductReviews from "../reviews/ProductReviews";
 import { trackViewContent } from "@/utils/tiktokTracking"; // 🎯 TIKTOK IMPORT
 import { trackMetaViewContent } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
 
+// Social Media Embed Parser Helper (Instagram Reels/Posts & TikTok Videos)
+export type SocialPlatform = "instagram" | "tiktok";
+
+export interface SocialVideoEmbed {
+  platform: SocialPlatform;
+  embedUrl: string;
+  originalUrl: string;
+}
+
+export function parseSocialVideoUrl(url?: string | null): SocialVideoEmbed | null {
+  if (!url || typeof url !== "string") return null;
+  const cleanUrl = url.trim();
+  if (!cleanUrl) return null;
+
+  // Instagram Reel or Post (/reel/ or /p/)
+  const instaMatch = cleanUrl.match(/instagram\.com\/(reel|p)\/([^/?#&]+)/i);
+  if (instaMatch) {
+    const type = instaMatch[1];
+    const id = instaMatch[2];
+    return {
+      platform: "instagram",
+      embedUrl: `https://www.instagram.com/${type}/${id}/embed`,
+      originalUrl: cleanUrl,
+    };
+  }
+
+  // TikTok Video (/video/{id})
+  const tiktokMatch = cleanUrl.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/i) || cleanUrl.match(/tiktok\.com\/embed\/v2\/(\d+)/i);
+  if (tiktokMatch) {
+    const videoId = tiktokMatch[1];
+    return {
+      platform: "tiktok",
+      embedUrl: `https://www.tiktok.com/embed/v2/${videoId}`,
+      originalUrl: cleanUrl,
+    };
+  }
+
+  // Generic fallback if user pasted another Instagram or TikTok URL format
+  if (/instagram\.com/i.test(cleanUrl)) {
+    const embed = cleanUrl.endsWith("/embed") ? cleanUrl : `${cleanUrl.replace(/\/$/, "")}/embed`;
+    return { platform: "instagram", embedUrl: embed, originalUrl: cleanUrl };
+  }
+
+  if (/tiktok\.com/i.test(cleanUrl)) {
+    return { platform: "tiktok", embedUrl: cleanUrl, originalUrl: cleanUrl };
+  }
+
+  return null;
+}
+
 interface Props {
   product: Product;
-  /**
-   * Server pe fetch hue related products. Sirf `RelatedProducts` tak pass
-   * hote hain taake wo 6 internal links SSR HTML ka hissa banen.
-   */
   relatedProducts?: Product[];
 }
 
 export default function ProductDetailsClient({ product, relatedProducts }: Props) {
   const router = useRouter();
-  // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
 
   // 🌟 QUANTITY STATE
@@ -47,32 +92,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
 
   // 🌟 VARIANT STATE: Track the selected variant
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const hasVariants = Boolean(product.variants && product.variants.length > 0);
 
-  const hasVariants = product.variants && product.variants.length > 0;
-
-  // 🎯 TRACKING: Track product view on mount
-  useEffect(() => {
-    // 🎯 TIKTOK CONTENT CODE: Product details page viewed
-    trackViewContent({
-      id: product.id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      category: product.category,
-    });
-    // 🎯 META PIXEL CONTENT CODE: Product details page viewed
-    trackMetaViewContent({
-      id: product.id,
-      name: product.name,
-      price: product.discountPrice || product.price,
-      category: product.category,
-    });
-  }, [
-    product.id,
-    product.name,
-    product.price,
-    product.discountPrice,
-    product.category,
-  ]);
+  // 🌟 SOCIAL MEDIA VIDEO EMBED
+  const socialEmbed = parseSocialVideoUrl(product.socialVideoUrl);
+  const [socialEmbedError, setSocialEmbedError] = useState(false);
 
   // All Images Array
   const galleryImages = product.images
@@ -82,9 +106,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
       ]
     : [product.imageUrl];
 
-  // Combined Media Items (Video as 1st item if present + Images)
+  // Combined Media Items (Uploaded Video + Social Media Video + Images)
   type MediaItem =
     | { type: "video"; url: string; poster: string }
+    | { type: "socialVideo"; embed: SocialVideoEmbed }
     | { type: "image"; url: string };
 
   const mediaItems: MediaItem[] = [
@@ -94,6 +119,14 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
             type: "video" as const,
             url: product.videoUrl,
             poster: product.imageUrl || galleryImages[0] || "/placeholder.png",
+          },
+        ]
+      : []),
+    ...(socialEmbed
+      ? [
+          {
+            type: "socialVideo" as const,
+            embed: socialEmbed,
           },
         ]
       : []),
@@ -271,7 +304,34 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
             onTouchEnd={handleTouchEnd}
             className="aspect-square relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm floating-card group select-none max-h-[70vh] md:max-h-none"
           >
-            {mediaItems[activeIndex]?.type === "video" ? (
+            {mediaItems[activeIndex]?.type === "socialVideo" ? (
+              <div className="relative w-full h-full bg-black flex flex-col items-center justify-center overflow-hidden">
+                {socialEmbedError ? (
+                  <div className="flex flex-col items-center justify-center p-6 text-center text-white/80 space-y-3">
+                    <Video size={36} className="text-red-400 opacity-80" />
+                    <p className="text-xs sm:text-sm font-semibold">Video Unavailable</p>
+                    <a
+                      href={mediaItems[activeIndex].embed.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary underline hover:opacity-80 font-bold"
+                    >
+                      Watch on {mediaItems[activeIndex].embed.platform === "instagram" ? "Instagram" : "TikTok"}
+                    </a>
+                  </div>
+                ) : (
+                  <iframe
+                    key={mediaItems[activeIndex].embed.embedUrl}
+                    src={mediaItems[activeIndex].embed.embedUrl}
+                    title={`${product.name} Social Video`}
+                    className="w-full h-full border-none"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    allowFullScreen
+                    onError={() => setSocialEmbedError(true)}
+                  />
+                )}
+              </div>
+            ) : mediaItems[activeIndex]?.type === "video" ? (
               <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
                 {!isVideoPlaying ? (
                   /* Video Thumbnail / Poster with Semi-Transparent Circular Play Button Overlay (Daraz Style) */
@@ -336,6 +396,12 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
                   <span>Video</span>
                 </span>
               )}
+              {mediaItems[activeIndex]?.type === "socialVideo" && (
+                <span className="rounded-lg bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1.5 shadow-md">
+                  <Video size={13} className="text-white animate-pulse" />
+                  <span className="capitalize">{mediaItems[activeIndex].embed.platform} Video</span>
+                </span>
+              )}
             </div>
 
             {/* Top-Right: Media Counter Badge (e.g. 1/3) - Keeps bottom 100% clear for video controls */}
@@ -376,7 +442,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
             )}
           </div>
 
-          {/* Thumbnails Strip (Including Video thumbnail with Play badge) */}
+          {/* Thumbnails Strip (Including Video & Social Video thumbnails) */}
           {mediaItems.length > 1 && (
             <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 pt-1">
               {mediaItems.map((item, idx) => (
@@ -406,6 +472,23 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
                       </div>
                       <span className="absolute bottom-1 left-1 right-1 bg-black/85 text-white text-[9px] font-extrabold uppercase rounded text-center py-0.5 tracking-wider">
                         Video
+                      </span>
+                    </>
+                  ) : item.type === "socialVideo" ? (
+                    <>
+                      <Image
+                        src={product.imageUrl || galleryImages[0] || "/placeholder.png"}
+                        alt="Social video thumbnail"
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center shadow-md">
+                          <Play size={12} className="ml-0.5 fill-white text-white" />
+                        </div>
+                      </div>
+                      <span className="absolute bottom-1 left-1 right-1 bg-black/85 text-white text-[8px] font-extrabold uppercase rounded text-center py-0.5 tracking-wider truncate px-0.5">
+                        {item.embed.platform === "instagram" ? "Reel" : "TikTok"}
                       </span>
                     </>
                   ) : (

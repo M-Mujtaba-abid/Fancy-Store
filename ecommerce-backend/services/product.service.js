@@ -164,9 +164,18 @@ export const addProductService = async (body, files) => {
   const {
     name, description, price, costPrice, stock, stockQuantity, category, subCategory,
     carModel, color, material, isFeatured, isNewArrival,
-    isOnSale, discountPrice, vehicleType,
+    isOnSale, discountPrice, vehicleType, socialVideoUrl,
     variants
   } = body;
+
+  let cleanedSocialVideoUrl = null;
+  if (socialVideoUrl && typeof socialVideoUrl === "string" && socialVideoUrl.trim()) {
+    const trimmed = socialVideoUrl.trim();
+    if (!/instagram\.com|tiktok\.com/i.test(trimmed)) {
+      throw new ApiError(400, "Social video link must be a valid Instagram or TikTok URL");
+    }
+    cleanedSocialVideoUrl = trimmed;
+  }
 
   const uploadedImages = await uploadImagesToCloudinary(productFiles);
 
@@ -200,6 +209,7 @@ export const addProductService = async (body, files) => {
     imageUrl: uploadedImages[0],
     images: uploadedImages,
     videoUrl: videoUrl || null, // ✅ Add video URL
+    socialVideoUrl: cleanedSocialVideoUrl, // ✅ Social Video Link (Instagram/TikTok)
     slug: await generateUniqueSlug(name),
   };
 
@@ -435,6 +445,18 @@ export const updateProductService = async (id, body, files) => {
   if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === "true" || updateData.isFeatured === true;
   if (updateData.isNewArrival !== undefined) updateData.isNewArrival = updateData.isNewArrival === "true" || updateData.isNewArrival === true;
   if (updateData.isOnSale !== undefined) updateData.isOnSale = updateData.isOnSale === "true" || updateData.isOnSale === true;
+
+  if (updateData.socialVideoUrl !== undefined) {
+    if (updateData.socialVideoUrl && typeof updateData.socialVideoUrl === "string" && updateData.socialVideoUrl.trim()) {
+      const trimmed = updateData.socialVideoUrl.trim();
+      if (!/instagram\.com|tiktok\.com/i.test(trimmed)) {
+        throw new ApiError(400, "Social video link must be a valid Instagram or TikTok URL");
+      }
+      updateData.socialVideoUrl = trimmed;
+    } else {
+      updateData.socialVideoUrl = null;
+    }
+  }
 
   if (updateData.subCategory === "") updateData.subCategory = null;
 
