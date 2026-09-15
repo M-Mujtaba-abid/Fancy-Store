@@ -11,6 +11,7 @@ import { trackMetaAddToCart } from "@/utils/metaTracking"; // 🎯 META PIXEL IM
 interface AddToCartProps {
   productId: string;
   stock: number;
+  quantity?: number;
   className?: string; // Custom styling allowance
   children?: React.ReactNode; // 👈 YEH LINE LAZMI ADD KAREIN
   product?: {
@@ -27,6 +28,7 @@ interface AddToCartProps {
 const AddToCart: React.FC<AddToCartProps> = ({
   productId,
   stock,
+  quantity = 1,
   className,
   product,
   children,
@@ -54,7 +56,7 @@ const AddToCart: React.FC<AddToCartProps> = ({
     // ✅ Ab hum yahan price aur name bhi bhej rahe hain (Guest cart ke liye zaroori hai)
     addToCart({
       productId,
-      quantity: 1,
+      quantity: quantity,
       price: product?.price || 0,
       name: product?.name || "Product",
       image: product?.image,
@@ -71,14 +73,14 @@ const AddToCart: React.FC<AddToCartProps> = ({
           name: product.name,
           price: product.price,
           category: product.category,
-        }, 1);
+        }, quantity);
 
       trackMetaAddToCart({
           id: product.id,
           name: product.name,
           price: product.price,
           category: product.category,
-        }, 1);
+        }, quantity);
     }
   };
   return (

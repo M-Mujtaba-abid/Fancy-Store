@@ -5,11 +5,17 @@ import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   ChevronLeft,
+  ChevronRight,
   ShieldCheck,
   Truck,
   RotateCcw,
   PackageX,
   Layers,
+  Play,
+  Video,
+  Star,
+  Plus,
+  Minus,
 } from "lucide-react";
 import Image from "next/image";
 import { Product, ProductVariant } from "@/types/product.type";
@@ -35,6 +41,9 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
   const router = useRouter();
   // ✅ 1. Yeh line add karein button ki loading state ke liye
   const [isBuyNowPending, setIsBuyNowPending] = useState(false);
+
+  // 🌟 QUANTITY STATE
+  const [quantity, setQuantity] = useState(1);
 
   // 🌟 VARIANT STATE: Track the selected variant
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
@@ -65,13 +74,72 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
     product.category,
   ]);
 
-  // Main image state: Jab user thumbnail par click kare toh main image badle
-  const [activeImage, setActiveImage] = useState<string>(
-    product?.imageUrl ||
-      (product?.images && product.images.length > 0
-        ? product.images[0]
-        : "/placeholder.png"),
-  );
+  // All Images Array
+  const galleryImages = product.images
+    ? [
+        product.imageUrl,
+        ...product.images.filter((img: string) => img !== product.imageUrl),
+      ]
+    : [product.imageUrl];
+
+  // Combined Media Items (Video as 1st item if present + Images)
+  type MediaItem =
+    | { type: "video"; url: string; poster: string }
+    | { type: "image"; url: string };
+
+  const mediaItems: MediaItem[] = [
+    ...(product.videoUrl
+      ? [
+          {
+            type: "video" as const,
+            url: product.videoUrl,
+            poster: product.imageUrl || galleryImages[0] || "/placeholder.png",
+          },
+        ]
+      : []),
+    ...galleryImages.map((img) => ({
+      type: "image" as const,
+      url: img as string,
+    })),
+  ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  // Active display image (for AddToCart & BuyNow payloads)
+  const currentMedia = mediaItems[activeIndex];
+  const activeDisplayImage =
+    currentMedia?.type === "image"
+      ? currentMedia.url
+      : product?.imageUrl || galleryImages[0] || "/placeholder.png";
+
+  // Touch swipe handling for mobile horizontal swiping
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 40;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      setIsVideoPlaying(false);
+      setActiveIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+    } else if (isRightSwipe) {
+      setIsVideoPlaying(false);
+      setActiveIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
+    }
+  };
 
   // 🌟 COMPUTED: Active price based on selected variant
   const getVariantPrice = (v: ProductVariant) => {
@@ -91,37 +159,33 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
   // Stock Check
   const isOutOfStock = activeStock <= 0;
 
-  // All Images Array
-  const galleryImages = product.images
-    ? [
-        product.imageUrl,
-        ...product.images.filter((img: string) => img !== product.imageUrl),
-      ]
-    : [product.imageUrl];
-
   // 🌟 VARIANT SELECTION HANDLER
   const handleVariantSelect = (variant: ProductVariant) => {
+    setIsVideoPlaying(false);
     if (selectedVariant?.id === variant.id) {
       // Deselect if clicking the same variant
       setSelectedVariant(null);
-      // Reset to first image
-      setActiveImage(
-        product?.imageUrl ||
-          (product?.images && product.images.length > 0
-            ? product.images[0]
-            : "/placeholder.png"),
-      );
+      setActiveIndex(0);
     } else {
       setSelectedVariant(variant);
       if (variant.imageUrl) {
-        setActiveImage(variant.imageUrl);
+        const imgIdx = mediaItems.findIndex(
+          (item) => item.type === "image" && item.url === variant.imageUrl
+        );
+        if (imgIdx !== -1) {
+          setActiveIndex(imgIdx);
+        }
       } else {
         // Map variant to a gallery image by index (if available)
         const variantIndex = product.variants!.findIndex((v) => v.id === variant.id);
-        if (variantIndex !== -1 && variantIndex < galleryImages.length) {
-          setActiveImage(galleryImages[variantIndex] as string);
+        const targetImg = galleryImages[variantIndex] || galleryImages[0];
+        const imgIdx = mediaItems.findIndex(
+          (item) => item.type === "image" && item.url === targetImg
+        );
+        if (imgIdx !== -1) {
+          setActiveIndex(imgIdx);
         } else {
-          setActiveImage(galleryImages[0] || "/placeholder.png");
+          setActiveIndex(0);
         }
       }
     }
@@ -161,13 +225,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
         name: selectedVariant
           ? `${product.name} (${variantLabel})`
           : product.name,
-        image: activeImage || product.imageUrl || product.images?.[0],
+        image: activeDisplayImage || product.imageUrl || product.images?.[0],
         // Buy Now flow bhi category drop kar raha tha — is ke bina checkout ke
         // Meta/TikTok events mein content_category undefined jata hai
         category: product.category,
         price: activePrice,
         originalPrice: origPrice,
-        quantity: 1,
+        quantity: quantity,
         ...(selectedVariant && { 
           variantId: selectedVariant.id, 
           materialName: variantLabel,
@@ -197,65 +261,161 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
       </button>
 
       {/* --- UPPER SECTION: 2 COLUMNS (Image & Details) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Left: Image Gallery */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
+        {/* Left: Combined Image & Video Gallery (Daraz Style) */}
         <div className="space-y-4">
-          {/* Main Active Image */}
-          <div className="aspect-square relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm floating-card">
-            <Image
-              src={activeImage}
-              alt={product.name}
-              fill
-              className="object-contain p-4 transition-all duration-300 ease-in-out"
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
+          {/* Main Display Area (Aspect Square, Touch Swipeable) */}
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="aspect-square relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm floating-card group select-none"
+          >
+            {mediaItems[activeIndex]?.type === "video" ? (
+              <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
+                {!isVideoPlaying ? (
+                  /* Video Thumbnail / Poster with Semi-Transparent Circular Play Button Overlay (Daraz Style) */
+                  <div
+                    onClick={() => setIsVideoPlaying(true)}
+                    className="relative w-full h-full cursor-pointer flex items-center justify-center group/play"
+                  >
+                    <Image
+                      src={mediaItems[activeIndex].poster}
+                      alt={`${product.name} video thumbnail`}
+                      fill
+                      className="object-contain p-4 transition-transform duration-300 group-hover/play:scale-105"
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-black/20 group-hover/play:bg-black/35 transition-colors" />
+
+                    {/* Semi-transparent circular play button */}
+                    <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 text-white backdrop-blur-md flex items-center justify-center shadow-2xl border border-white/20 transform transition-all duration-300 group-hover/play:scale-110 active:scale-95">
+                      <Play size={32} className="ml-1 fill-white text-white sm:w-10 sm:h-10" />
+                    </div>
+
+                    {/* Video Badge */}
+                    <span className="absolute left-3 top-3 z-10 rounded-lg bg-black/75 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1.5 border border-white/10 shadow-md">
+                      <Video size={14} className="text-red-500 animate-pulse" />
+                      <span>Product Video</span>
+                    </span>
+                  </div>
+                ) : (
+                  /* Inline Video Player with standard HTML5 controls (includes fullscreen toggle) */
+                  <video
+                    key={mediaItems[activeIndex].url}
+                    src={mediaItems[activeIndex].url}
+                    controls
+                    autoPlay
+                    controlsList="nodownload"
+                    playsInline
+                    className="w-full h-full object-contain"
+                    onEnded={() => setIsVideoPlaying(false)}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+              </div>
+            ) : (
+              /* Image Slide */
+              <Image
+                src={mediaItems[activeIndex]?.url || "/placeholder.png"}
+                alt={product.name}
+                fill
+                className="object-contain p-4 transition-all duration-300 ease-in-out"
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            )}
+
+            {/* Flat Sale Badge */}
             {isProductOnSale && (
               <span className="absolute left-3 top-3 z-10 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-white shadow-md sm:left-4 sm:top-4 sm:text-sm">
                 FLAT 40% OFF
               </span>
             )}
+
+            {/* Prev / Next Navigation Arrows */}
+            {mediaItems.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsVideoPlaying(false);
+                    setActiveIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1));
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-background/80 hover:bg-background text-text-main shadow-md flex items-center justify-center border border-border/50 transition-all opacity-80 hover:opacity-100"
+                  aria-label="Previous item"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsVideoPlaying(false);
+                    setActiveIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1));
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-background/80 hover:bg-background text-text-main shadow-md flex items-center justify-center border border-border/50 transition-all opacity-80 hover:opacity-100"
+                  aria-label="Next item"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
+
+            {/* Counter Badge (e.g. 1/4) */}
+            {mediaItems.length > 1 && (
+              <div className="absolute right-3 bottom-3 z-10 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 shadow-sm">
+                {activeIndex + 1} / {mediaItems.length}
+              </div>
+            )}
           </div>
 
-          {/* Thumbnails (Sub Images) */}
-          {galleryImages.length > 1 && (
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {galleryImages.map((img, idx) => (
+          {/* Thumbnails Strip (Including Video thumbnail with Play badge) */}
+          {mediaItems.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 pt-1">
+              {mediaItems.map((item, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveImage(img as string)}
-                  className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg overflow-hidden transition-all duration-200 border-2 
-                    ${activeImage === img ? "border-primary shadow-md scale-105" : "border-transparent hover:opacity-80"}
+                  type="button"
+                  onClick={() => {
+                    setIsVideoPlaying(false);
+                    setActiveIndex(idx);
+                  }}
+                  className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden transition-all duration-200 border-2 
+                    ${activeIndex === idx ? "border-primary shadow-md scale-105" : "border-border/50 hover:opacity-80"}
                   `}
                 >
-                  <Image
-                    src={img as string}
-                    alt={`thumbnail-${idx}`}
-                    fill
-                    className="object-cover"
-                  />
+                  {item.type === "video" ? (
+                    <>
+                      <Image
+                        src={item.poster}
+                        alt="Video thumbnail"
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+                          <Play size={14} className="ml-0.5 fill-white text-white" />
+                        </div>
+                      </div>
+                      <span className="absolute bottom-1 left-1 right-1 bg-black/85 text-white text-[9px] font-extrabold uppercase rounded text-center py-0.5 tracking-wider">
+                        Video
+                      </span>
+                    </>
+                  ) : (
+                    <Image
+                      src={item.url}
+                      alt={`thumbnail-${idx}`}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
                 </button>
               ))}
-            </div>
-          )}
-
-          {/* ✅ Product Video Section */}
-          {product.videoUrl && (
-            <div className="mt-6 rounded-2xl overflow-hidden border border-border/50 bg-black/5">
-              <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <video
-                  controls
-                  controlsList="nodownload"
-                  className="w-full h-full object-contain"
-                  poster={product.imageUrl}
-                >
-                  <source src={product.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-              <p className="text-xs text-text-muted font-semibold p-3 bg-background/50">
-                📹 Product Demo Video
-              </p>
             </div>
           )}
         </div>
@@ -289,6 +449,21 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
           <h1 className="text-3xl md:text-4xl font-bold text-text-main mb-2">
             {product.name}
           </h1>
+
+          {/* Rating & Reviews summary */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center text-amber-400 gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} size={16} className="fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            <span className="text-xs font-bold text-text-main">
+              {product.averageRating ? Number(product.averageRating).toFixed(1) : "4.9"}
+            </span>
+            <a href="#reviews-section" className="text-xs text-primary hover:underline font-medium ml-1">
+              ({product.totalReviews || 12} reviews)
+            </a>
+          </div>
 
           {/* Meta Info */}
           {(product.carModel || product.material) && (
@@ -525,12 +700,46 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
             )}
           </div>
 
+          {/* Quantity Selector */}
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-sm font-semibold text-text-main">Quantity:</span>
+            <div className="inline-flex items-center border border-border/80 rounded-xl overflow-hidden bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1 || isOutOfStock}
+                className="w-10 h-10 flex items-center justify-center text-text-main hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Decrease quantity"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="w-12 text-center text-sm font-bold text-text-main">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.min(activeStock, q + 1))}
+                disabled={quantity >= activeStock || isOutOfStock}
+                className="w-10 h-10 flex items-center justify-center text-text-main hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Increase quantity"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            {activeStock > 0 && activeStock <= 5 && (
+              <span className="text-xs font-semibold text-amber-600 animate-pulse">
+                Only {activeStock} left in stock!
+              </span>
+            )}
+          </div>
+
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 mb-10 mt-auto">
             {/* ✅ AddToCart — now variant-aware */}
             <AddToCart
               productId={product.id}
               stock={activeStock}
+              quantity={quantity}
               onClick={(e) => {
                 if (hasVariants && !selectedVariant) {
                   toast.error("Please select a material quality first!");
@@ -544,7 +753,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
                   ? `${product.name} (${selectedVariant.materialName})`
                   : product.name,
                 price: activePrice,
-                image: activeImage,
+                image: activeDisplayImage,
                 category: product.category,
                 variantId: selectedVariant ? selectedVariant.id : undefined,
               }}

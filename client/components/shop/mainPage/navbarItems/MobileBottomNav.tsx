@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Store, Search, Heart, User, LogIn } from "lucide-react";
@@ -8,7 +8,11 @@ import { isAuthenticated } from "@/utils/auth";
 
 const MobileBottomNav = () => {
   const pathname = usePathname();
-  const loggedIn = isAuthenticated();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  const loggedIn = isMounted && isAuthenticated();
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },

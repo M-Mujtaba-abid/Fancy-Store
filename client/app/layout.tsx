@@ -155,8 +155,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col`}
       >
-        <script
-          type="application/ld+json"
+        <Script id="organization-jsonld" type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
         {/* ==========================================
