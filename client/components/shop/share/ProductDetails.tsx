@@ -294,12 +294,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
                     <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 text-white backdrop-blur-md flex items-center justify-center shadow-2xl border border-white/20 transform transition-all duration-300 group-hover/play:scale-110 active:scale-95">
                       <Play size={32} className="ml-1 fill-white text-white sm:w-10 sm:h-10" />
                     </div>
-
-                    {/* Video Badge */}
-                    <span className="absolute left-3 top-3 z-10 rounded-lg bg-black/75 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1.5 border border-white/10 shadow-md">
-                      <Video size={14} className="text-red-500 animate-pulse" />
-                      <span>Product Video</span>
-                    </span>
                   </div>
                 ) : (
                   /* Inline Video Player with standard HTML5 controls (includes fullscreen toggle) */
@@ -329,15 +323,30 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
               />
             )}
 
-            {/* Flat Sale Badge */}
-            {isProductOnSale && (
-              <span className="absolute left-3 top-3 z-10 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-white shadow-md sm:left-4 sm:top-4 sm:text-sm">
-                FLAT 40% OFF
-              </span>
+            {/* Top-Left Badges Flex Container (Prevents overlapping of Sale badge and Video badge) */}
+            <div className="absolute left-3 top-3 z-20 flex items-center gap-2 max-w-[65%] flex-wrap pointer-events-none">
+              {isProductOnSale && (
+                <span className="rounded-lg bg-red-500 px-2.5 py-1 text-xs sm:text-sm font-extrabold uppercase tracking-wide text-white shadow-md">
+                  FLAT 40% OFF
+                </span>
+              )}
+              {mediaItems[activeIndex]?.type === "video" && !isVideoPlaying && (
+                <span className="rounded-lg bg-black/75 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white flex items-center gap-1.5 border border-white/10 shadow-md">
+                  <Video size={13} className="text-red-500 animate-pulse" />
+                  <span>Video</span>
+                </span>
+              )}
+            </div>
+
+            {/* Top-Right: Media Counter Badge (e.g. 1/3) - Keeps bottom 100% clear for video controls */}
+            {mediaItems.length > 1 && !isVideoPlaying && (
+              <div className="absolute right-3 top-3 z-20 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 shadow-sm pointer-events-none">
+                {activeIndex + 1} / {mediaItems.length}
+              </div>
             )}
 
             {/* Prev / Next Navigation Arrows */}
-            {mediaItems.length > 1 && (
+            {mediaItems.length > 1 && !isVideoPlaying && (
               <>
                 <button
                   type="button"
@@ -364,13 +373,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
                   <ChevronRight size={20} />
                 </button>
               </>
-            )}
-
-            {/* Counter Badge (e.g. 1/4) */}
-            {mediaItems.length > 1 && (
-              <div className="absolute right-3 bottom-3 z-10 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-semibold text-white border border-white/10 shadow-sm">
-                {activeIndex + 1} / {mediaItems.length}
-              </div>
             )}
           </div>
 
