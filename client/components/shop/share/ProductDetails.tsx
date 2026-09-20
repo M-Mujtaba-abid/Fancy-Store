@@ -242,12 +242,32 @@ export default function ProductDetailsClient({ product, relatedProducts }: Props
   const [socialEmbedError, setSocialEmbedError] = useState(false);
 
   // All Images Array
-  const galleryImages = product.images
-    ? [
-        product.imageUrl,
-        ...product.images.filter((img: string) => img !== product.imageUrl),
-      ]
-    : [product.imageUrl];
+  //
+  // ⚠️ Variant ki apni image bhi is list mein AANI zaroori hai.
+  //
+  // handleVariantSelect variant ki image ko `mediaItems` mein findIndex se
+  // dhoondta hai aur na milne par kuch nahi karta. Variant ki image (jaise
+  // "Black Coated" wala cover) product.images mein hoti hi nahi - wo sirf
+  // ProductVariants row par hoti hai. Is liye match kabhi nahi hota tha aur
+  // variant select karne par price to badalti thi magar main image wahi purani
+  // rehti thi.
+  //
+  // Set order barqarar rakhta hai aur duplicate hata deta hai: "Silver Coated"
+  // variant ki image aksar product.imageUrl hi hoti hai, wo dobara nahi aati.
+  const galleryImages = (() => {
+    const unique = Array.from(
+      new Set(
+        [
+          product.imageUrl,
+          ...(product.images || []),
+          ...(product.variants || []).map((v) => v.imageUrl),
+        ].filter(Boolean) as string[]
+      )
+    );
+    // Product par ek bhi image na ho to khali array se neeche mediaItems khali
+    // ho jata aur gallery render hi na hoti.
+    return unique.length > 0 ? unique : ["/placeholder.png"];
+  })();
 
   // Combined Media Items (Uploaded Video + Social Media Video + Images)
   type MediaItem =
