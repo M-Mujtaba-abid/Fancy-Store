@@ -2,6 +2,11 @@ import models from "../models/index.js";
 import sendEmail from "../utils/sendEmail.js";
 import { orderConfirmationTemplate, adminNewOrderTemplate, orderStatusUpdateTemplate } from "../utils/emailTemplate.js";
 import { SHIPPING_FEE } from "../constants/index.js";
+import {
+  applyCouponForOrder,
+  recordRedemption,
+  releaseRedemptionsForOrder,
+} from "./coupon.service.js";
 
 const { Cart, CartItem, Product, Order, OrderItem, User } = models;
 // ================= PLACE ORDER =================
@@ -23,9 +28,13 @@ export const placeOrderService = async (userId, orderData) => {
       buyNowQuantity,
       buyNowVariantId,
       guestCartItems,
+      couponCode,
     } = orderData;
 
-    let totalAmount = 0;
+    // Items ka jorh. Discount aur shipping is ke BAAD lagte hain, isi liye
+    // ise alag rakha hai:
+    //     totalAmount = subtotal - discountAmount + shippingFee
+    let subtotal = 0;
     const shippingFee = SHIPPING_FEE;
     const orderItemRows = [];
     let cart = null;
@@ -70,7 +79,7 @@ export const placeOrderService = async (userId, orderData) => {
         await product.save({ transaction: t });
       }
 
-      totalAmount += activePrice * quantity;
+      subtotal += activePrice * quantity;
 
       orderItemRows.push({
         productId: product.id,
@@ -84,7 +93,7 @@ export const placeOrderService = async (userId, orderData) => {
     // SCENARIO 1: DIRECT "BUY NOW" FLOW
     // =======================================================
     if (buyNowProductId && buyNowQuantity) {
-      totalAmount = 0;
+      subtotal = 0;
       await addProductToOrder(buyNowProductId, buyNowQuantity, buyNowVariantId);
     }
     // =======================================================
@@ -107,7 +116,7 @@ export const placeOrderService = async (userId, orderData) => {
     // SCENARIO 3: GUEST "CART" FLOW (items sent from client)
     // =======================================================
     else if (guestCartItems?.length) {
-      totalAmount = 0;
+      subtotal = 0;
       for (const item of guestCartItems) {
         if (!item.productId || !item.quantity || item.quantity <= 0) {
           throw { status: 400, message: "Invalid guest cart item." };
@@ -122,13 +131,43 @@ export const placeOrderService = async (userId, orderData) => {
       throw { status: 400, message: "No valid items to order." };
     }
 
+    // ✅ COUPON
+    //
+    // Yahan lagta hai, items ke baad aur order banne se pehle, taake discount
+    // asal subtotal par ho jo SERVER ne nikala hai. Client jo discount bheje
+    // wo bilkul istemal nahi hota.
+    //
+    // applyCouponForOrder coupon ki row par lock leta hai (transaction ke
+    // andar). Lock ke bagair do orders ek sath aa kar dono usedCount parh lete
+    // aur usage limit se zyada redeem ho jata.
+    //
+    // Coupon galat ya khatam ho to error jaata hai, chup chaap ignore nahi
+    // karte: customer ne checkout par discount dekha tha, uske bagair order
+    // laga dena uske sath dhoka hoga.
+    const {
+      coupon,
+      discountAmount = 0,
+      phoneNormalized,
+      emailNormalized,
+    } = await applyCouponForOrder({
+      code: couponCode,
+      subtotal,
+      phone: phoneNumber,
+      email,
+      transaction: t,
+    });
+
     // ✅ ORDER CREATION (Dono scenarios mein order banega)
-    totalAmount += shippingFee;
+    const totalAmount = subtotal - discountAmount + shippingFee;
     const order = await Order.create(
       {
         userId,
+        subtotal,
+        discountAmount,
         totalAmount,
         shippingFee,
+        couponId: coupon ? coupon.id : null,
+        couponCode: coupon ? coupon.code : null,
         status: "pending",
         fullName,
         phoneNumber,
@@ -149,6 +188,23 @@ export const placeOrderService = async (userId, orderData) => {
     
     if (rowsToInsert.length) {
       await OrderItem.bulkCreate(rowsToInsert, { transaction: t });
+    }
+
+    // Redemption order ke BAAD banti hai kyunke ise orderId chahiye. Usi
+    // transaction mein hai, to order aur redemption hamesha sath rehte hain.
+    if (coupon) {
+      await recordRedemption({
+        coupon,
+        orderId: order.id,
+        userId,
+        phone: phoneNumber,
+        email,
+        phoneNormalized,
+        emailNormalized,
+        discountAmount,
+        orderSubtotal: subtotal,
+        transaction: t,
+      });
     }
 
     // ✅ SIRF CART FLOW MEIN CART DELETE KARO (Buy now mein delete NAHI hoga)
@@ -190,7 +246,7 @@ export const placeOrderService = async (userId, orderData) => {
       console.error("Email send failed:", emailErr.message);
     }
 
-    return { orderId: order.id, shippingFee };
+    return { orderId: order.id, shippingFee, subtotal, discountAmount, totalAmount };
 
   } catch (err) {
     await t.rollback();
@@ -272,6 +328,22 @@ export const updateOrderStatusService = async (id, status) => {
   const previousStatus = order.status;
   order.status = status;
   await order.save();
+
+  // Order cancel ho to coupon customer ke liye dobara khol do.
+  //
+  // Sirf "cancelled" par, "returned" par NAHI: return mein customer ko maal
+  // aur discount dono mil chuke hote hain. Admin chahe to coupon panel se
+  // haath se release kar sakta hai.
+  //
+  // Best effort hai - coupon release fail ho jaye to order ka status update
+  // phir bhi bacha rehna chahiye, warna admin panel ka button hi toot jata.
+  if (status.toLowerCase() === "cancelled" && previousStatus.toLowerCase() !== "cancelled") {
+    try {
+      await releaseRedemptionsForOrder(order.id, `Order #${order.id} cancelled`);
+    } catch (couponErr) {
+      console.error("Coupon release failed:", couponErr.message);
+    }
+  }
 
   // Restore inventory when an order is cancelled or returned.
   const restockingStatuses = ["cancelled", "returned"];

@@ -19,6 +19,9 @@ import {
   trackMetaInitiateCheckout,
   trackMetaPurchase,
 } from "@/utils/metaTracking"; // 🎯 META PIXEL IMPORT
+import CouponField from "@/components/shop/share/CouponField";
+import { couponStorage } from "@/service/couponService/coupon.service";
+import type { AppliedCoupon } from "@/types/coupon.type";
 
 function CheckoutContent() {
   const router = useRouter();
@@ -49,6 +52,8 @@ function CheckoutContent() {
     country: "Pakistan", // Default
     paymentMethod: "COD", // Cash on Delivery default (lowercase rakhein)
   });
+
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   // 🎯 TRACKING: Track checkout initiated on page load
   useEffect(() => {
@@ -132,9 +137,20 @@ console.log("✅ [Checkout] PlaceAnOrder Done!");
           }
         : formData;
 
+    // Sirf code bhejte hain, discount ka amount nahi. Server usay khud
+    // nikalta hai, warna client apni marzi ka discount bhej sakta tha.
+    if (appliedCoupon) {
+      (finalPayload as Record<string, unknown>).couponCode = appliedCoupon.code;
+    }
+
     placeOrder(finalPayload, {
       onSuccess: (res: any) => {
         if (isBuyNow) sessionStorage.removeItem("buyNowItem"); // Safai
+
+        // Coupon istemal ho chuka. Saved code hata dete hain, warna agli dafa
+        // wo khud bhar jata aur customer ko "You have already used this
+        // coupon" wala error milta.
+        couponStorage.clear();
         const mappedItems = displayItems.map((item: any) => ({
           id: item.productId || item.id,
           name: item.name,
@@ -187,7 +203,14 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
       ? buyNowItem.price * buyNowItem.quantity
       : cartData?.subtotal || 0;
   const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
-  const displayTotal = displaySubtotal + displayShipping;
+
+  // Discount SIRF items ke subtotal par lagta hai, shipping par nahi.
+  //
+  // ⚠️ Ye sirf DIKHANE ke liye hai. Order ka asal discount server apni
+  // transaction ke andar dobara nikalta hai (services/order.service.js), client
+  // ka bheja hua amount wahan istemal hi nahi hota.
+  const displayDiscount = Math.min(appliedCoupon?.discountAmount ?? 0, displaySubtotal);
+  const displayTotal = displaySubtotal - displayDiscount + displayShipping;
 
   return (
     <div className="min-h-screen pt-8 pb-16 bg-background max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -389,9 +412,27 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
                 Rs. {displaySubtotal.toLocaleString()}
               </span>
             </div>
+            {displayDiscount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount ({appliedCoupon?.code})</span>
+                <span className="font-medium">
+                  - Rs. {displayDiscount.toLocaleString()}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
               <span className="font-medium text-text-main">Rs. {displayShipping.toLocaleString()}</span>
+            </div>
+
+            <div className="pt-1">
+              <CouponField
+                subtotal={displaySubtotal}
+                phone={formData.phoneNumber}
+                email={formData.email}
+                applied={appliedCoupon}
+                onApplied={setAppliedCoupon}
+              />
             </div>
           </div>
 
