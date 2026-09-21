@@ -14,6 +14,8 @@ import ProductVariant from "./productVariant.model.js";
 import LiveChatMessage from "./liveChatMessage.model.js";
 import ChatRoom from "./chatRoom.model.js";
 import BlogPost from "./blogPost.model.js";
+import Coupon from "./coupon.model.js";
+import CouponRedemption from "./couponRedemption.model.js";
 
 const models = {
   User,
@@ -35,6 +37,8 @@ const models = {
   ChatMessage,
   ChatRoom,
   LiveChatMessage,
+  Coupon,
+  CouponRedemption,
 };
 
 // Associations
@@ -42,6 +46,11 @@ User.hasMany(UserIdentity, { foreignKey: "userId", onDelete: "CASCADE" });
 UserIdentity.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(ChatMessage, { foreignKey: "userId", onDelete: "SET NULL" });
 ProductVariant.belongsTo(Product, { foreignKey: "productId" });
+
+// Coupon <-> redemptions. Coupon delete hone par uski history bhi jati hai
+// (migration mein CASCADE), isi liye admin panel delete ki jagah isActive=false
+// suggest karta hai.
+Coupon.hasMany(CouponRedemption, { foreignKey: "couponId", as: "redemptions", onDelete: "CASCADE" });
 
 //Room
 User.hasMany(ChatRoom, { foreignKey: "userId", onDelete: "SET NULL", as: "chatRooms" });

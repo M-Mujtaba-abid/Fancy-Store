@@ -13,6 +13,7 @@ import {
   Star,
   Tags,
   Newspaper,
+  Ticket,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -167,6 +168,18 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
                 >
                   <Tags size={15} />
                   Categories
+                </Link>
+                <Link
+                  href="/dashboard/coupons"
+                  onClick={handleLinkClick}
+                  className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-md text-sm ${
+                    isActive("/dashboard/coupons")
+                      ? "bg-primary text-white"
+                      : "text-text-main hover:bg-background"
+                  }`}
+                >
+                  <Ticket size={15} />
+                  Coupons
                 </Link>
               </div>
             )}
