@@ -3,7 +3,7 @@ import { productService } from "@/service/productservice/product.service";
 import { Product, ProductMutationInput, ProductUpdateInput } from "@/types/product.type";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { revalidateForCategory } from "@/utils/revalidate";
+import { revalidateForProduct } from "@/utils/revalidate";
 // import { productService } from "../services/product.service";
 
 // Sare products fetch karne ka hook
@@ -77,12 +77,16 @@ export const useCreateProduct = () => {
 
   return useMutation({
     mutationFn: (payload: ProductMutationInput) => productService.createProduct(payload),
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       toast.success("Product created successfully");
       // Category page static hai (generateStaticParams) aur uska page-1 data
       // server props se aata hai — cache clear kiye bina naya product wahan
       // kabhi nahi dikhta.
-      void revalidateForCategory(variables?.category);
+      //
+      // Product ka apna page bhi purge karte hain: uski revalidate window ab
+      // 6 ghante ki hai, to bina is ke naya/badla hua product ghanton tak
+      // purana dikhta rehta.
+      void revalidateForProduct(data?.slug, variables?.category);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
@@ -107,9 +111,9 @@ export const useUpdateProduct = () => {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: ProductUpdateInput }) =>
       productService.updateProduct(id, payload),
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       toast.success("Product updated successfully");
-      void revalidateForCategory(variables?.payload?.category);
+      void revalidateForProduct(data?.slug, variables?.payload?.category);
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi
@@ -135,10 +139,11 @@ export const useDeleteProduct = () => {
     mutationFn: (id: string) => productService.deleteProduct(id),
     onSuccess: () => {
       toast.success("Product deleted successfully");
-      // Delete sirf id deta hai, category slug nahi — is liye yahan sirf
-      // homepage purge hoti hai. Us product ki category page apni
-      // `revalidate = 300` window pe khud refresh ho jayegi.
-      void revalidateForCategory();
+      // Delete sirf id deta hai, na slug na category — is liye sirf listing
+      // pages purge hoti hain. Us product ka apna page apni revalidate window
+      // pe khud refresh hoga, aur tab tak wahan se order lagane ki koshish
+      // backend "Product not found" se ruk jati hai.
+      void revalidateForProduct();
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // ⚠️ Ye do keys "products" prefix ke andar NAHI aati, is liye pehle kabhi

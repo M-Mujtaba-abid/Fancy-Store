@@ -89,7 +89,19 @@ export const cleanMetaDescription = (
   if (!html) return fallback;
 
   const text = String(html)
-    .replace(/<[^>]+>/g, " ") // tag ki jagah space - yehi asal fix hai
+    // ⚠️ Heading ka TEXT bhi hatate hain, sirf uske tags nahi.
+    //
+    // Descriptions mein ab "<h3>Silver Coat Quality</h3>" jaisi headings hoti
+    // hain (silver aur black quality ke sections). Sirf tags hatane se wo
+    // lafz jumle mein ghus jate the aur har product ki meta description
+    // "Silver Coat Quality Silver coated parachute top cover..." se shuru
+    // hoti thi - 160 characters ke budget mein se 19 zaya, har product par,
+    // aur search result mein pehla jumla bhi bhadda lagta tha.
+    //
+    // Heading ek label hoti hai, jumla nahi, is liye snippet mein uski koi
+    // jagah nahi. Body text khud apna kaam kar leta hai.
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, " ")
+    .replace(/<[^>]+>/g, " ") // baaqi tags ki jagah space - yehi asal fix tha
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
