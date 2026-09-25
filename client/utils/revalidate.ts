@@ -30,3 +30,24 @@ export const revalidatePaths = async (paths: string[]) => {
 /** Homepage + (agar slug diya ho to) us category ka page. */
 export const revalidateForCategory = (slug?: string | null) =>
   revalidatePaths(slug ? ["/", `/category/${slug}`] : ["/"]);
+
+/**
+ * Product save/edit ke baad: khud us product ka page bhi purge karo.
+ *
+ * ⚠️ Ye is liye zaroori hai ke product page ki `revalidate` window ab lambi
+ * hai (app/(shop)/products/[id]/page.tsx). Pehle 5 minute thi, to bhool jane
+ * par bhi page jaldi refresh ho jata tha. Ab bina is call ke edit kiya hua
+ * price ya stock ghanton tak purana dikhta rahega.
+ *
+ * productSlug na ho (e.g. delete, jahan sirf id milti hai) to listing pages
+ * phir bhi purge ho jati hain.
+ */
+export const revalidateForProduct = (
+  productSlug?: string | null,
+  categorySlug?: string | null
+) => {
+  const paths = ["/", "/products"];
+  if (categorySlug) paths.push(`/category/${categorySlug}`);
+  if (productSlug) paths.push(`/products/${productSlug}`);
+  return revalidatePaths(paths);
+};

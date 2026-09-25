@@ -121,7 +121,22 @@
 // Site ki ziada tar URLs product pages hain, aur Google slow responses dekh
 // kar apna crawl rate khud gira deta hai — isi liye ye "Discovered -
 // currently not indexed (Last crawled: N/A)" par atki hui thin.
-export const revalidate = 300;
+//
+// 300 se barha kar 21600 (6 ghante) kiya gaya. Naap kar dekha gaya:
+//
+//     X-Vercel-Cache: HIT     ->  0.3 - 0.5 second
+//     X-Vercel-Cache: STALE   ->  2.5 - 4.0 second
+//
+// Yani window khatam hote hi page teen guna slow ho jata hai (teen backend
+// calls, har ek ~0.5s). 5 minute ki window ka matlab tha ke jo pages koi
+// nahi khol raha - yani wahi jo index nahi ho rahe - unhe Googlebot lagbhag
+// hamesha STALE hi milte the.
+//
+// Lambi window mehfooz is liye hai ke admin se product save karte hi uska
+// page on-demand purge ho jata hai (utils/revalidate.ts ka
+// revalidateForProduct). Sirf stock 6 ghante tak purana dikh sakta hai, aur
+// wo bhi khatarnak nahi: order lagate waqt backend khud stock check karta hai.
+export const revalidate = 21600;
 
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
