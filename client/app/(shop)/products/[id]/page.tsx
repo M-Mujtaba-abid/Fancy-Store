@@ -141,6 +141,7 @@ export const revalidate = 21600;
 import ProductDetailsClient from "@/components/shop/share/ProductDetails";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
 import { productService } from "@/service/productservice/product.service";
+import { getProductCached } from "@/service/cached";
 import { reviewService } from "@/service/review.service";
 import { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -173,7 +174,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   try {
-    const response = await productService.getProductById(id);
+    const response = await getProductCached(id);
     const product = (response as any)?.product || response;
 
     // Sirf naam — app/layout.tsx:81 ka template " | Fancy Store" khud jorta
@@ -266,7 +267,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   let product = null;
 
   try {
-    const response = await productService.getProductById(id);
+    const response = await getProductCached(id);
     product = (response as any)?.product || response;
   } catch (error: any) {
     // Backend ne explicitly "product exists nahi" bola — real 404.

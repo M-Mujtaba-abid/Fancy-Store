@@ -52,7 +52,7 @@ import AppShell from "@/components/layout/AppShell";
 import CouponRefCapture from "@/components/shop/share/CouponRefCapture";
 import { Toaster } from "react-hot-toast";
 import FloatingWidgets from "@/components/shop/chat/FloatingWidgets";
-import { categoryService } from "@/service/categoryService/category.service";
+import { getCategoriesCached } from "@/service/cached";
 import { apiCategoryToTile } from "@/types/category.type";
 
 const geistSans = Geist({
@@ -156,8 +156,7 @@ export default async function RootLayout({
   // ⚠️ .catch() MANDATORY — layout mein unhandled rejection poore build ka
   // prerender step fail kar deta hai, yani poori site deploy hi nahi hoti.
   // Fail hone par Footer apne static fallback par chala jata hai.
-  const footerCategories = await categoryService
-    .getAll()
+  const footerCategories = await getCategoriesCached()
     .then((categories) => categories.map(apiCategoryToTile))
     .catch(() => undefined);
 

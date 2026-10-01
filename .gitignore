@@ -9,17 +9,22 @@ __pycache__/
 
 # Local data dumps
 /*.csv
+/ecommerce-backend/neon-dump/
+/ecommerce-backend/rescue/
 
 # Locally generated / downloaded images
 # (production images Cloudinary se aati hain, repo se nahi)
 /assets/
 /client/public/uploads/
 
-# One-off local seeder scripts
+# One-off local seeder & migration scripts
 /ecommerce-backend/seeders/seed.js
 /ecommerce-backend/seeders/check-cover-duplicates.js
 /ecommerce-backend/seeders/delete-seeded-covers.js
 /ecommerce-backend/seeders/upload-covers-to-cloudinary.js
+/ecommerce-backend/scripts/dumpNeon.js
+/ecommerce-backend/scripts/importToSupabase.js
+/ecommerce-backend/scripts/rescueFromLiveCache.js
 
 # Secrets (safety net - sub-folders me pehle se ignored hain)
 .env
@@ -37,3 +42,5 @@ node_modules/
 .idea/
 .DS_Store
 Thumbs.db
+.vercel
+.env*

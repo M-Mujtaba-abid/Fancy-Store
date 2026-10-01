@@ -49,7 +49,13 @@ const sequelize = process.env.DATABASE_URL
 export const dbConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ Database connected successfully to Neon");
+    // Host bhi print karte hain: DB ab DATABASE_URL se aata hai, aur pehle ye
+    // line hamesha "Neon" likhti thi. Supabase par shift hone ke baad wo
+    // jhooti ho gayi thi aur debugging mein ghalat raasta dikhati.
+    const host = String(process.env.DATABASE_URL || "")
+      .replace(/^postgres(ql)?:\/\/[^@]*@/, "")
+      .split("/")[0];
+    console.log(`✅ Database connected successfully${host ? ` (${host})` : ""}`);
     // 👈 ADD THIS: Enable vector extension in Neon DB
     await sequelize.query("CREATE EXTENSION IF NOT EXISTS vector;");
     console.log("✅ pgvector extension is ready");

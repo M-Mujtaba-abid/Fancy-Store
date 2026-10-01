@@ -13,8 +13,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { categoryService } from "@/service/categoryService/category.service";
-import { productService } from "@/service/productservice/product.service";
+import {
+  getCategoryBySlugCached,
+  getCategoryProductsCached,
+} from "@/service/cached";
 import CategoryClient from "./CategoryClient";
 import CategoryFaq from "@/components/shop/share/CategoryFaq";
 import RelatedGuides from "@/components/shop/share/RelatedGuides";
@@ -53,9 +55,9 @@ export async function buildCategoryMetadata(
   // noindex yahan se lagana kaam karta hai aur out-of-range pages (e.g. stock
   // kam hone par purana /page/7) Google ke index mein nahi jatin.
   const [category, currentPage] = await Promise.all([
-    categoryService.getBySlug(slug).catch(() => null),
+    getCategoryBySlugCached(slug).catch(() => null),
     page > 1
-      ? productService.getProductsByFilter(slug, {}, page, PAGE_SIZE).catch(() => null)
+      ? getCategoryProductsCached(slug, page, PAGE_SIZE).catch(() => null)
       : Promise.resolve(null),
   ]);
 
@@ -118,10 +120,8 @@ export default async function CategoryView({
   // ⚠️ .catch() dono pe MANDATORY hai — unhandled rejection `next build` ke
   // prerender step ko fail kar deta hai, aur phir deploy hi nahi hota.
   const [category, currentPage] = await Promise.all([
-    categoryService.getBySlug(slug).catch(() => null),
-    productService
-      .getProductsByFilter(slug, {}, page, PAGE_SIZE)
-      .catch(() => null),
+    getCategoryBySlugCached(slug).catch(() => null),
+    getCategoryProductsCached(slug, page, PAGE_SIZE).catch(() => null),
   ]);
 
   const title = category?.title || humanizeSlug(slug);
