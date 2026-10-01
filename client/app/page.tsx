@@ -1,5 +1,5 @@
 
-export const revalidate = 3600;
+export const revalidate = 3600; // 1 Ghanta (100% Safe + Instant Admin Purge)
 
 import { Metadata } from "next"; // ✅ Next.js Metadata import kiya
 import CarouselBanner from "@/components/shop/mainPage/CarouselBanner";

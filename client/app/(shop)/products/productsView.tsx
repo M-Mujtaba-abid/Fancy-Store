@@ -18,8 +18,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { productService } from "@/service/productservice/product.service";
-import { categoryService } from "@/service/categoryService/category.service";
+import {
+  getAllProductsCached,
+  getCategoriesCached,
+} from "@/service/cached";
 import PaginationNav from "@/components/shop/share/PaginationNav";
 import ProductsClient from "./ProductsClient";
 
@@ -53,7 +55,7 @@ export async function buildProductsMetadata(page: number): Promise<Metadata> {
   // noindex yahan se lagana kaam karta hai.
   const currentPage =
     page > 1
-      ? await productService.getAllProducts(page, PAGE_SIZE).catch(() => null)
+      ? await getAllProductsCached(page, PAGE_SIZE).catch(() => null)
       : null;
 
   const outOfRange = page > 1 && (currentPage?.products?.length ?? 0) === 0;
@@ -112,8 +114,8 @@ export default async function ProductsView({ page }: { page: number }) {
   // ⚠️ .catch() dono pe MANDATORY hai — unhandled rejection `next build` ke
   // prerender step ko fail kar deta hai, aur phir deploy hi nahi hota.
   const [currentPage, allCategories] = await Promise.all([
-    productService.getAllProducts(page, PAGE_SIZE).catch(() => null),
-    categoryService.getAll().catch(() => []),
+    getAllProductsCached(page, PAGE_SIZE).catch(() => null),
+    getCategoriesCached().catch(() => []),
   ]);
 
   // Khali categories link nahi karte: unka page sirf "This Category is Coming

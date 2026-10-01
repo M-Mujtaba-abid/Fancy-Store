@@ -1,0 +1,17 @@
+const path = require("path");
+
+/**
+ * sequelize-cli ko config.json ki jagah config.cjs par bhejta hai.
+ *
+ * Wajah: config.json ek static file hai, us mein `require("dotenv")` nahi ho
+ * sakta. Is liye us mein database ka password LIKHNA parta tha, aur wo file
+ * git mein committed thi. Ab config.cjs .env se DATABASE_URL parhti hai, yani
+ * koi credential repo mein nahi jata aur app aur migrations dono ek hi jagah
+ * se DB ka pata lete hain.
+ *
+ * Baqi paths (models/, migrations/, seeders/) sequelize-cli ke default hi
+ * hain, unhe yahan dobara likhne ki zaroorat nahi.
+ */
+module.exports = {
+  config: path.resolve(__dirname, "config", "config.cjs"),
+};

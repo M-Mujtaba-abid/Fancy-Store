@@ -9,7 +9,19 @@
 // unhe "URL is unknown to Google / Referring page: None detected" dikha raha
 // tha. Ab har page ka apna URL hai aur categoryView ka PaginationNav in sab ko
 // asli <a href> se jorta hai.
-export const revalidate = 300;
+// ⚠️ 6 ghante jaan bujh kar. Wapas chhota mat karna.
+//
+// Ye value pehle 300 (5 minute) thi. Har stale request ek ISR write banti
+// hai, aur site par ~50 aise cached URLs hain. 50 x 288 writes/din =
+// ~430K/mahina, jo Vercel ki free limit (200K) se do guna zyada tha. CPU bhi
+// isi se jal rahi thi, kyunke har regeneration backend ki kai calls karti hai.
+//
+// 6 ghante mehfooz is liye hai ke admin se product add/edit karte hi ye page
+// foran purge ho jata hai - dekho utils/revalidate.ts ka revalidateForProduct().
+// Timer sirf un cheezon par lagta hai jo admin se nahi badaltin, jaise order
+// se ghatne wala stock, aur wo bhi khatarnak nahi kyunke order lagate waqt
+// backend khud stock check karta hai.
+export const revalidate = 21600;
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";

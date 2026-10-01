@@ -85,9 +85,21 @@ export async function GET() {
     return new NextResponse(xml, {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
+        // ⚠️ CDN cache. Iske bagair ye route HAR request par 1000 products
+        // fetch kar ke poora XML dobara banata tha, aur Google Merchant plus
+        // bots isay bar bar khinchte hain. Vercel ki "Fluid Active CPU" jin
+        // do cheezon se limit cross kar gayi thi, ye un mein se ek thi.
+        //
+        // `export const revalidate` jaan bujh kar NAHI lagaya: wo route ko
+        // build par prerender karwa deta hai, aur agar us waqt backend down
+        // ho to neeche wala catch 500 return karega jo poore window ke liye
+        // cache ho jayega. Cache-Control sirf KAMYAB response par lagta hai,
+        // to error kabhi cache nahi hota.
+        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400',
       },
     });
   } catch (error) {
+    // Error par koi Cache-Control nahi — agli request dobara try karegi.
     return new NextResponse("Error fetching products", { status: 500 });
   }
 }

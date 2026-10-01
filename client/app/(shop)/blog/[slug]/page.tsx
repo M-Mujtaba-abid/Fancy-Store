@@ -4,9 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { blogService } from "@/service/blogService/blog.service";
+import { getBlogPostCached } from "@/service/cached";
 import RelatedShopLinks from "@/components/shop/blog/RelatedShopLinks";
 
-export const revalidate = 300;
+// ⚠️ 6 ghante jaan bujh kar. Wapas chhota mat karna.
+//
+// Ye value pehle 300 (5 minute) thi. Har stale request ek ISR write banti
+// hai, aur site par ~50 aise cached URLs hain. 50 x 288 writes/din =
+// ~430K/mahina, jo Vercel ki free limit (200K) se do guna zyada tha. CPU bhi
+// isi se jal rahi thi, kyunke har regeneration backend ki kai calls karti hai.
+//
+// 6 ghante mehfooz is liye hai ke admin se product add/edit karte hi ye page
+// foran purge ho jata hai - dekho utils/revalidate.ts ka revalidateForProduct().
+// Timer sirf un cheezon par lagta hai jo admin se nahi badaltin, jaise order
+// se ghatne wala stock, aur wo bhi khatarnak nahi kyunke order lagate waqt
+// backend khud stock check karta hai.
+export const revalidate = 21600;
 
 const SITE_URL = "https://www.fancystore.store";
 
@@ -32,7 +45,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await blogService.getBySlug(slug).catch(() => null);
+  const post = await getBlogPostCached(slug).catch(() => null);
 
   if (!post) return { title: "Post Not Found" };
 
@@ -72,7 +85,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await blogService.getBySlug(slug).catch(() => null);
+  const post = await getBlogPostCached(slug).catch(() => null);
 
   // Backend already 404s drafts/missing slugs — real 404, never a 200
   // "not found" div.
