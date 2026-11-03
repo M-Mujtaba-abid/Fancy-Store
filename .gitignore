@@ -11,6 +11,8 @@ __pycache__/
 /*.csv
 /ecommerce-backend/neon-dump/
 /ecommerce-backend/rescue/
+# scripts/increaseCarCoverPrices.js ke before/after logs (--revert inhi se chalta hai)
+/ecommerce-backend/price-logs/
 
 # Locally generated / downloaded images
 # (production images Cloudinary se aati hain, repo se nahi)

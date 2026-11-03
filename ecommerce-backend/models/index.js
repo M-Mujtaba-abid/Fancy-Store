@@ -16,6 +16,7 @@ import ChatRoom from "./chatRoom.model.js";
 import BlogPost from "./blogPost.model.js";
 import Coupon from "./coupon.model.js";
 import CouponRedemption from "./couponRedemption.model.js";
+import StoreSetting from "./storeSetting.model.js";
 
 const models = {
   User,
@@ -39,6 +40,7 @@ const models = {
   LiveChatMessage,
   Coupon,
   CouponRedemption,
+  StoreSetting,
 };
 
 // Associations

@@ -14,6 +14,7 @@ import {
   Tags,
   Newspaper,
   Ticket,
+  Settings,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -297,6 +298,19 @@ const SidebarNav = ({ isOpen, onClose }: SidebarNavProps) => {
                 {pendingCount}
               </span>
             )}
+          </Link>
+
+          <Link
+            href="/dashboard/settings"
+            onClick={handleLinkClick}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+              isActive("/dashboard/settings")
+                ? "bg-primary text-white"
+                : "bg-background text-text-main hover:bg-background/80"
+            }`}
+          >
+            <Settings size={18} />
+            Settings (Delivery &amp; Sale)
           </Link>
         </nav>
 

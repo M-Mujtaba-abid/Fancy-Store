@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetCart } from "@/hooks/useCart";
 import { usePlaceOrder } from "@/hooks/useOrders";
-import { SHIPPING_FEE } from "@/constants/shipping.constants";
+import { useShippingFee } from "@/hooks/useSettings";
 import { isAuthenticated } from "@/utils/auth";
 import { Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -39,6 +39,9 @@ function CheckoutContent() {
   }, [isBuyNow]);
 
   const { data: cartData, isLoading: isCartLoading } = useGetCart();
+  // Buy Now aur guest cart par server ka cart response nahi hota, wahan
+  // admin Settings wala charge dikhate hain. Order par server khud lagata hai.
+  const fallbackShipping = useShippingFee();
   const { mutate: placeOrder, isPending: isPlacingOrder } = usePlaceOrder();
 
   // Form State
@@ -202,7 +205,7 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
     isBuyNow && buyNowItem
       ? buyNowItem.price * buyNowItem.quantity
       : cartData?.subtotal || 0;
-  const displayShipping = cartData?.shippingFee ?? SHIPPING_FEE;
+  const displayShipping = cartData?.shippingFee ?? fallbackShipping;
 
   // Discount SIRF items ke subtotal par lagta hai, shipping par nahi.
   //
@@ -422,7 +425,11 @@ console.log("🎯 [Checkout] 4. Purchase trigger ho raha hai! Order ID:", res.or
             )}
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
-              <span className="font-medium text-text-main">Rs. {displayShipping.toLocaleString()}</span>
+              {displayShipping === 0 ? (
+                <span className="font-bold text-green-600">FREE</span>
+              ) : (
+                <span className="font-medium text-text-main">Rs. {displayShipping.toLocaleString()}</span>
+              )}
             </div>
 
             <div className="pt-1">

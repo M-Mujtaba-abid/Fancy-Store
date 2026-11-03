@@ -1,7 +1,7 @@
 import models from "../models/index.js";
 import sendEmail from "../utils/sendEmail.js";
 import { orderConfirmationTemplate, adminNewOrderTemplate, orderStatusUpdateTemplate } from "../utils/emailTemplate.js";
-import { SHIPPING_FEE } from "../constants/index.js";
+import { getShippingFee } from "./settings.service.js";
 import {
   applyCouponForOrder,
   recordRedemption,
@@ -35,7 +35,10 @@ export const placeOrderService = async (userId, orderData) => {
     // ise alag rakha hai:
     //     totalAmount = subtotal - discountAmount + shippingFee
     let subtotal = 0;
-    const shippingFee = SHIPPING_FEE;
+    // Admin panel (Settings) wala charge. Jaan bujh kar transaction `t` ke
+    // BAHAR parhte hain: settings table mein koi masla ho to Postgres poori
+    // transaction abort kar deta, aur order hi na lagta.
+    const shippingFee = await getShippingFee();
     const orderItemRows = [];
     let cart = null;
 
