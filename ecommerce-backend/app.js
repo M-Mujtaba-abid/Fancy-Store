@@ -19,6 +19,7 @@ import adminRoutes from "./routes/admin.route.js";
 import cronRoutes from "./routes/cron.route.js";
 import blogRoutes from "./routes/blog.route.js";
 import couponRoutes from "./routes/coupon.route.js";
+import settingsRoutes from "./routes/settings.route.js";
 
 import { stripeWebhook } from "./controllers/payment.controller.js";
 import errorHandler from "./middleware/error.middleware.js";
@@ -141,6 +142,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/cron", cronRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

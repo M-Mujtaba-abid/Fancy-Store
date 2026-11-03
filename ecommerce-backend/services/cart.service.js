@@ -1,5 +1,5 @@
 import models from "../models/index.js";
-import { SHIPPING_FEE } from "../constants/index.js";
+import { getShippingFee } from "./settings.service.js";
 const { Cart, CartItem, Product } = models;
 
 export const addToCartService = async (userId, productId, quantity, variantId = null) => {
@@ -174,12 +174,15 @@ export const getCartService = async (userId) => {
     };
   });
 
+  // Admin panel (Settings) wala delivery charge. 0 = free delivery.
+  const shippingFee = await getShippingFee();
+
   return {
     cartId: cart.id,
     items: formattedItems,
     subtotal: parseFloat(subtotal.toFixed(2)),
-    shippingFee: SHIPPING_FEE,
-    totalAmount: parseFloat((subtotal + SHIPPING_FEE).toFixed(2)),
+    shippingFee,
+    totalAmount: parseFloat((subtotal + shippingFee).toFixed(2)),
   };
 };
 

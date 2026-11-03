@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useGetCart, useUpdateCartItem, useClearCart } from "@/hooks/useCart";
-import { SHIPPING_FEE } from "@/constants/shipping.constants";
+import { useShippingFee } from "@/hooks/useSettings";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
@@ -18,7 +18,8 @@ export default function CartPage() {
 
   const items = cartData?.items || [];
   const subtotal = cartData?.subtotal || 0;
-  const shippingFee = cartData?.shippingFee ?? SHIPPING_FEE;
+  const fallbackShipping = useShippingFee();
+  const shippingFee = cartData?.shippingFee ?? fallbackShipping;
   const totalAmount = cartData?.totalAmount ?? subtotal + shippingFee;
 
   // 🎯 TRACKING: Handle checkout click
@@ -201,9 +202,13 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between text-text-muted">
               <span>Shipping</span>
-              <span className="font-medium text-text-main">
-                Rs. {shippingFee.toLocaleString()}
-              </span>
+              {shippingFee === 0 ? (
+                <span className="font-bold text-green-600">FREE</span>
+              ) : (
+                <span className="font-medium text-text-main">
+                  Rs. {shippingFee.toLocaleString()}
+                </span>
+              )}
             </div>
           </div>
 
